@@ -3,14 +3,16 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Zap, User, Briefcase, Loader2 } from 'lucide-react';
+import { ArrowLeft, Zap, User, Briefcase, Loader2, CheckCircle } from 'lucide-react';
 
 export default function CadastroPage() {
   const [tipo, setTipo] = useState<'consumidor' | 'gerador' | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [nome, setNome] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -18,8 +20,7 @@ export default function CadastroPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-
-    console.log('Tentando cadastrar:', email, tipo);
+    setSuccess(false);
 
     try {
       // 1. Criar usuário no Supabase Auth
@@ -28,60 +29,53 @@ export default function CadastroPage() {
         password,
         options: {
           data: { 
-            tipo,
-            nome: email.split('@')[0]
-          },
+            nome: nome,
+            tipo: tipo
+          }
         }
       });
 
-      if (authError) {
-        console.error('Erro Auth:', authError);
-        setError(authError.message);
-        setLoading(false);
-        return;
-      }
-
-      console.log('Auth sucesso:', authData);
+      if (authError) throw new Error(authError.message);
 
       if (authData.user) {
-        // 2. Salvar na tabela profiles
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: authData.user.id,
-            nome: email.split('@')[0],
-            email: email,
-            tipo: tipo,
-            created_at: new Date().toISOString()
-          });
-
-        if (profileError) {
-          console.error('Erro profile:', profileError);
-        }
-
-        // 3. Salvar na tabela leads
+        // 2. Salvar na tabela leads
         await supabase.from('leads').insert({
-          nome: email.split('@')[0],
+          nome: nome,
           email: email,
           tipo: tipo,
-          status: 'pendente',
-          created_at: new Date().toISOString()
+          status: 'pendente'
         });
 
-        // 4. Redirecionar para completar perfil baseado no tipo
-        if (tipo === 'consumidor') {
-          router.push('/completar-perfil/consumidor');
-        } else {
-          router.push('/completar-perfil/gerador');
-        }
+        setSuccess(true);
+        
+        // 3. Limpar formulário e mostrar mensagem
+        setTimeout(() => {
+          router.push('/login');
+        }, 3000);
       }
     } catch (err: any) {
-      console.error('Erro geral:', err);
-      setError('Erro ao criar conta. Tente novamente.');
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center px-6">
+        <div className="max-w-md w-full bg-white/5 border border-white/10 rounded-3xl p-8 text-center">
+          <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-white mb-2">Cadastro realizado!</h1>
+          <p className="text-slate-400 mb-4">
+            Sua conta foi criada com sucesso. Você será redirecionado para o login.
+          </p>
+          <Link href="/login" className="text-emerald-400 hover:text-emerald-300 transition">
+            Ir para o login →
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#020617] to-[#0a122e] flex items-center justify-center px-6">
@@ -112,12 +106,23 @@ export default function CadastroPage() {
               className="w-full p-6 bg-blue-500/10 border border-blue-500/30 rounded-2xl text-center hover:bg-blue-500/20 transition group"
             >
               <Briefcase className="w-8 h-8 text-blue-400 mx-auto mb-3" />
-              <h3 className="text-xl font-bold text-white">Gerador / Parceiro</h3>
+              <h3 className="text-xl font-bold text-white">Gerador</h3>
               <p className="text-slate-400 text-sm">Tenho energia solar para compartilhar</p>
             </button>
           </div>
         ) : (
           <form onSubmit={handleCadastro} className="space-y-5">
+            <div>
+              <label className="block text-slate-400 text-sm mb-2">Nome completo</label>
+              <input
+                type="text"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white placeholder:text-slate-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition"
+                placeholder="Seu nome"
+                required
+              />
+            </div>
             <div>
               <label className="block text-slate-400 text-sm mb-2">E-mail</label>
               <input
@@ -125,6 +130,7 @@ export default function CadastroPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white placeholder:text-slate-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition"
+                placeholder="seu@email.com"
                 required
               />
             </div>
@@ -143,7 +149,7 @@ export default function CadastroPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-900 rounded-xl font-bold hover:from-emerald-400 hover:to-emerald-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-900 rounded-xl font-bold hover:from-emerald-400 hover:to-emerald-500 transition-all disabled:opacity-50"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Criar Conta'}
             </button>
