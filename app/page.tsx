@@ -27,7 +27,7 @@ export default function HomePage() {
       <div className="fixed bottom-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] -z-10" />
       <div className="fixed top-40 right-0 w-80 h-80 bg-blue-500/5 rounded-full blur-[100px] -z-10" />
 
-      {/* --- NAVBAR COM SIMULADOR --- */}
+      {/* --- NAVBAR REFORMULADA COM LOGIN E CADASTRO --- */}
       <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-[#020617]/90 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2 group cursor-pointer">
@@ -46,7 +46,7 @@ export default function HomePage() {
             <a href="#vantagens" className="hover:text-emerald-400 transition-all hover:scale-105">Vantagens</a>
             <a href="#depoimentos" className="hover:text-emerald-400 transition-all hover:scale-105">Resultados</a>
             
-            {/* 🆕 LINK DO SIMULADOR */}
+            {/* LINK DO SIMULADOR */}
             <Link href="/simulador" className="text-emerald-400 hover:text-emerald-300 transition-all hover:scale-105 font-bold flex items-center gap-1">
               <Zap className="w-3 h-3" /> Simulador
             </Link>
@@ -54,18 +54,24 @@ export default function HomePage() {
             <Link href="/para-geradores" className="text-blue-400 hover:text-blue-300 transition-all hover:scale-105 font-bold">
               Para Geradores
             </Link>
+
+            {/* NOVOS LINKS: ENTRAR E CRIAR CONTA */}
+            <Link href="/login" className="text-white hover:text-emerald-400 transition-all hover:scale-105 font-medium">
+              Entrar
+            </Link>
+            <Link href="/cadastro" className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 px-5 py-2 rounded-full text-sm font-bold transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(16,185,129,0.4)]">
+              Criar Conta
+            </Link>
           </div>
 
+          {/* BOTÃO CONSULTORIA GRATUITA REMOVIDO DA NAVBAR */}
           <div className="flex items-center gap-4">
-            
-            <Link href="/economizar" className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-900 px-6 py-2.5 rounded-full text-sm font-bold transition-all transform hover:scale-105 shadow-[0_0_25px_rgba(16,185,129,0.5)] hover:shadow-[0_0_35px_rgba(16,185,129,0.7)] flex items-center gap-2">
-              Consultoria Gratuita <Sparkles className="w-4 h-4" />
-            </Link>
+            {/* Espaço vazio ou pode colocar algo futuramente */}
           </div>
         </div>
       </nav>
 
-      {/* --- HERO SECTION --- */}
+      {/* --- HERO SECTION REFORMULADA --- */}
       <section className="relative pt-32 pb-20 px-6 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-emerald-500/15 blur-[120px] rounded-full -z-10 animate-pulse" />
         <div className="absolute top-20 right-10 w-40 h-40 bg-yellow-500/5 blur-[60px] rounded-full -z-10" />
@@ -87,14 +93,13 @@ export default function HomePage() {
             <span className="text-white font-medium"> Simples, seguro e 100% digital.</span>
           </p>
           
+          {/* BOTÕES DA HERO SECTION REFORMULADOS */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-            <Link href="/economizar" className="w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-white to-slate-200 text-slate-900 rounded-full font-bold text-lg hover:from-slate-200 hover:to-slate-300 transition-all flex items-center justify-center gap-3 group shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:shadow-[0_0_45px_rgba(255,255,255,0.5)] relative overflow-hidden">
-              <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-              Quero economizar <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            <Link href="/cadastro" className="w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-900 rounded-full font-bold text-lg hover:from-emerald-400 hover:to-emerald-500 transition-all flex items-center justify-center gap-3 group shadow-xl">
+              Começar Agora <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
-            
-            <Link href="/vender" className="w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 text-emerald-400 border border-emerald-500/40 rounded-full font-bold text-lg hover:bg-emerald-500/30 transition-all flex items-center justify-center gap-3 group hover:scale-105 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-              <Zap className="w-5 h-5" /> Quero vender energia <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            <Link href="/para-geradores" className="w-full sm:w-auto px-10 py-5 bg-white/10 border border-white/20 text-white rounded-full font-bold text-lg hover:bg-white/20 transition-all flex items-center justify-center gap-3">
+              Sou Gerador <Zap className="w-5 h-5" />
             </Link>
           </div>
 
