@@ -64,7 +64,7 @@ export default function ParaGeradoresPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
               <Link 
-                href="/completar-perfil/gerador" 
+                href="/cadastro-gerador" 
                 className="group w-full sm:w-auto px-10 py-4 bg-gradient-to-r from-yellow-500 to-amber-500 text-slate-900 rounded-full font-bold text-lg hover:from-yellow-400 hover:to-amber-400 transition-all flex items-center justify-center gap-3 shadow-xl"
               >
                 Quero Transformar Meu Excedente em Lucro <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -81,7 +81,7 @@ export default function ParaGeradoresPage() {
           <div className="mb-20 p-8 rounded-3xl bg-gradient-to-r from-red-500/5 to-amber-500/5 border border-red-500/20">
             <div className="flex items-center gap-3 mb-6 justify-center">
               <AlertCircle className="w-6 h-6 text-red-400" />
-              <h2 className="text-2xl font-bold text-white">Sua Usina Pode Está Operando no Vermelho</h2>
+              <h2 className="text-2xl font-bold text-white">Sua Usina Pode Estar Operando no Vermelho</h2>
             </div>
             <p className="text-slate-300 text-center max-w-2xl mx-auto">
               De acordo com a ANEEL, mais de <strong className="text-red-400">40% da energia gerada por usinas solares é desperdiçada</strong> por falta de consumidores. 
@@ -191,7 +191,7 @@ export default function ParaGeradoresPage() {
               Enquanto você decide, outros geradores já estão lucrando. Garanta sua vaga no clube seleto de parceiros da EnergiaLivre.
             </p>
             <Link 
-              href="/completar-perfil/gerador" 
+              href="/cadastro-gerador" 
               className="group inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-yellow-500 to-amber-500 text-slate-900 rounded-full font-bold text-lg hover:from-yellow-400 hover:to-amber-400 transition-all transform hover:scale-105 shadow-xl"
             >
               Quero Ser um Gerador Parceiro <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
