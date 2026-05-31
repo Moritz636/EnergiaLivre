@@ -17,7 +17,6 @@ import {
   BadgeCheck,
   TrendingDown
 } from 'lucide-react';
-import { GoogleLoginButton } from '@/app/components/GoogleLoginButton';
 
 export default function HomePage() {
   return (
@@ -58,7 +57,6 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center gap-4">
-            <GoogleLoginButton />
             
             <Link href="/economizar" className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-900 px-6 py-2.5 rounded-full text-sm font-bold transition-all transform hover:scale-105 shadow-[0_0_25px_rgba(16,185,129,0.5)] hover:shadow-[0_0_35px_rgba(16,185,129,0.7)] flex items-center gap-2">
               Consultoria Gratuita <Sparkles className="w-4 h-4" />
