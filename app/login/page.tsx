@@ -1,88 +1,74 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLogin, setIsLogin] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+export default function DashboardPage() {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const supabase = createClient();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    if (isLogin) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setError(error.message);
-      else router.push('/dashboard');
-    } else {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) setError(error.message);
-      else {
-        setError('Conta criada! Verifique seu e-mail para confirmar.');
-        setTimeout(() => setIsLogin(true), 3000);
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      console.log('Usuário logado:', user);
+      
+      if (error || !user) {
+        console.log('Redirecionando para login...');
+        router.push('/login');
+        return;
       }
-    }
-    setLoading(false);
+      
+      setUser(user);
+      setLoading(false);
+    };
+    
+    checkUser();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
   return (
-    <div className="min-h-screen bg-[#020617] flex items-center justify-center px-6">
-      <div className="max-w-md w-full bg-white/5 border border-white/10 rounded-3xl p-8">
-        <h1 className="text-3xl font-bold text-white text-center mb-8">
-          {isLogin ? 'Entrar' : 'Criar Conta'}
-        </h1>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            placeholder="E-mail"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-3 px-4 text-white"
-            required
-          />
-          <input
-            type="password"
-            placeholder="Senha"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-3 px-4 text-white"
-            required
-          />
-          
-          {error && (
-            <p className={`text-sm ${error.includes('Verifique') ? 'text-emerald-400' : 'text-red-400'}`}>
-              {error}
-            </p>
-          )}
-          
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-900 rounded-xl font-bold transition-all"
-          >
-            {loading ? 'Carregando...' : (isLogin ? 'Entrar' : 'Cadastrar')}
+    <div className="min-h-screen bg-[#020617] text-slate-200 p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-white">Meu Dashboard</h1>
+          <button onClick={handleLogout} className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg">
+            Sair
           </button>
-        </form>
+        </div>
         
-        <button
-          onClick={() => setIsLogin(!isLogin)}
-          className="w-full text-center text-slate-400 text-sm mt-4 hover:text-emerald-400 transition"
-        >
-          {isLogin ? 'Não tem conta? Cadastre-se' : 'Já tem conta? Faça login'}
-        </button>
-        
-        <Link href="/" className="block text-center text-slate-500 text-xs mt-6 hover:text-slate-400">
-          ← Voltar para Home
-        </Link>
+        <div className="bg-white/5 border border-white/10 rounded-3xl p-8">
+          <p className="text-slate-400">Bem-vindo, <span className="text-white">{user.email}</span></p>
+          <p className="text-slate-500 text-sm mt-2">Complete seu perfil para começar a economizar ou vender energia.</p>
+          
+          <div className="grid md:grid-cols-2 gap-4 mt-8">
+            <Link href="/completar-perfil/consumidor" className="p-6 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-center hover:bg-emerald-500/20">
+              <h3 className="text-xl font-bold text-white">Sou Consumidor</h3>
+              <p className="text-slate-400 text-sm">Quero economizar na conta de luz</p>
+            </Link>
+            <Link href="/completar-perfil/gerador" className="p-6 bg-blue-500/10 border border-blue-500/30 rounded-2xl text-center hover:bg-blue-500/20">
+              <h3 className="text-xl font-bold text-white">Sou Gerador</h3>
+              <p className="text-slate-400 text-sm">Tenho energia solar para compartilhar</p>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

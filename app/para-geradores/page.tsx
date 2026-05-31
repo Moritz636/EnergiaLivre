@@ -17,7 +17,6 @@ import {
   BadgeCheck,
   TrendingDown
 } from 'lucide-react';
-import { GoogleLoginButton } from '@/app/components/GoogleLoginButton';
 
 export default function HomePage() {
   return (
@@ -28,7 +27,7 @@ export default function HomePage() {
       <div className="fixed bottom-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] -z-10" />
       <div className="fixed top-40 right-0 w-80 h-80 bg-blue-500/5 rounded-full blur-[100px] -z-10" />
 
-      {/* --- NAVBAR COM SIMULADOR --- */}
+      {/* --- NAVBAR COM LINK PARA GERADORES --- */}
       <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-[#020617]/90 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2 group cursor-pointer">
@@ -46,24 +45,15 @@ export default function HomePage() {
             <a href="#sustentabilidade" className="hover:text-emerald-400 transition-all hover:scale-105">Sustentabilidade</a>
             <a href="#vantagens" className="hover:text-emerald-400 transition-all hover:scale-105">Vantagens</a>
             <a href="#depoimentos" className="hover:text-emerald-400 transition-all hover:scale-105">Resultados</a>
-            
-            {/* 🆕 LINK DO SIMULADOR */}
-            <Link href="/simulador" className="text-emerald-400 hover:text-emerald-300 transition-all hover:scale-105 font-bold flex items-center gap-1">
-              <Zap className="w-3 h-3" /> Simulador
-            </Link>
-            
+            {/* NOVO LINK NA NAVBAR */}
             <Link href="/para-geradores" className="text-blue-400 hover:text-blue-300 transition-all hover:scale-105 font-bold">
               Para Geradores
             </Link>
           </div>
 
-          <div className="flex items-center gap-4">
-            <GoogleLoginButton />
-            
-            <Link href="/economizar" className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-900 px-6 py-2.5 rounded-full text-sm font-bold transition-all transform hover:scale-105 shadow-[0_0_25px_rgba(16,185,129,0.5)] hover:shadow-[0_0_35px_rgba(16,185,129,0.7)] flex items-center gap-2">
-              Consultoria Gratuita <Sparkles className="w-4 h-4" />
-            </Link>
-          </div>
+          <Link href="/economizar" className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-900 px-6 py-2.5 rounded-full text-sm font-bold transition-all transform hover:scale-105 shadow-[0_0_25px_rgba(16,185,129,0.5)] hover:shadow-[0_0_35px_rgba(16,185,129,0.7)] flex items-center gap-2">
+            Consultoria Gratuita <Sparkles className="w-4 h-4" />
+          </Link>
         </div>
       </nav>
 
@@ -307,7 +297,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- FOOTER --- */}
+      {/* --- FOOTER COM LINK PARA GERADORES --- */}
       <footer className="py-20 px-6 border-t border-white/10 bg-[#01040f]">
         <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-12 mb-16">
           <div className="col-span-2">
