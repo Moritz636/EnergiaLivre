@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Zap, Loader2, ShieldCheck, Sun, MapPin, Building } from 'lucide-react';
+import { ArrowLeft, Zap, Loader2, ShieldCheck, Sun, MapPin, Building, CheckCircle2 } from 'lucide-react';
 
 // Lista completa de concessionárias atualizada Maio/2026
 const CONCESSIONARIAS = [
@@ -51,7 +51,6 @@ export default function CadastroGeradorPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  // Atualizar estado automaticamente ao selecionar concessionária
   const handleConcessionariaChange = (value: string) => {
     const selected = CONCESSIONARIAS.find(c => c.nome === value);
     setFormData({
@@ -67,7 +66,6 @@ export default function CadastroGeradorPage() {
     setError('');
 
     try {
-      // 1. Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -77,8 +75,7 @@ export default function CadastroGeradorPage() {
       if (authError) throw new Error(authError.message);
 
       if (authData.user) {
-        // 2. Salvar na tabela geradores
-        const { error: geradorError } = await supabase.from('geradores').insert({
+        await supabase.from('geradores').insert({
           id: authData.user.id,
           nome_usina: formData.nome_usina,
           capacidade_kwp: parseFloat(formData.capacidade),
@@ -89,10 +86,7 @@ export default function CadastroGeradorPage() {
           status: 'pendente'
         });
 
-        if (geradorError) console.error('Erro gerador:', geradorError);
-
-        // 3. Salvar na tabela leads
-        const { error: leadError } = await supabase.from('leads').insert({
+        await supabase.from('leads').insert({
           nome: formData.nome,
           email: formData.email,
           whatsapp: formData.whatsapp,
@@ -103,14 +97,11 @@ export default function CadastroGeradorPage() {
           status: 'pendente'
         });
 
-        if (leadError) console.error('Erro lead:', leadError);
-
         setSuccess(true);
-        setTimeout(() => router.push('/dashboard-gerador'), 2000);
+        setTimeout(() => router.push('/'), 3000);
       }
     } catch (err: any) {
       setError(err.message);
-    } finally {
       setLoading(false);
     }
   };
@@ -119,11 +110,9 @@ export default function CadastroGeradorPage() {
     return (
       <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
-          <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Zap className="w-8 h-8 text-green-400" />
-          </div>
+          <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white mb-2">Cadastro realizado!</h1>
-          <p className="text-slate-400">Redirecionando para o dashboard...</p>
+          <p className="text-slate-400">Redirecionando para a página inicial...</p>
         </div>
       </div>
     );
