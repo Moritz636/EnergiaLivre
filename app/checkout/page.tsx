@@ -16,7 +16,6 @@ import {
   Clock
 } from 'lucide-react';
 
-// Planos disponíveis
 const planos = [
   {
     id: 'price_basico',
@@ -122,7 +121,6 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200">
       
-      {/* Header */}
       <div className="border-b border-white/10 bg-[#020617]/80 backdrop-blur-xl fixed top-0 w-full z-50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/dashboard-consumidor" className="flex items-center gap-2 group">
@@ -140,7 +138,6 @@ export default function CheckoutPage() {
       <div className="pt-24 px-6 pb-20">
         <div className="max-w-6xl mx-auto">
           
-          {/* Header da Página */}
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-bold mb-4">
               <Crown className="w-3.5 h-3.5" /> Escolha seu plano
@@ -154,7 +151,6 @@ export default function CheckoutPage() {
             </p>
           </div>
 
-          {/* Cards de Planos */}
           <div className="grid md:grid-cols-3 gap-6 mb-12">
             {planos.map((plano) => (
               <div
@@ -214,14 +210,12 @@ export default function CheckoutPage() {
             ))}
           </div>
 
-          {/* Mensagem de erro */}
           {error && (
             <div className="text-center mb-6">
               <p className="text-red-400 text-sm">{error}</p>
             </div>
           )}
 
-          {/* Comparativo de Economia */}
           <div className="mb-12 p-6 rounded-2xl bg-white/5 border border-white/10">
             <h3 className="text-lg font-bold text-white text-center mb-6">💰 Comparativo de Economia Mensal</h3>
             <div className="grid md:grid-cols-3 gap-6 text-center">
@@ -242,7 +236,6 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* Selos de Confiança */}
           <div className="text-center">
             <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500">
               <div className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-emerald-500" /> Pagamento 100% Seguro</div>
