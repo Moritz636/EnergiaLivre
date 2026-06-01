@@ -1,35 +1,33 @@
-"use server";
-
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+'use server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 export async function saveLead(formData: any) {
-  try {
-    // O objeto abaixo agora mapeia TODOS os possíveis campos de ambas as páginas
-    const { error } = await supabaseAdmin
-      .from('leads')
-      .insert([
-        { 
-          nome: formData.nome, 
-          email: formData.email, 
-          whatsapp: formData.whatsapp,
-          // Dados de quem quer ECONOMIZAR
-          gasto_mensal: formData.gastoMensal || null, 
-          cidade: formData.cidade || null,
-          // Dados de quem quer VENDER
-          capacidade: formData.capacidade || null, 
-          estado: formData.estado || null,
+  const cookieStore = await cookies();
+  
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
         },
-      ]);
-
-    if (error) {
-      console.error("Erro do Supabase Admin:", error);
-      return { success: false, message: error.message };
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...options });
+        },
+        remove(name: string, options: any) {
+          cookieStore.set({ name, value: '', ...options });
+        },
+      },
     }
+  );
 
-    console.log(`🚨 NOVO LEAD! Notificar: energialivreofc@gmail.com`);
-    return { success: true };
+  try {
+    const { data, error } = await supabase.from('leads').insert([formData]);
+    if (error) throw error;
+    return { success: true, data };
   } catch (error: any) {
-    console.error("Erro crítico na Server Action:", error);
     return { success: false, message: error.message };
   }
 }
