@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, CheckCircle, User, Zap } from 'lucide-react';
 
 export default function CadastroPage() {
   const [email, setEmail] = useState('');
@@ -23,24 +23,57 @@ export default function CadastroPage() {
     setLoading(true);
     setError('');
 
+    if (password.length < 6) {
+      setError('A senha deve ter no mínimo 6 caracteres');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const { data, error } = await supabase.auth.signUp({
+      // 1. Criar usuário no Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { nome, tipo, whatsapp, cidade } }
+        options: { 
+          data: { 
+            nome, 
+            tipo,
+            whatsapp,
+            cidade
+          } 
+        }
       });
 
-      if (error) throw new Error(error.message);
+      if (authError) throw new Error(authError.message);
 
-      if (data.user) {
+      if (authData.user) {
+        // 2. Inserir na tabela profiles
+        await supabase.from('profiles').insert({
+          id: authData.user.id,
+          email,
+          nome,
+          tipo,
+          whatsapp,
+          cidade,
+          created_at: new Date().toISOString()
+        });
+
+        // 3. Inserir na tabela leads
         await supabase.from('leads').insert({
-          nome, email, whatsapp, cidade, tipo, status: 'pendente'
+          nome,
+          email,
+          whatsapp,
+          cidade,
+          tipo,
+          status: 'pendente',
+          created_at: new Date().toISOString()
         });
 
         setSuccess(true);
         setTimeout(() => router.push('/login'), 3000);
       }
     } catch (err: any) {
+      console.error('Erro no cadastro:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -49,11 +82,14 @@ export default function CadastroPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[#020617] flex items-center justify-center">
-        <div className="bg-white/5 p-8 rounded-2xl text-center">
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-white">Cadastro realizado!</h1>
-          <p className="text-slate-400">Redirecionando para o login...</p>
+          <h1 className="text-2xl font-bold text-white mb-2">Cadastro realizado!</h1>
+          <p className="text-slate-400 mb-4">Sua conta foi criada com sucesso.</p>
+          <Link href="/login" className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 transition">
+            Ir para o login →
+          </Link>
         </div>
       </div>
     );
@@ -66,27 +102,38 @@ export default function CadastroPage() {
           <ArrowLeft className="w-4 h-4" /> Voltar
         </Link>
 
-        <h1 className="text-2xl font-bold text-white text-center mb-6">Criar Conta</h1>
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <User className="w-8 h-8 text-emerald-400" />
+          </div>
+          <h1 className="text-2xl font-bold text-white">Criar Conta</h1>
+          <p className="text-slate-400 text-sm">Junte-se à revolução da energia solar</p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="text" placeholder="Nome completo" value={nome} onChange={(e) => setNome(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white" required />
-          <input type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white" required />
-          <input type="tel" placeholder="WhatsApp" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white" required />
-          <input type="text" placeholder="Cidade - UF" value={cidade} onChange={(e) => setCidade(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white" required />
-          <input type="password" placeholder="Senha (mínimo 6)" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white" required minLength={6} />
+          <input type="text" placeholder="Nome completo" value={nome} onChange={(e) => setNome(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition" required />
+          <input type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition" required />
+          <input type="tel" placeholder="WhatsApp (com DDD)" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition" required />
+          <input type="text" placeholder="Cidade - UF" value={cidade} onChange={(e) => setCidade(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition" required />
+          <input type="password" placeholder="Senha (mínimo 6 caracteres)" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition" required minLength={6} />
           
           <div className="flex gap-4">
-            <button type="button" onClick={() => setTipo('consumidor')} className={`flex-1 py-2 rounded-xl transition ${tipo === 'consumidor' ? 'bg-emerald-500 text-slate-900' : 'bg-slate-800 text-slate-400'}`}>💰 Consumidor</button>
-            <button type="button" onClick={() => setTipo('gerador')} className={`flex-1 py-2 rounded-xl transition ${tipo === 'gerador' ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-400'}`}>⚡ Gerador</button>
+            <button type="button" onClick={() => setTipo('consumidor')} className={`flex-1 py-3 rounded-xl font-bold transition ${tipo === 'consumidor' ? 'bg-emerald-500 text-slate-900' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>
+              💰 Consumidor
+            </button>
+            <button type="button" onClick={() => setTipo('gerador')} className={`flex-1 py-3 rounded-xl font-bold transition ${tipo === 'gerador' ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>
+              ⚡ Gerador
+            </button>
           </div>
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
-          <button type="submit" disabled={loading} className="w-full py-3 bg-emerald-500 text-slate-900 rounded-xl font-bold hover:bg-emerald-400 transition">
-            {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Cadastrar'}
+          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+          
+          <button type="submit" disabled={loading} className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-900 rounded-xl font-bold hover:from-emerald-400 hover:to-emerald-500 transition disabled:opacity-50">
+            {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Cadastrar'}
           </button>
         </form>
 
-        <p className="text-center text-slate-500 text-xs mt-6">Ao cadastrar, você concorda com nossos Termos.</p>
+        <p className="text-center text-slate-500 text-xs mt-6">Ao cadastrar, você concorda com nossos Termos de Uso.</p>
       </div>
     </div>
   );

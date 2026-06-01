@@ -1,10 +1,9 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const supabase = createClient();
 
@@ -22,18 +21,18 @@ export default function DashboardPage() {
         .eq('id', user.id)
         .single();
 
-      if (profile?.tipo === 'consumidor') {
-        router.push('/dashboard-consumidor');
-      } else if (profile?.tipo === 'gerador') {
-        router.push('/dashboard-gerador');
+      if (profile?.tipo === 'gerador') {
+        router.replace('/dashboard-gerador');
       } else {
-        router.push('/dashboard-consumidor');
+        router.replace('/dashboard-consumidor');
       }
-      setLoading(false);
     };
     checkUser();
   }, []);
 
-  if (loading) return <div className="min-h-screen bg-[#020617] flex items-center justify-center"><div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>;
-  return null;
+  return (
+    <div className="min-h-screen bg-[#020617] flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 }
