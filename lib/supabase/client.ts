@@ -1,8 +1,17 @@
 import { createBrowserClient } from '@supabase/ssr'
 
-const SUPABASE_URL = 'https://eahwyotzbskfjvsoqzw.supabase.co'
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhaHd5b3R6YnNrZmp2cXNvcXp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjg4MDIsImV4cCI6MjA5NDYwNDgwMn0.TpHyG89UqOqmlZDuWxox6SUcducSNMPiYCx35vtFqrY'
-
 export function createClient() {
-  return createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  // O código agora busca as chaves nas Variáveis de Ambiente da Vercel
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+  // Verificação de segurança: Se as chaves não existirem, ele avisa no console
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error(
+      '❌ ERRO CRÍTICO: Variáveis de ambiente do Supabase não encontradas! ' +
+      'Verifique o painel da Vercel em Settings -> Environment Variables.'
+    );
+  }
+
+  return createBrowserClient(supabaseUrl, supabaseAnonKey);
 }
