@@ -3,19 +3,16 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Shield, Lock, Mail, Loader2, Eye, EyeOff } from 'lucide-react';
-
-const ADMIN_EMAIL = 'energialivreofc@gmail.com';
-const ADMIN_PASSWORD = 'adm123';
+import { ArrowLeft, Loader2, Shield } from 'lucide-react';
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState(ADMIN_EMAIL);
-  const [password, setPassword] = useState(ADMIN_PASSWORD);
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  
   const router = useRouter();
   const supabase = createClient();
+  const ADMIN_EMAIL = 'energialivreofc@gmail.com';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,70 +20,58 @@ export default function AdminLoginPage() {
     setError('');
 
     try {
-      if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
-        throw new Error('Credenciais inválidas');
+      if (password !== 'adm123') {
+        throw new Error('Senha administrativa incorreta.');
       }
 
-      // Tentar login
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      // Tenta logar. Se não existir, cria o usuário admin automaticamente
+      let { error: signInError } = await supabase.auth.signInWithPassword({
         email: ADMIN_EMAIL,
-        password: ADMIN_PASSWORD,
+        password: password,
       });
 
-      if (signInError) {
-        // Criar usuário admin se não existir
-        await supabase.auth.signUp({
+      if (signInError && signInError.message.includes('Invalid login')) {
+        const { error: signUpError } = await supabase.auth.signUp({
           email: ADMIN_EMAIL,
-          password: ADMIN_PASSWORD,
+          password: password,
           options: { data: { nome: 'Administrador', tipo: 'admin' } }
         });
-        await supabase.auth.signInWithPassword({
-          email: ADMIN_EMAIL,
-          password: ADMIN_PASSWORD,
-        });
+        if (signUpError) throw signUpError;
+        
+        await supabase.auth.signInWithPassword({ email: ADMIN_EMAIL, password: password });
+      } else if (signInError) {
+        throw signInError;
       }
 
-      router.push('/admin/dashboard');
+      router.replace('/admin/dashboard');
     } catch (err: any) {
+      console.error('Erro admin:', err);
       setError(err.message);
-    } finally {
       setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
-      <div className="max-w-md w-full bg-white/5 border border-white/10 rounded-2xl p-6">
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Shield className="w-8 h-8 text-purple-400" />
-          </div>
-          <h1 className="text-2xl font-bold text-white">Admin Login</h1>
-          <p className="text-slate-400 text-sm">Acesse o painel administrativo</p>
+      <div className="max-w-md w-full bg-white/5 border border-white/10 rounded-3xl p-8">
+        <Link href="/" className="text-slate-500 hover:text-purple-400 inline-flex items-center gap-2 mb-8">
+          <ArrowLeft className="w-4 h-4" /> Voltar ao site
+        </Link>
+        <div className="text-center mb-8">
+          <Shield className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+          <h1 className="text-3xl font-bold text-white">Painel Admin</h1>
         </div>
-
+        
         <form onSubmit={handleLogin} className="space-y-4">
-          <input type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition" required />
+          <input type="email" value={ADMIN_EMAIL} disabled className="w-full bg-slate-800 border border-white/10 rounded-xl py-3 px-4 text-slate-400" />
+          <input type="password" placeholder="Senha (adm123)" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white" required />
           
-          <div className="relative">
-            <input type={showPassword ? 'text' : 'password'} placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition" required />
-            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500">
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-
-          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+          {error && <p className="text-red-400 text-sm text-center bg-red-500/10 p-2 rounded-lg">{error}</p>}
           
-          <button type="submit" disabled={loading} className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold hover:from-purple-400 hover:to-pink-400 transition disabled:opacity-50">
-            {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Entrar no Painel'}
+          <button disabled={loading} className="w-full py-4 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-500 transition disabled:opacity-50 flex justify-center items-center">
+            {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Acessar Painel'}
           </button>
         </form>
-
-        <div className="text-center mt-6">
-          <Link href="/" className="text-slate-500 text-sm hover:text-purple-400 transition">
-            ← Voltar para o site
-          </Link>
-        </div>
       </div>
     </div>
   );
