@@ -350,7 +350,7 @@ export default function EconomizarPage() {
                   Envie uma foto da sua última fatura de energia para nosso WhatsApp. Isso torna o cálculo 100% preciso e acelera sua economia.
                 </p>
                 <a 
-                  href={`https://wa.me/5584996160095?text=Olá! Acabei de fazer a análise na EnergiaLivre e quero enviar minha fatura para acelerar o processo. Meu nome é ${formData.nome || 'cliente'} e minha cidade é ${formData.cidade || 'minha região'}.`} 
+                  href={`https://wa.me/5584987858668?text=Olá! Acabei de fazer a análise na EnergiaLivre e quero enviar minha fatura para acelerar o processo. Meu nome é ${formData.nome || 'cliente'} e minha cidade é ${formData.cidade || 'minha região'}.`} 
                   target="_blank"
                   className="block w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-900 rounded-xl font-bold hover:from-emerald-400 hover:to-emerald-500 transition-all shadow-lg"
                 >
