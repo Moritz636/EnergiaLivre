@@ -1,88 +1,33 @@
-'use client'
-
-import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { Shield, Loader2 } from 'lucide-react'
+import { SignIn } from '@clerk/nextjs'
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const supabase = createClient()
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (signInError) {
-      setError('Credenciais inválidas')
-      setLoading(false)
-      return
-    }
-
-    if (data.user) {
-      const { data: adminData } = await supabase
-        .from('admins')
-        .select('*')
-        .eq('email', email)
-        .single()
-
-      if (adminData) {
-        window.location.replace('/admin/dashboard')
-      } else {
-        setError('Acesso não autorizado')
-        await supabase.auth.signOut()
-      }
-    }
-    setLoading(false)
-  }
-
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
-      <div className="max-w-md w-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-3xl p-8">
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Shield className="w-8 h-8 text-purple-400" />
+            <span className="text-3xl">️</span>
           </div>
-          <h1 className="text-2xl font-bold text-white">Admin Login</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Painel Administrativo</h1>
+          <p className="text-slate-400">Acesso restrito</p>
         </div>
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <input
-            type="email"
-            placeholder="E-mail"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white"
-            required
-          />
-          
-          <input
-            type="password"
-            placeholder="Senha"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white"
-            required
-          />
-
-          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold disabled:opacity-50"
-          >
-            {loading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 'Acessar Painel'}
-          </button>
-        </form>
+        <SignIn 
+          appearance={{
+            elements: {
+              rootBox: "mx-auto w-full",
+              card: "bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-3xl p-8 shadow-2xl",
+              headerTitle: "text-white text-xl",
+              headerSubtitle: "text-purple-300",
+              formFieldLabel: "text-purple-200",
+              formFieldInput: "bg-slate-900 border border-purple-500/30 rounded-xl py-3 text-white",
+              formButtonPrimary: "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white rounded-xl py-3 font-bold",
+              footerActionLink: "text-purple-300",
+            }
+          }}
+          routing="path"
+          path="/admin-login"
+          redirectUrl="/admin/dashboard"
+        />
       </div>
     </div>
   )

@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@clerk/localizations": "^4.7.0",
+    "@clerk/nextjs": "^5.7.6",
     "@supabase/ssr": "^0.5.0",
     "@supabase/supabase-js": "^2.45.0",
     "lucide-react": "^0.446.0",
