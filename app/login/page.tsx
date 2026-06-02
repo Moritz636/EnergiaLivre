@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -12,8 +12,45 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [checking, setChecking] = useState(true)
   const router = useRouter()
   const supabase = createClient()
+
+  // Verificar se já está logado ao carregar
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (user) {
+        // Já está logado - redirecionar baseado no tipo
+        const { data: adminCheck } = await supabase
+          .from('admins')
+          .select('email')
+          .eq('email', user.email)
+          .single()
+
+        if (adminCheck) {
+          window.location.href = '/admin/dashboard' // Forçar navegação
+          return
+        }
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('tipo')
+          .eq('id', user.id)
+          .single()
+
+        if (profile?.tipo === 'gerador') {
+          window.location.href = '/dashboard-gerador'
+        } else {
+          window.location.href = '/dashboard-consumidor'
+        }
+      }
+      setChecking(false)
+    }
+
+    checkAuth()
+  }, [supabase, router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,7 +68,10 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        // Verificar se é admin primeiro
+        // Aguardar 100ms para garantir que a sessão foi salva
+        await new Promise(resolve => setTimeout(resolve, 100))
+
+        // Verificar se é admin
         const { data: adminCheck } = await supabase
           .from('admins')
           .select('email')
@@ -39,11 +79,11 @@ export default function LoginPage() {
           .single()
 
         if (adminCheck) {
-          router.push('/admin/dashboard')
+          window.location.href = '/admin/dashboard' // Forçar navegação completa
           return
         }
 
-        // Verificar tipo no profiles
+        // Verificar tipo
         const { data: profile } = await supabase
           .from('profiles')
           .select('tipo')
@@ -51,16 +91,23 @@ export default function LoginPage() {
           .single()
 
         if (profile?.tipo === 'gerador') {
-          router.push('/dashboard-gerador')
+          window.location.href = '/dashboard-gerador'
         } else {
-          router.push('/dashboard-consumidor')
+          window.location.href = '/dashboard-consumidor'
         }
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao fazer login')
-    } finally {
       setLoading(false)
     }
+  }
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+      </div>
+    )
   }
 
   return (
@@ -100,7 +147,7 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+          {error && <p className="text-red-400 text-sm text-center bg-red-500/10 p-2 rounded-lg">{error}</p>}
 
           <button
             type="submit"
