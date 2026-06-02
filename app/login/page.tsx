@@ -1,113 +1,61 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react'
+import { Mail, Lock, Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [checking, setChecking] = useState(true)
   const router = useRouter()
   const supabase = createClient()
-
-  // Verificar se já está logado ao carregar
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (user) {
-        // Já está logado - redirecionar baseado no tipo
-        const { data: adminCheck } = await supabase
-          .from('admins')
-          .select('email')
-          .eq('email', user.email)
-          .single()
-
-        if (adminCheck) {
-          window.location.href = '/admin/dashboard' // Forçar navegação
-          return
-        }
-
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('tipo')
-          .eq('id', user.id)
-          .single()
-
-        if (profile?.tipo === 'gerador') {
-          window.location.href = '/dashboard-gerador'
-        } else {
-          window.location.href = '/dashboard-consumidor'
-        }
-      }
-      setChecking(false)
-    }
-
-    checkAuth()
-  }, [supabase, router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
-    try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
 
-      if (signInError) {
-        throw new Error('E-mail ou senha incorretos')
-      }
-
-      if (data.user) {
-        // Aguardar 100ms para garantir que a sessão foi salva
-        await new Promise(resolve => setTimeout(resolve, 100))
-
-        // Verificar se é admin
-        const { data: adminCheck } = await supabase
-          .from('admins')
-          .select('email')
-          .eq('email', data.user.email)
-          .single()
-
-        if (adminCheck) {
-          window.location.href = '/admin/dashboard' // Forçar navegação completa
-          return
-        }
-
-        // Verificar tipo
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('tipo')
-          .eq('id', data.user.id)
-          .single()
-
-        if (profile?.tipo === 'gerador') {
-          window.location.href = '/dashboard-gerador'
-        } else {
-          window.location.href = '/dashboard-consumidor'
-        }
-      }
-    } catch (err: any) {
-      setError(err.message || 'Erro ao fazer login')
+    if (signInError) {
+      setError('Email ou senha incorretos')
       setLoading(false)
+      return
     }
-  }
 
-  if (checking) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
-      </div>
-    )
+    if (data.user) {
+      // Verificar se é admin
+      const { data: adminData } = await supabase
+        .from('admins')
+        .select('*')
+        .eq('email', email)
+        .single()
+
+      if (adminData) {
+        // Forçar redirecionamento absoluto
+        window.location.replace('/admin/dashboard')
+        return
+      }
+
+      // Verificar perfil
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tipo')
+        .eq('id', data.user.id)
+        .single()
+
+      if (profile?.tipo === 'gerador') {
+        window.location.replace('/dashboard-gerador')
+      } else {
+        window.location.replace('/dashboard-consumidor')
+      }
+    }
   }
 
   return (
@@ -131,23 +79,16 @@ export default function LoginPage() {
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <input
-              type={showPassword ? 'text' : 'password'}
+              type="password"
               placeholder="Senha"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 pl-10 pr-12 text-white"
+              className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white"
               required
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
-            >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
           </div>
 
-          {error && <p className="text-red-400 text-sm text-center bg-red-500/10 p-2 rounded-lg">{error}</p>}
+          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
 
           <button
             type="submit"
@@ -157,12 +98,6 @@ export default function LoginPage() {
             {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Entrar'}
           </button>
         </form>
-
-        <div className="text-center mt-6">
-          <Link href="/cadastro" className="text-slate-400 hover:text-emerald-400 text-sm">
-            Não tem conta? Cadastre-se
-          </Link>
-        </div>
       </div>
     </div>
   )
