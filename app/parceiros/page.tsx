@@ -1,14 +1,14 @@
-// app/parceiros/page.tsx
 'use client';
 
 import { useState } from 'react';
 import { 
   Zap, TrendingUp, Users, Shield, Award, 
   CheckCircle, ArrowRight, Star, MapPin,
-  DollarSign, BarChart3, Heart, Globe
+  DollarSign, BarChart3, Heart, Globe,
+  Smartphone, Headphones, FileText, Clock
 } from 'lucide-react';
 
-export default function ProgramaParceiros() {
+export default function ProgramaEmbaixadores() {
   const [selectedState, setSelectedState] = useState<string | null>(null);
 
   return (
@@ -26,8 +26,8 @@ export default function ProgramaParceiros() {
           </div>
           <div className="flex items-center gap-4">
             <a href="/login" className="text-slate-300 hover:text-white transition">Entrar</a>
-            <a href="/cadastro-parceiro" className="bg-gradient-to-r from-emerald-500 to-yellow-500 text-slate-900 px-6 py-2.5 rounded-full font-bold hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] transition-all">
-              Ser Parceiro
+            <a href="#cadastro" className="bg-gradient-to-r from-emerald-500 to-yellow-500 text-slate-900 px-6 py-2.5 rounded-full font-bold hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] transition-all">
+              Ser Embaixador
             </a>
           </div>
         </div>
@@ -58,7 +58,7 @@ export default function ProgramaParceiros() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-12">
             {[
               { value: '+R$ 2M', label: 'Pagos em comissões', icon: DollarSign },
-              { value: '+500', label: 'Parceiros ativos', icon: Users },
+              { value: '+500', label: 'Embaixadores ativos', icon: Users },
               { value: '32%', label: 'Economia média', icon: TrendingUp },
               { value: '5', label: 'Estados atendidos', icon: MapPin },
             ].map((stat, i) => (
@@ -71,7 +71,7 @@ export default function ProgramaParceiros() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/cadastro-parceiro" className="px-10 py-5 bg-gradient-to-r from-emerald-500 to-yellow-500 text-slate-900 rounded-full font-bold text-lg hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] transition-all flex items-center justify-center gap-2 group">
+            <a href="#cadastro" className="px-10 py-5 bg-gradient-to-r from-emerald-500 to-yellow-500 text-slate-900 rounded-full font-bold text-lg hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] transition-all flex items-center justify-center gap-2 group">
               Começar Agora <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </a>
             <a href="#simulador" className="px-10 py-5 bg-white/10 border border-white/20 text-white rounded-full font-bold text-lg hover:bg-white/20 transition-all">
@@ -185,13 +185,6 @@ export default function ProgramaParceiros() {
       {/* SIMULADOR */}
       <section id="simulador" className="py-20 px-6 bg-gradient-to-br from-emerald-500/10 to-yellow-500/5 border-y border-white/10">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
-              Simule seus ganhos
-            </h2>
-            <p className="text-slate-400 text-lg">Veja quanto você pode ganhar por mês</p>
-          </div>
-
           <SimulatorComponent />
         </div>
       </section>
@@ -202,7 +195,7 @@ export default function ProgramaParceiros() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
-                Por que ser um parceiro?
+                Por que ser um embaixador?
               </h2>
               <div className="space-y-6">
                 {[
@@ -264,8 +257,32 @@ export default function ProgramaParceiros() {
         </div>
       </section>
 
-      {/* COBERTURA */}
+      {/* SUPORTE */}
       <section className="py-20 px-6 bg-slate-900/40 border-y border-white/5">
+        <div className="max-w-6xl mx-auto text-center">
+          <h2 className="text-3xl md:text-5xl font-bold text-white mb-12">
+            Você nunca está sozinho
+          </h2>
+          
+          <div className="grid md:grid-cols-4 gap-6">
+            {[
+              { icon: FileText, title: 'Material de apoio', desc: 'Apresentações e scripts prontos' },
+              { icon: Smartphone, title: 'Treinamento', desc: 'Capacitação online completa' },
+              { icon: Headphones, title: 'Suporte dedicado', desc: 'WhatsApp para dúvidas' },
+              { icon: BarChart3, title: 'Plataforma', desc: 'Acompanhe comissões em tempo real' }
+            ].map((item, i) => (
+              <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
+                <item.icon className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
+                <h3 className="text-lg font-bold text-white mb-2">{item.title}</h3>
+                <p className="text-slate-400 text-sm">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* COBERTURA */}
+      <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto text-center">
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
             Onde você pode atuar
@@ -282,22 +299,60 @@ export default function ProgramaParceiros() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section className="py-20 px-6 bg-slate-900/40 border-y border-white/5">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-3xl md:text-5xl font-bold text-white text-center mb-12">
+            Perguntas frequentes
+          </h2>
+          
+          <div className="space-y-4">
+            {[
+              {
+                q: 'Preciso investir alguma coisa pra começar?',
+                a: 'Não. Zero investimento. Você não compra estoque, não paga taxa de adesão e não tem meta obrigatória.'
+              },
+              {
+                q: 'Quando eu recebo a primeira comissão?',
+                a: 'A comissão na venda pode chegar a 100% paga já no cadastro do cliente. Depois, você recebe o bônus de recorrência todo mês.'
+              },
+              {
+                q: 'Como funciona a comissão?',
+                a: 'Você recebe comissão na venda (até 100%) + bônus de recorrência mensal enquanto o cliente mantiver a assinatura.'
+              },
+              {
+                q: 'Preciso ser CLT ou ter CNPJ?',
+                a: 'Você atua como autônomo. Não tem vínculo CLT — você é dono do seu tempo.'
+              }
+            ].map((faq, i) => (
+              <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                <h3 className="text-lg font-bold text-white mb-3">{faq.q}</h3>
+                <p className="text-slate-400">{faq.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA FINAL */}
-      <section className="py-20 px-6">
+      <section id="cadastro" className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <div className="bg-gradient-to-br from-emerald-500/20 to-yellow-500/10 border border-emerald-500/30 rounded-3xl p-12">
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
-              Comece a ganhar hoje mesmo
+              Transforme a conta de luz em fonte de renda
             </h2>
             <p className="text-slate-400 text-lg mb-8 max-w-2xl mx-auto">
-              Cadastro gratuito, sem compromisso. Em 5 minutos você já pode começar a indicar.
+              Cadastre-se no programa. Em 5 minutos você fala com um recrutador e já sai com treinamento e material de vendas.
+              <br /><strong className="text-white">Sem investimento, sem meta obrigatória.</strong>
             </p>
             <a href="/cadastro-parceiro" className="inline-flex items-center gap-2 px-10 py-5 bg-gradient-to-r from-emerald-500 to-yellow-500 text-slate-900 rounded-full font-bold text-lg hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] transition-all">
-              Quero Ser Parceiro <ArrowRight className="w-5 h-5" />
+              Quero ser Embaixador <ArrowRight className="w-5 h-5" />
             </a>
-            <p className="text-slate-500 text-sm mt-6 flex items-center justify-center gap-2">
-              <Shield className="w-4 h-4" /> Cadastro 100% seguro e gratuito
-            </p>
+            <div className="flex flex-wrap justify-center gap-6 mt-8 text-sm text-slate-400">
+              <span className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-emerald-500" /> Regulado pela ANEEL</span>
+              <span className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-emerald-500" /> Dados protegidos (LGPD)</span>
+              <span className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-emerald-500" /> Comissão garantida</span>
+            </div>
           </div>
         </div>
       </section>
@@ -320,50 +375,18 @@ function SimulatorComponent() {
   const totalMensal = rendaRecorrente;
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-3xl p-8">
-      <div className="grid md:grid-cols-2 gap-8 mb-8">
-        <div>
-          <label className="block text-slate-400 mb-2">Clientes por mês: {clientes}</label>
-          <input 
-            type="range" 
-            min="5" 
-            max="100" 
-            value={clientes} 
-            onChange={(e) => setClientes(Number(e.target.value))}
-            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-          />
-        </div>
-        <div>
-          <label className="block text-slate-400 mb-2">Ticket médio: R$ {ticketMedio}</label>
-          <input 
-            type="range" 
-            min="200" 
-            max="1000" 
-            step="50"
-            value={ticketMedio} 
-            onChange={(e) => setTicketMedio(Number(e.target.value))}
-            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-          />
-        </div>
+    <div>
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
+          Simule seus ganhos
+        </h2>
+        <p className="text-slate-400 text-lg">Veja quanto você pode ganhar por mês</p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="bg-white/5 rounded-2xl p-6 text-center">
-          <div className="text-slate-400 mb-2">1º Mês</div>
-          <div className="text-3xl font-black text-emerald-400">R$ {comissaoPrimeiroMes.toLocaleString()}</div>
-          <div className="text-sm text-slate-500 mt-1">Comissão inicial</div>
-        </div>
-        <div className="bg-white/5 rounded-2xl p-6 text-center">
-          <div className="text-slate-400 mb-2">Recorrente/mês</div>
-          <div className="text-3xl font-black text-yellow-400">R$ {rendaRecorrente.toLocaleString()}</div>
-          <div className="text-sm text-slate-500 mt-1">Renda passiva</div>
-        </div>
-        <div className="bg-gradient-to-br from-emerald-500/20 to-yellow-500/20 border border-emerald-500/30 rounded-2xl p-6 text-center">
-          <div className="text-slate-300 mb-2">Total 12 meses</div>
-          <div className="text-3xl font-black text-white">R$ {(comissaoPrimeiroMes + (rendaRecorrente * 12)).toLocaleString()}</div>
-          <div className="text-sm text-emerald-400 mt-1">Projeção anual</div>
-        </div>
-      </div>
-    </div>
-  );
-}
+      <div className="bg-white/5 border border-white/10 rounded-3xl p-8">
+        <div className="grid md:grid-cols-2 gap-8 mb-8">
+          <div>
+            <label className="block text-slate-400 mb-2">Clientes por mês: {clientes}</label>
+            <input 
+              type="range" 
+              min="5
