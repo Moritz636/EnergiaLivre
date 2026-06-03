@@ -1,62 +1,21 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useAuth } from '@/app/hooks/useAuth';
+import { LogOut, Zap, TrendingDown, DollarSign, Calendar, Award, Crown, ArrowRight, CheckCircle2, Leaf, Home, PiggyBank, BarChart3, ShieldCheck, Sparkles, Flame, Globe } from 'lucide-react';
 import Link from 'next/link';
-import { 
-  LogOut, 
-  Zap, 
-  TrendingDown, 
-  DollarSign,
-  Calendar,
-  Award,
-  Crown,
-  ArrowRight,
-  CheckCircle2,
-  Leaf,
-  Home,
-  PiggyBank,
-  BarChart3,
-  ShieldCheck,
-  Sparkles,
-  Flame,
-  Globe
-} from 'lucide-react';
 
 export default function DashboardConsumidorPage() {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, profile, loading, logout } = useAuth();
   
-  const [economiaMensal, setEconomiaMensal] = useState(187);
-  const [economiaAnual, setEconomiaAnual] = useState(2244);
-  const [kwhEconomizados, setKwhEconomizados] = useState(584);
-  const [co2Evitado, setCo2Evitado] = useState(412);
-  const [faturaAtual, setFaturaAtual] = useState(589);
-  const [faturaComDesconto, setFaturaComDesconto] = useState(402);
-  const [percentualEconomia, setPercentualEconomia] = useState(32);
-  const [diasConectado, setDiasConectado] = useState(47);
-  const [arvoresSalvas, setArvoresSalvas] = useState(18);
-  
-  const router = useRouter();
-  const supabase = createClient();
-
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-      setUser(user);
-      setLoading(false);
-    };
-    checkUser();
-  }, []);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/');
-  };
+  // Dados de economia (simulados - virão do banco em breve)
+  const economiaMensal = 187;
+  const economiaAnual = 2244;
+  const kwhEconomizados = 584;
+  const co2Evitado = 412;
+  const faturaAtual = 589;
+  const faturaComDesconto = 402;
+  const percentualEconomia = 32;
+  const diasConectado = 47;
+  const arvoresSalvas = 18;
 
   if (loading) {
     return (
@@ -64,6 +23,10 @@ export default function DashboardConsumidorPage() {
         <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
+  }
+
+  if (!user) {
+    return null; // Será redirecionado pelo hook
   }
 
   return (
@@ -92,7 +55,7 @@ export default function DashboardConsumidorPage() {
               <span>{user?.email?.split('@')[0]}</span>
             </div>
             <button
-              onClick={handleLogout}
+              onClick={logout}
               className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 text-sm hover:bg-red-500/20 transition-all"
             >
               <LogOut className="w-4 h-4" />
@@ -113,7 +76,7 @@ export default function DashboardConsumidorPage() {
                   <span className="text-xs text-yellow-400/80 uppercase tracking-wider">Cliente EnergiaLivre • Mês {diasConectado} dias</span>
                 </div>
                 <h1 className="text-3xl md:text-4xl font-bold text-white">
-                  Olá, <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-yellow-400">{user?.email?.split('@')[0]}</span>
+                  Olá, <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-yellow-400">{profile?.nome || user?.email?.split('@')[0]}</span>
                 </h1>
                 <p className="text-slate-400 mt-2">
                   Você já economizou <span className="text-emerald-400 font-bold">R$ {economiaMensal}</span> neste mês. Continue assim!

@@ -1,2 +1,2 @@
-NEXT_PUBLIC_SUPABASE_URL=https://eahwyotzbskfjvqsoqzw.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_secret_0CEjKzEYhO1kfWZC1iJnow_HKZdDTYL
+# ARQUIVO DEPRECATED - USE .env.local
+# Mantido para compatibilidade, mas será removido em breve
