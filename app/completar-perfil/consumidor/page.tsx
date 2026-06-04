@@ -1,11 +1,12 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { getSupabase } from '@/lib/supabase/singleton';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import type { User } from '@supabase/supabase-js';
 
 export default function CompletarPerfilConsumidor() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({ nome: '', whatsapp: '', cidade: '', gastoMensal: '' });
   const router = useRouter();
@@ -19,10 +20,10 @@ export default function CompletarPerfilConsumidor() {
     });
   }, []);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Salvar no Supabase (tabela leads ou profiles)
-    await supabase.from('leads').insert({
+    if (!user) return;
+    await (supabase as any).from('leads').insert({
       nome: formData.nome,
       email: user.email,
       whatsapp: formData.whatsapp,

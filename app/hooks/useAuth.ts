@@ -50,8 +50,9 @@ export function useAuth() {
 
         if (mountedRef.current) {
           if (!error && data) {
-            setProfile(data);
-            setIsAdmin(data.role === 'admin');
+            const profileData = data as Profile
+            setProfile(profileData);
+            setIsAdmin(profileData.role === 'admin');
           } else {
             setProfile(null);
             setIsAdmin(false);
@@ -99,8 +100,9 @@ export function useAuth() {
         .eq('id', user.id)
         .single();
       if (!error && profileData) {
-        setProfile(profileData);
-        setIsAdmin(profileData.role === 'admin');
+        const next = profileData as Profile
+        setProfile(next);
+        setIsAdmin(next.role === 'admin');
       }
     } finally {
       setLoading(false);
@@ -109,7 +111,7 @@ export function useAuth() {
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) throw new Error('Não autenticado');
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('profiles')
       .update(updates)
       .eq('id', user.id);

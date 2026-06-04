@@ -4,6 +4,10 @@ import { useAuth } from '@/app/hooks/useAuth';
 import { getSupabase } from '@/lib/supabase/singleton';
 import { LogOut, Zap, TrendingDown, DollarSign, Calendar, Award, Crown, ArrowRight, CheckCircle2, Leaf, Home, PiggyBank, BarChart3, ShieldCheck, Sparkles, Flame, Globe, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import type { Database } from '@/lib/database.types';
+
+type Consumidor = Database['public']['Tables']['consumidores']['Row']
+type Assinatura = Database['public']['Tables']['assinaturas']['Row']
 
 interface Metrics {
   economiaMensal: number;
@@ -46,15 +50,18 @@ export default function DashboardConsumidorPage() {
           .eq('status', 'active')
           .maybeSingle();
 
+        const consumidorRow = consumidor as Consumidor | null
+        const assinaturaRow = assinatura as Assinatura | null
+
         // 3. Calcular métricas
-        const kwh = assinatura?.kwh_mensais || 0;
-        const valor = assinatura?.valor_mensal || 0;
-        const economiaPercent = assinatura?.economia_percentual || 25;
+        const kwh = assinaturaRow?.kwh_mensais || 0;
+        const valor = assinaturaRow?.valor_mensal || 0;
+        const economiaPercent = assinaturaRow?.economia_percentual || 25;
         const faturaAtual = kwh * 0.95; // Tarifa média
         const economia = faturaAtual * (economiaPercent / 100);
         const faturaFinal = faturaAtual - economia;
-        const diasConectado = consumidor?.created_at
-          ? Math.floor((Date.now() - new Date(consumidor.created_at).getTime()) / 86400000)
+        const diasConectado = consumidorRow?.created_at
+          ? Math.floor((Date.now() - new Date(consumidorRow.created_at).getTime()) / 86400000)
           : 0;
 
         setMetrics({
@@ -67,9 +74,9 @@ export default function DashboardConsumidorPage() {
           faturaComDesconto: Math.round(faturaFinal),
           percentualEconomia: economiaPercent,
           diasConectado,
-          planoAtivo: !!assinatura,
-          nomePlano: assinatura?.nome_plano || 'Sem plano',
-          proximaFatura: assinatura?.current_period_end || null,
+          planoAtivo: !!assinaturaRow,
+          nomePlano: assinaturaRow?.nome_plano || 'Sem plano',
+          proximaFatura: assinaturaRow?.current_period_end || null,
         });
       } catch (err) {
         console.error('Erro ao carregar métricas:', err);

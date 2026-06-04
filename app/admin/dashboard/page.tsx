@@ -29,7 +29,8 @@ import {
   Eye,
   Settings,
   Download,
-  Share2
+  Share2,
+  Shield,
 } from 'lucide-react';
 
 interface Lead {
@@ -73,25 +74,25 @@ export default function AdminDashboardPage() {
   }, [isAdmin]);
 
   const loadLeads = async () => {
-    setLoading(true);
+    setLoadingStats(true);
     const { data, error } = await supabase
       .from('leads')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (data) setLeads(data);
-    setLoading(false);
+    setLoadingStats(false);
   };
 
   const loadEstatisticas = async () => {
     setLoadingStats(true);
     try {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('view_estatisticas_sistema')
         .select('*')
         .single();
 
-      if (data) setEstatisticas(data);
+      if (data) setEstatisticas(data as Estatisticas);
     } catch (error) {
       console.error('Error loading stats:', error);
     } finally {
@@ -100,7 +101,7 @@ export default function AdminDashboardPage() {
   };
 
   const updateStatus = async (id: number, status: string) => {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('leads')
       .update({ status })
       .eq('id', id);

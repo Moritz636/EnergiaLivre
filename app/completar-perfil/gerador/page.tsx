@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { getSupabase } from '@/lib/supabase/singleton';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -25,13 +25,12 @@ export default function CadastroGeradorPage() {
   const router = useRouter();
   const supabase = getSupabase();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      // 1. Criar usuário
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -41,8 +40,7 @@ export default function CadastroGeradorPage() {
       if (authError) throw new Error(authError.message);
 
       if (authData.user) {
-        // 2. Salvar gerador
-        await supabase.from('geradores').insert({
+        await (supabase as any).from('geradores').insert({
           id: authData.user.id,
           nome_usina: formData.nome_usina,
           capacidade_kwp: parseFloat(formData.capacidade),
@@ -53,8 +51,7 @@ export default function CadastroGeradorPage() {
           status: 'pendente'
         });
 
-        // 3. Salvar lead
-        await supabase.from('leads').insert({
+        await (supabase as any).from('leads').insert({
           nome: formData.nome,
           email: formData.email,
           whatsapp: formData.whatsapp,

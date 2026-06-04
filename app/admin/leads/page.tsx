@@ -76,11 +76,11 @@ export default function AdminLeadsPage() {
   };
 
   const atualizarStatus = async (id: number, status: string) => {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('leads')
       .update({ status })
       .eq('id', id);
-    
+
     if (!error) carregarLeads();
   };
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { getSupabase } from '@/lib/supabase/singleton';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, CheckCircle, User } from 'lucide-react';
@@ -15,11 +15,11 @@ export default function CadastroParceiroPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  
+
   const router = useRouter();
   const supabase = getSupabase();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError('');
@@ -43,7 +43,7 @@ export default function CadastroParceiroPage() {
 
       if (authData.user) {
         // Salva na tabela leads
-        await supabase.from('leads').insert({
+        await (supabase as any).from('leads').insert({
           user_id: authData.user.id,
           nome,
           email,

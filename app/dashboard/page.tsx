@@ -21,7 +21,8 @@ export default function DashboardPage() {
         .eq('id', user.id)
         .single();
 
-      if (profile?.tipo === 'gerador') {
+      const tipo = (profile as { tipo?: string } | null)?.tipo
+      if (tipo === 'gerador') {
         router.replace('/dashboard-gerador');
       } else {
         router.replace('/dashboard-consumidor');

@@ -51,7 +51,8 @@ export default function LoginPage() {
           .eq('id', data.user.id)
           .single();
 
-        if (profile?.role === 'admin') {
+        const role = (profile as { role?: string } | null)?.role
+        if (role === 'admin') {
           router.push('/admin/dashboard');
         } else {
           const redirectPath = redirect || '/dashboard';

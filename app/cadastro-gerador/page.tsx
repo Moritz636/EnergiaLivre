@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { getSupabase } from '@/lib/supabase/singleton';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -53,7 +53,7 @@ export default function CadastroGeradorPage() {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError('');
@@ -89,7 +89,7 @@ export default function CadastroGeradorPage() {
 
       if (authData.user) {
         // 2. Criar lead (separado do auth para evitar conflito com trigger)
-        await supabase.from('leads').insert({
+        await (supabase as any).from('leads').insert({
           user_id: authData.user.id,
           nome: formData.nome,
           email: formData.email,
@@ -103,7 +103,7 @@ export default function CadastroGeradorPage() {
         });
 
         // 3. Criar gerador (o trigger pode ter criado - usar upsert)
-        await supabase.from('geradores').upsert({
+        await (supabase as any).from('geradores').upsert({
           id: authData.user.id,
           nome_usina: formData.nome_usina,
           capacidade_kwp: parseFloat(formData.capacidade) || 0,
