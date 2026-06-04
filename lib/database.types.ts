@@ -14,7 +14,7 @@ export interface Database {
           id: string
           email: string
           nome: string
-          tipo: 'consumidor' | 'gerador' | 'admin'
+          tipo: 'consumidor' | 'gerador' | 'parceiro' | 'admin'
           role: 'user' | 'admin'
           whatsapp: string
           cidade: string
@@ -28,7 +28,7 @@ export interface Database {
           id: string
           email: string
           nome: string
-          tipo: 'consumidor' | 'gerador' | 'admin'
+          tipo: 'consumidor' | 'gerador' | 'parceiro' | 'admin'
           role?: 'user' | 'admin'
           whatsapp?: string
           cidade?: string
@@ -42,7 +42,7 @@ export interface Database {
           id?: string
           email?: string
           nome?: string
-          tipo?: 'consumidor' | 'gerador' | 'admin'
+          tipo?: 'consumidor' | 'gerador' | 'parceiro' | 'admin'
           role?: 'user' | 'admin'
           whatsapp?: string
           cidade?: string
@@ -62,10 +62,13 @@ export interface Database {
           whatsapp: string
           cidade: string
           estado: string
-          tipo: 'consumidor' | 'gerador'
+          tipo: 'consumidor' | 'gerador' | 'parceiro'
           capacidade_kwp: number | null
           gasto_mensal: number | null
           concessionaria: string | null
+          nicho: string | null
+          audiencia_estimada: number | null
+          canal: string | null
           status: 'pendente' | 'aprovado' | 'recusado'
           created_at: string
           updated_at: string
@@ -81,10 +84,13 @@ export interface Database {
           whatsapp: string
           cidade: string
           estado: string
-          tipo: 'consumidor' | 'gerador'
+          tipo: 'consumidor' | 'gerador' | 'parceiro'
           capacidade_kwp?: number | null
           gasto_mensal?: number | null
           concessionaria?: string | null
+          nicho?: string | null
+          audiencia_estimada?: number | null
+          canal?: string | null
           status?: 'pendente' | 'aprovado' | 'recusado'
           created_at?: string
           updated_at?: string
@@ -100,10 +106,13 @@ export interface Database {
           whatsapp?: string
           cidade?: string
           estado?: string
-          tipo?: 'consumidor' | 'gerador'
+          tipo?: 'consumidor' | 'gerador' | 'parceiro'
           capacidade_kwp?: number | null
           gasto_mensal?: number | null
           concessionaria?: string | null
+          nicho?: string | null
+          audiencia_estimada?: number | null
+          canal?: string | null
           status?: 'pendente' | 'aprovado' | 'recusado'
           created_at?: string
           updated_at?: string

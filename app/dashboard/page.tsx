@@ -24,6 +24,8 @@ export default function DashboardPage() {
       const tipo = (profile as { tipo?: string } | null)?.tipo
       if (tipo === 'gerador') {
         router.replace('/dashboard-gerador');
+      } else if (tipo === 'parceiro') {
+        router.replace('/dashboard-parceiro');
       } else {
         router.replace('/dashboard-consumidor');
       }

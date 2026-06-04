@@ -4,7 +4,7 @@ import type { Database } from '@/lib/database.types'
 export const WHATSAPP_NUMBER = '5584987858668'
 export const WHATSAPP_BASE = `https://wa.me/${WHATSAPP_NUMBER}`
 
-export type LeadTipo = 'consumidor' | 'gerador'
+export type LeadTipo = 'consumidor' | 'gerador' | 'parceiro'
 
 export interface LeadConsumidorInput {
   tipo: 'consumidor'
@@ -28,7 +28,19 @@ export interface LeadGeradorInput {
   cargo?: string
 }
 
-export type LeadInput = LeadConsumidorInput | LeadGeradorInput
+export interface LeadParceiroInput {
+  tipo: 'parceiro'
+  nome: string
+  email: string
+  whatsapp: string
+  cidade: string
+  estado: string
+  nicho?: string
+  audienciaEstimada?: number
+  canal?: string
+}
+
+export type LeadInput = LeadConsumidorInput | LeadGeradorInput | LeadParceiroInput
 
 export type LeadInsert = Database['public']['Tables']['leads']['Insert']
 
@@ -132,6 +144,31 @@ export function validateLead(raw: unknown): LeadValidation {
       },
     }
   }
+  if (tipo === 'parceiro') {
+    const nicho =
+      typeof r.nicho === 'string' && r.nicho.trim() ? r.nicho.trim() : undefined
+    const canal =
+      typeof r.canal === 'string' && r.canal.trim() ? r.canal.trim() : undefined
+    const audienciaRaw = r.audienciaEstimada ?? r.audiencia_estimada
+    const audienciaEstimada =
+      audienciaRaw === undefined || audienciaRaw === null || audienciaRaw === ''
+        ? undefined
+        : toNumber(audienciaRaw) ?? undefined
+    return {
+      ok: true,
+      data: {
+        tipo: 'parceiro',
+        nome,
+        email,
+        whatsapp,
+        cidade,
+        estado,
+        nicho,
+        audienciaEstimada,
+        canal,
+      },
+    }
+  }
   return { ok: false, message: 'Tipo de lead inválido', field: 'tipo' }
 }
 
@@ -146,13 +183,35 @@ export function buildLeadRow(input: LeadInput, userId?: string | null): LeadInse
     user_id: userId ?? null,
   }
   if (input.tipo === 'consumidor') {
-    return { ...base, gasto_mensal: input.gastoMensal, capacidade_kwp: null, concessionaria: null }
+    return {
+      ...base,
+      gasto_mensal: input.gastoMensal,
+      capacidade_kwp: null,
+      concessionaria: null,
+      nicho: null,
+      audiencia_estimada: null,
+      canal: null,
+    }
+  }
+  if (input.tipo === 'gerador') {
+    return {
+      ...base,
+      gasto_mensal: null,
+      capacidade_kwp: input.capacidadeKwp,
+      concessionaria: input.concessionaria ?? null,
+      nicho: null,
+      audiencia_estimada: null,
+      canal: null,
+    }
   }
   return {
     ...base,
     gasto_mensal: null,
-    capacidade_kwp: input.capacidadeKwp,
-    concessionaria: input.concessionaria ?? null,
+    capacidade_kwp: null,
+    concessionaria: null,
+    nicho: input.nicho ?? null,
+    audiencia_estimada: input.audienciaEstimada ?? null,
+    canal: input.canal ?? null,
   }
 }
 
@@ -211,9 +270,16 @@ export function buildWhatsAppMessage(lead: LeadInput): string {
         `Quero economizar com energia solar.`,
     )
   }
+  if (lead.tipo === 'gerador') {
+    return sanitize(
+      `Olá! Sou ${nome}, tenho uma usina de ${fmtBRL(lead.capacidadeKwp)} kWp em ` +
+        `${lead.cidade}/${lead.estado} e quero monetizar meu excedente pela EnergiaLivre.`,
+    )
+  }
+  const nicho = lead.nicho ? ` Atuo com ${lead.nicho}.` : ''
   return sanitize(
-    `Olá! Sou ${nome}, tenho uma usina de ${fmtBRL(lead.capacidadeKwp)} kWp em ` +
-      `${lead.cidade}/${lead.estado} e quero monetizar meu excedente pela EnergiaLivre.`,
+    `Olá! Sou ${nome}, quero ser parceiro da EnergiaLivre e indicar energia solar.` +
+      ` Minha base é em ${lead.cidade}/${lead.estado}.${nicho}`,
   )
 }
 
@@ -241,13 +307,19 @@ export function buildFollowUpMessage(
         `minha fatura para acelerar o processo. Cidade: ${cidade}.`,
     )
   }
-  const cap = ctx.capacidadeKwp && ctx.capacidadeKwp > 0
-    ? `${fmtBRL(ctx.capacidadeKwp)} kWp`
-    : 'N/I'
-  const estado = (ctx.estado || '').trim().toUpperCase() || 'N/I'
+  if (tipo === 'gerador') {
+    const cap = ctx.capacidadeKwp && ctx.capacidadeKwp > 0
+      ? `${fmtBRL(ctx.capacidadeKwp)} kWp`
+      : 'N/I'
+    const estado = (ctx.estado || '').trim().toUpperCase() || 'N/I'
+    return sanitize(
+      `Olá! Sou ${firstName}, acabei de cadastrar minha usina na EnergiaLivre e quero enviar ` +
+        `os documentos para acelerar a monetização. Capacidade: ${cap} | Estado: ${estado}.`,
+    )
+  }
   return sanitize(
-    `Olá! Sou ${firstName}, acabei de cadastrar minha usina na EnergiaLivre e quero enviar ` +
-      `os documentos para acelerar a monetização. Capacidade: ${cap} | Estado: ${estado}.`,
+    `Olá! Sou ${firstName}, acabei de me cadastrar como parceiro da EnergiaLivre e quero ` +
+      `saber como começar a indicar. Minha base é em ${cidade}.`,
   )
 }
 

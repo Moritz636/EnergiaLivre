@@ -132,6 +132,7 @@ export function useAuth() {
     isAuthenticated: !!user,
     isConsumer: profile?.tipo === 'consumidor',
     isGenerator: profile?.tipo === 'gerador',
+    isPartner: profile?.tipo === 'parceiro',
   };
 }
 
@@ -152,15 +153,13 @@ export function useAuthRedirect() {
   const { user, profile, loading } = useAuth();
   if (loading) return { loading: true, canAccess: false };
   if (!user) return { loading: false, canAccess: false, redirect: '/login' };
-  return {
-    loading: false,
-    canAccess: true,
-    redirect: profile?.tipo === 'gerador' ? '/dashboard-gerador' : '/dashboard-consumidor',
-  };
+  if (profile?.tipo === 'gerador') return { loading: false, canAccess: true, redirect: '/dashboard-gerador' };
+  if (profile?.tipo === 'parceiro') return { loading: false, canAccess: true, redirect: '/dashboard-parceiro' };
+  return { loading: false, canAccess: true, redirect: '/dashboard-consumidor' };
 }
 
 export function useEmbaixadorAuth() {
-  const { user, profile, loading, isAdmin, logout, refresh, updateProfile, isAuthenticated, isConsumer, isGenerator } = useAuth();
+  const { user, profile, loading, isAdmin, logout, refresh, updateProfile, isAuthenticated, isConsumer, isGenerator, isPartner } = useAuth();
   return {
     user,
     profile,
@@ -170,7 +169,7 @@ export function useEmbaixadorAuth() {
     refresh,
     updateProfile,
     isAuthenticated,
-    isEmbaixador: profile?.role === 'admin' || profile?.tipo === 'gerador',
+    isEmbaixador: isAdmin || isGenerator || isPartner,
     embaixadorData: isAdmin ? profile : null,
   };
 }

@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
     email TEXT NOT NULL UNIQUE,
     nome TEXT NOT NULL,
-    tipo TEXT NOT NULL CHECK (tipo IN ('consumidor', 'gerador', 'admin')),
+    tipo TEXT NOT NULL CHECK (tipo IN ('consumidor', 'gerador', 'parceiro', 'admin')),
     role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
     whatsapp TEXT NOT NULL,
     cidade TEXT NOT NULL,
@@ -47,10 +47,13 @@ CREATE TABLE IF NOT EXISTS leads (
     whatsapp TEXT NOT NULL,
     cidade TEXT NOT NULL,
     estado TEXT NOT NULL,
-    tipo TEXT NOT NULL CHECK (tipo IN ('consumidor', 'gerador')),
+    tipo TEXT NOT NULL CHECK (tipo IN ('consumidor', 'gerador', 'parceiro')),
     capacidade_kwp FLOAT, -- Apenas para geradores
     gasto_mensal FLOAT, -- Apenas para consumidores
     concessionaria TEXT, -- Apenas para geradores
+    nicho TEXT, -- Apenas para parceiros (ex: imóveis, marketing digital, educação)
+    audiencia_estimada INTEGER, -- Apenas para parceiros (pessoas alcançadas/mês)
+    canal TEXT, -- Apenas para parceiros (Instagram, YouTube, indicação direta, etc)
     status TEXT NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'aprovado', 'recusado')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -66,6 +69,7 @@ CREATE INDEX idx_leads_cidade ON leads(cidade);
 CREATE INDEX idx_leads_estado ON leads(estado);
 CREATE INDEX idx_leads_created_at ON leads(created_at DESC);
 CREATE INDEX idx_leads_user_id ON leads(user_id);
+CREATE INDEX idx_leads_user_tipo ON leads(user_id, tipo);
 
 -- ============================================
 -- TABELA: GERADORES (USUÁRIOS QUE GERAÇÃO ENERGIA)
@@ -271,7 +275,7 @@ BEGIN
         COALESCE(NEW.raw_user_meta_data->>'estado', '')
     );
     
-    -- Criar entry correspondente na tabela específica (gerador ou consumidor)
+    -- Criar entry correspondente na tabela específica (gerador, consumidor ou parceiro)
     IF COALESCE(NEW.raw_user_meta_data->>'tipo', 'consumidor') = 'gerador' THEN
         INSERT INTO public.geradores (id, nome_usina, capacidade_kwp, excedente_mensal_kwh, concessionaria, cidade, estado, status)
         VALUES (
@@ -284,6 +288,10 @@ BEGIN
             COALESCE(NEW.raw_user_meta_data->>'estado', ''),
             'pendente'
         );
+    ELSIF COALESCE(NEW.raw_user_meta_data->>'tipo', 'consumidor') = 'parceiro' THEN
+        -- Parceiros não precisam de entry em tabela específica;
+        -- dados de nicho/audiencia ficam apenas no lead inicial.
+        NULL;
     ELSE
         INSERT INTO public.consumidores (id, gasto_mensal)
         VALUES (

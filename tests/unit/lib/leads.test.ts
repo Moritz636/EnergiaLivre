@@ -12,6 +12,7 @@ import {
   captureLead,
   type LeadConsumidorInput,
   type LeadGeradorInput,
+  type LeadParceiroInput,
 } from '@/lib/leads'
 import { createSupabaseMock } from '@/tests/mocks/supabase'
 
@@ -33,6 +34,17 @@ const baseGerador: Omit<LeadGeradorInput, 'tipo'> = {
   capacidadeKwp: 75,
   concessionaria: 'Cosern',
   cargo: 'Sócio',
+}
+
+const baseParceiro: Omit<LeadParceiroInput, 'tipo'> = {
+  nome: 'Carlos Souza',
+  email: 'carlos@parceiro.com',
+  whatsapp: '+5584977776666',
+  cidade: 'Recife',
+  estado: 'PE',
+  nicho: 'marketing',
+  audienciaEstimada: 5000,
+  canal: 'instagram',
 }
 
 describe('WHATSAPP constants', () => {
@@ -108,6 +120,35 @@ describe('validateLead', () => {
     expect(r.ok).toBe(false)
   })
 
+  it('valida parceiro feliz (com opcionais)', () => {
+    const r = validateLead({ ...baseParceiro, tipo: 'parceiro' })
+    expect(r.ok).toBe(true)
+    if (r.ok && r.data.tipo === 'parceiro') {
+      expect(r.data.nicho).toBe('marketing')
+      expect(r.data.audienciaEstimada).toBe(5000)
+      expect(r.data.canal).toBe('instagram')
+    }
+  })
+
+  it('valida parceiro sem campos opcionais', () => {
+    const { nicho: _n, audienciaEstimada: _a, canal: _c, ...rest } = baseParceiro
+    const r = validateLead({ ...rest, tipo: 'parceiro' })
+    expect(r.ok).toBe(true)
+    if (r.ok && r.data.tipo === 'parceiro') {
+      expect(r.data.nicho).toBeUndefined()
+      expect(r.data.audienciaEstimada).toBeUndefined()
+      expect(r.data.canal).toBeUndefined()
+    }
+  })
+
+  it('normaliza audienciaEstimada string', () => {
+    const r = validateLead({ ...baseParceiro, audienciaEstimada: '12.500', tipo: 'parceiro' })
+    expect(r.ok).toBe(true)
+    if (r.ok && r.data.tipo === 'parceiro') {
+      expect(r.data.audienciaEstimada).toBe(12.5)
+    }
+  })
+
   it('aceita gastoMensal como string numérica', () => {
     const r = validateLead({ ...baseConsumidor, gastoMensal: '380,50', tipo: 'consumidor' })
     expect(r.ok).toBe(true)
@@ -172,6 +213,20 @@ describe('buildLeadRow', () => {
     const row = buildLeadRow(v.data)
     expect(row.estado).toBe('SP')
   })
+
+  it('mapeia parceiro corretamente', () => {
+    const v = validateLead({ ...baseParceiro, tipo: 'parceiro' })
+    if (!v.ok) throw new Error('expected valid')
+    const row = buildLeadRow(v.data, 'user-2')
+    expect(row.tipo).toBe('parceiro')
+    expect(row.nicho).toBe('marketing')
+    expect(row.audiencia_estimada).toBe(5000)
+    expect(row.canal).toBe('instagram')
+    expect(row.gasto_mensal).toBeNull()
+    expect(row.capacidade_kwp).toBeNull()
+    expect(row.concessionaria).toBeNull()
+    expect(row.user_id).toBe('user-2')
+  })
 })
 
 describe('buildWhatsAppMessage / buildWhatsAppUrl', () => {
@@ -200,6 +255,24 @@ describe('buildWhatsAppMessage / buildWhatsAppUrl', () => {
     expect(url.startsWith(`${WHATSAPP_BASE}?text=`)).toBe(true)
     const decoded = decodeURIComponent(url.split('text=')[1])
     expect(decoded).toBe(buildWhatsAppMessage(v.data))
+  })
+
+  it('monta mensagem de parceiro com nicho', () => {
+    const v = validateLead({ ...baseParceiro, tipo: 'parceiro' })
+    if (!v.ok) throw new Error('expected valid')
+    const msg = buildWhatsAppMessage(v.data)
+    expect(msg).toContain('Carlos')
+    expect(msg).toContain('Recife/PE')
+    expect(msg.toLowerCase()).toContain('marketing')
+  })
+
+  it('monta mensagem de parceiro sem nicho', () => {
+    const { nicho: _n, ...rest } = baseParceiro
+    const v = validateLead({ ...rest, tipo: 'parceiro' })
+    if (!v.ok) throw new Error('expected valid')
+    const msg = buildWhatsAppMessage(v.data)
+    expect(msg).toContain('Carlos')
+    expect(msg).toContain('Recife/PE')
   })
 })
 
@@ -233,6 +306,13 @@ describe('buildFollowUpMessage / buildFollowUpUrl', () => {
   it('gera URL válido do follow-up', () => {
     const url = buildFollowUpUrl('consumidor', { nome: 'Maria', cidade: 'Natal' })
     expect(url).toMatch(/^https:\/\/wa\.me\/\d+\?text=/)
+  })
+
+  it('mensagem de follow-up para parceiro', () => {
+    const msg = buildFollowUpMessage('parceiro', { nome: 'Carlos', cidade: 'Recife' })
+    expect(msg.toLowerCase()).toContain('parceiro')
+    expect(msg).toContain('Carlos')
+    expect(msg).toContain('Recife')
   })
 })
 
@@ -314,5 +394,21 @@ describe('captureLead', () => {
     )
     expect(result.success).toBe(false)
     expect(result.message).toBe('boom')
+  })
+
+  it('insere lead parceiro com nicho e audiencia', async () => {
+    const insert = vi.fn().mockResolvedValue({ data: [{ id: 11 }], error: null })
+    const result = await captureLead(
+      { ...baseParceiro, tipo: 'parceiro' },
+      { supabase: {} as any, insert },
+    )
+    expect(result.success).toBe(true)
+    expect(result.id).toBe(11)
+    expect(insert).toHaveBeenCalledTimes(1)
+    const rowArg = insert.mock.calls[0][0]
+    expect(rowArg.tipo).toBe('parceiro')
+    expect(rowArg.nicho).toBe('marketing')
+    expect(rowArg.audiencia_estimada).toBe(5000)
+    expect(rowArg.canal).toBe('instagram')
   })
 })

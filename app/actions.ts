@@ -4,8 +4,8 @@ import type { LeadInput, LeadResult } from '@/lib/leads'
 import { createClient } from '@/lib/supabase/server'
 
 export type SaveLeadInput =
-  | (Omit<LeadInput, 'tipo'> & { tipo?: 'consumidor' | 'gerador' })
-  | { tipo: 'consumidor' | 'gerador'; [k: string]: unknown }
+  | (Omit<LeadInput, 'tipo'> & { tipo?: 'consumidor' | 'gerador' | 'parceiro' })
+  | { tipo: 'consumidor' | 'gerador' | 'parceiro'; [k: string]: unknown }
 
 export async function saveLead(input: SaveLeadInput): Promise<LeadResult> {
   const supabase = await createClient()
