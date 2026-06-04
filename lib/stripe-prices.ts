@@ -30,6 +30,7 @@ export type PlanoTipo = 'consumidor' | 'gerador' | 'member_plus'
 
 export interface PlanoMetadata {
   tipo: PlanoTipo
+  codigo: string
   nome: string
   valorMensal: number
   kwh?: number
@@ -40,6 +41,7 @@ export interface PlanoMetadata {
 export const PLANOS_META: Record<string, PlanoMetadata> = {
   [STRIPE_PRICE_IDS.CONSUMIDOR_BASICO]: {
     tipo: 'consumidor',
+    codigo: 'basico',
     nome: 'Plano Básico',
     valorMensal: 89.9,
     kwh: 300,
@@ -47,6 +49,7 @@ export const PLANOS_META: Record<string, PlanoMetadata> = {
   },
   [STRIPE_PRICE_IDS.CONSUMIDOR_FAMILIAR]: {
     tipo: 'consumidor',
+    codigo: 'familiar',
     nome: 'Plano Familiar',
     valorMensal: 149.9,
     kwh: 500,
@@ -54,6 +57,7 @@ export const PLANOS_META: Record<string, PlanoMetadata> = {
   },
   [STRIPE_PRICE_IDS.CONSUMIDOR_PREMIUM]: {
     tipo: 'consumidor',
+    codigo: 'premium',
     nome: 'Plano Premium',
     valorMensal: 289.9,
     kwh: 1000,
@@ -61,24 +65,28 @@ export const PLANOS_META: Record<string, PlanoMetadata> = {
   },
   [STRIPE_PRICE_IDS.GERADOR_STARTER]: {
     tipo: 'gerador',
+    codigo: 'starter',
     nome: 'Solar Starter',
     valorMensal: 49.9,
     capacidadeKwp: 30,
   },
   [STRIPE_PRICE_IDS.GERADOR_PRO]: {
     tipo: 'gerador',
+    codigo: 'pro',
     nome: 'Solar Pro',
     valorMensal: 99.9,
     capacidadeKwp: 100,
   },
   [STRIPE_PRICE_IDS.GERADOR_PREMIUM]: {
     tipo: 'gerador',
+    codigo: 'premium',
     nome: 'Solar Premium',
     valorMensal: 199.9,
     capacidadeKwp: 500,
   },
   [STRIPE_PRICE_IDS.MEMBER_PLUS]: {
     tipo: 'member_plus',
+    codigo: 'member_plus',
     nome: 'Member Plus',
     valorMensal: 9.99,
   },

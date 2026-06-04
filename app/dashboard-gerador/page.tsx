@@ -306,6 +306,12 @@ export default function DashboardGeradorPage() {
             {m.status === 'ativo' ? 'Captar mais leads' : 'Concluir cadastro'}
             <ArrowRight className="w-4 h-4" />
           </Link>
+          <Link
+            href="/checkout-gerador"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white rounded-xl font-medium transition shadow-lg shadow-blue-500/20"
+          >
+            <Crown className="w-4 h-4 text-yellow-300" /> Ver Planos
+          </Link>
         </div>
 
         {m.createdAt && (
