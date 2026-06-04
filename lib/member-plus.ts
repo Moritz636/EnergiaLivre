@@ -4,11 +4,9 @@
 // Usado por:
 //   - app/api/stripe/webhook/route.ts (ativa/desativa)
 //   - app/dashboard/match/page.tsx (gate de UI)
+//   - app/checkout-member-plus/page.tsx (verifica status)
 //   - components/Match/MemberPlusBlocker.tsx (CTA)
 // ============================================
-
-import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '@/lib/database.types'
 
 export interface MemberPlusStatus {
   active: boolean
@@ -17,31 +15,29 @@ export interface MemberPlusStatus {
   daysRemaining: number | null
 }
 
-export interface MemberPlusDeps {
-  supabase: SupabaseClient<Database>
-  userId: string
-  select?: (cols: string) => Promise<{ data: any; error: any }>
-  update?: (patch: Database['public']['Tables']['profiles']['Update']) => Promise<{ error: any }>
+type SupabaseLike = {
+  from: (table: string) => any
 }
 
 export async function isMemberPlus(
-  deps: MemberPlusDeps,
+  supabase: SupabaseLike,
+  userId: string,
 ): Promise<boolean> {
-  const status = await getMemberPlusStatus(deps)
+  const status = await getMemberPlusStatus(supabase, userId)
   return status.active
 }
 
 export async function getMemberPlusStatus(
-  deps: MemberPlusDeps,
+  supabase: SupabaseLike,
+  userId: string,
 ): Promise<MemberPlusStatus> {
   try {
-    const result = deps.select
-      ? await deps.select('member_plus_active, member_plus_activated_at, member_plus_expires_at')
-      : await (deps.supabase
-          .from('profiles')
-          .select('member_plus_active, member_plus_activated_at, member_plus_expires_at')
-          .eq('id', deps.userId)
-          .single() as any)
+    const sb: any = supabase
+    const result = await sb
+      .from('profiles')
+      .select('member_plus_active, member_plus_activated_at, member_plus_expires_at')
+      .eq('id', userId)
+      .single()
     const data = result?.data as
       | {
           member_plus_active: boolean
@@ -71,26 +67,20 @@ export async function getMemberPlusStatus(
 }
 
 export async function activateMemberPlus(
-  deps: MemberPlusDeps,
-  expiresAt?: Date | string,
+  supabase: SupabaseLike,
+  userId: string,
+  durationDays: number = 30,
 ): Promise<{ success: boolean; message?: string }> {
-  const expires = expiresAt instanceof Date ? expiresAt.toISOString() : expiresAt ?? defaultExpiresAt()
+  const expiresAt = new Date()
+  expiresAt.setDate(expiresAt.getDate() + durationDays)
   const patch = {
     member_plus_active: true,
     member_plus_activated_at: new Date().toISOString(),
-    member_plus_expires_at: expires,
+    member_plus_expires_at: expiresAt.toISOString(),
   }
   try {
-    if (deps.update) {
-      const { error } = await deps.update(patch as any)
-      if (error) return { success: false, message: error.message ?? 'Erro ao ativar' }
-      return { success: true }
-    }
-    const sb: any = deps.supabase
-    const result: { error: any } = await sb
-      .from('profiles')
-      .update(patch)
-      .eq('id', deps.userId)
+    const sb: any = supabase
+    const result = await sb.from('profiles').update(patch).eq('id', userId)
     if (result?.error) {
       return { success: false, message: result.error.message ?? 'Erro ao ativar' }
     }
@@ -101,23 +91,15 @@ export async function activateMemberPlus(
 }
 
 export async function deactivateMemberPlus(
-  deps: MemberPlusDeps,
+  supabase: SupabaseLike,
+  userId: string,
 ): Promise<{ success: boolean; message?: string }> {
-  const patch = {
-    member_plus_active: false,
-    member_plus_expires_at: null as string | null,
-  }
   try {
-    if (deps.update) {
-      const { error } = await deps.update(patch as any)
-      if (error) return { success: false, message: error.message ?? 'Erro ao desativar' }
-      return { success: true }
-    }
-    const sb: any = deps.supabase
-    const result: { error: any } = await sb
+    const sb: any = supabase
+    const result = await sb
       .from('profiles')
-      .update(patch)
-      .eq('id', deps.userId)
+      .update({ member_plus_active: false, member_plus_expires_at: null })
+      .eq('id', userId)
     if (result?.error) {
       return { success: false, message: result.error.message ?? 'Erro ao desativar' }
     }
@@ -125,10 +107,4 @@ export async function deactivateMemberPlus(
   } catch (err: any) {
     return { success: false, message: err?.message ?? 'Erro inesperado' }
   }
-}
-
-export function defaultExpiresAt(): string {
-  const d = new Date()
-  d.setDate(d.getDate() + 30)
-  return d.toISOString()
 }

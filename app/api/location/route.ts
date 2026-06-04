@@ -15,8 +15,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}))
-    const lat = Number(body.lat)
-    const lng = Number(body.lng)
+    const lat = Number(body.latitude ?? body.lat)
+    const lng = Number(body.longitude ?? body.lng)
     const cidade = typeof body.cidade === 'string' ? body.cidade : ''
     const estado = typeof body.estado === 'string' ? body.estado : ''
     const accuracy = Number.isFinite(Number(body.accuracy_meters))
@@ -40,15 +40,14 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await saveUserLocation(
-      {
-        lat,
-        lng,
-        cidade,
-        estado,
-        accuracy_meters: accuracy,
-        source,
-      },
-      { supabase, userId: user.id },
+      supabase,
+      user.id,
+      lat,
+      lng,
+      cidade,
+      estado,
+      accuracy,
+      source,
     )
 
     if (!result.success) {
@@ -74,18 +73,31 @@ export async function GET() {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
     }
 
-    const { data, error } = await (supabase
+    const sb: any = supabase
+    const { data, error } = await sb
       .from('user_locations')
-      .select('lat, lng, cidade, estado, accuracy_meters, source, updated_at')
+      .select('latitude, longitude, cidade, estado, accuracy_meters, source, updated_at')
       .eq('user_id', user.id)
-      .single() as any)
+      .maybeSingle()
 
     if (error || !data) {
-      return NextResponse.json({ configured: false }, { status: 200 })
+      return NextResponse.json({ configured: false, location: null }, { status: 200 })
     }
 
-    return NextResponse.json({ configured: true, location: data })
+    return NextResponse.json({
+      configured: true,
+      location: {
+        lat: data.latitude,
+        lng: data.longitude,
+        cidade: data.cidade,
+        estado: data.estado,
+        accuracy_meters: data.accuracy_meters,
+        source: data.source,
+        updated_at: data.updated_at,
+      },
+    })
   } catch (err: any) {
+    console.error('GET /api/location error:', err)
     return NextResponse.json(
       { error: err?.message ?? 'Erro ao buscar localização' },
       { status: 500 },

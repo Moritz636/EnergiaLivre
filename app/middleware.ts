@@ -15,6 +15,8 @@ const publicRoutes = [
   '/vender',
   '/regulamentacao',
   '/para-geradores',
+  '/checkout',
+  '/checkout-member-plus',
   '/api/(.*)',
   '/(.*).(jpg|jpeg|png|gif|svg|ico|webp)',
   '/favicon.ico'

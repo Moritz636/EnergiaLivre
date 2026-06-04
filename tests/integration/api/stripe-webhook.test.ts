@@ -9,6 +9,7 @@ vi.mock('@/lib/supabase/server', () => ({
 import * as serverModule from '@/lib/supabase/server'
 import { __stripeInstance } from 'stripe'
 import { POST } from '@/app/api/stripe/webhook/route'
+import { STRIPE_PRICE_IDS } from '@/lib/stripe-prices'
 
 const createServerClientMock = vi.mocked(serverModule.createServerClient)
 const stripe = __stripeInstance as unknown as {
@@ -85,13 +86,12 @@ function makeSubscriptionEvent(type: string, overrides: any = {}) {
         cancel_at_period_end: false,
         metadata: {
           userId: 'user-1',
-          planoNome: 'Plano Teste',
-          kwh: '500',
-          economia: '30',
+          planoTipo: 'consumidor',
+          planoNome: 'Plano Familiar',
         },
         items: {
           data: [
-            { price: { id: 'price_test', unit_amount: 14990 } },
+            { price: { id: STRIPE_PRICE_IDS.CONSUMIDOR_FAMILIAR, unit_amount: 14990 } },
           ],
         },
         ...overrides,
@@ -159,8 +159,10 @@ describe('POST /api/stripe/webhook', () => {
     expect(insertAssinatura?.payload.user_id).toBe('user-1')
     expect(insertAssinatura?.payload.stripe_subscription_id).toBe('sub_test_1')
     expect(insertAssinatura?.payload.valor_mensal).toBe(149.9) // 14990/100
-    expect(insertAssinatura?.payload.kwh_mensais).toBe(500)
-    expect(insertAssinatura?.payload.economia_percentual).toBe(30)
+    expect(insertAssinatura?.payload.kwh_mensais).toBe(500) // CONSUMIDOR_FAMILIAR
+    expect(insertAssinatura?.payload.economia_percentual).toBe(32) // CONSUMIDOR_FAMILIAR
+    expect(insertAssinatura?.payload.tipo_plano).toBe('consumidor')
+    expect(insertAssinatura?.payload.nome_plano).toBe('Plano Familiar')
   })
 
   it('customer.subscription.created: pula insert se já existe (idempotência)', async () => {
@@ -376,5 +378,94 @@ describe('POST /api/stripe/webhook', () => {
     expect(res.status).toBe(200)
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Unhandled event type'))
     logSpy.mockRestore()
+  })
+
+  // ============================================
+  // MEMBER PLUS
+  // ============================================
+  it('member_plus: customer.subscription.created ativa flag em profiles (não insere em assinaturas)', async () => {
+    const sb = makeSupabaseMock()
+    createServerClientMock.mockResolvedValue(sb as any)
+    stripe.webhooks.constructEvent.mockReturnValue(
+      makeSubscriptionEvent('customer.subscription.created', {
+        metadata: { userId: 'user-mp-1', planoTipo: 'member_plus' },
+      })
+    )
+
+    const res = await POST(makeWebhookRequest('{}'))
+    expect(res.status).toBe(200)
+
+    const updateProfile = sb._calls.find(c => c.table === 'profiles' && c.op === 'update')
+    expect(updateProfile?.payload.member_plus_active).toBe(true)
+    expect(updateProfile?.payload.member_plus_expires_at).toBeTruthy()
+
+    const insertAssinatura = sb._calls.find(c => c.table === 'assinaturas' && c.op === 'insert')
+    expect(insertAssinatura).toBeUndefined()
+  })
+
+  it('gerador: customer.subscription.created insere assinatura com tipo_plano=gerador', async () => {
+    const sb = makeSupabaseMock({
+      resultFor: (op, table) => {
+        if (op === 'single' && table === 'assinaturas') return { data: null, error: null }
+        if (op === 'single' && table === 'leads') return { data: null, error: null }
+        return { data: null, error: null }
+      },
+    })
+    createServerClientMock.mockResolvedValue(sb as any)
+    stripe.webhooks.constructEvent.mockReturnValue(
+      makeSubscriptionEvent('customer.subscription.created', {
+        metadata: { userId: 'user-g-1', planoTipo: 'gerador', planoNome: 'Solar Pro' },
+        items: { data: [{ price: { id: STRIPE_PRICE_IDS.GERADOR_PRO, unit_amount: 9990 } }] },
+      })
+    )
+
+    const res = await POST(makeWebhookRequest('{}'))
+    expect(res.status).toBe(200)
+
+    const insertAssinatura = sb._calls.find(c => c.table === 'assinaturas' && c.op === 'insert')
+    expect(insertAssinatura?.payload.tipo_plano).toBe('gerador')
+    expect(insertAssinatura?.payload.nome_plano).toBe('Solar Pro')
+    expect(insertAssinatura?.payload.capacidade_kwp).toBe(100)
+  })
+
+  it('member_plus: invoice.payment_succeeded atualiza member_plus_expires_at', async () => {
+    const sb = makeSupabaseMock({
+      resultFor: (op, table) => {
+        if (op === 'single' && table === 'assinaturas') return { data: { user_id: 'user-mp-1' }, error: null }
+        return { data: null, error: null }
+      },
+    })
+    createServerClientMock.mockResolvedValue(sb as any)
+    stripe.webhooks.constructEvent.mockReturnValue(
+      makeInvoiceEvent('invoice.payment_succeeded', {
+        lines: { data: [{ description: 'Member Plus', metadata: { planoTipo: 'member_plus' } }] },
+      })
+    )
+
+    const res = await POST(makeWebhookRequest('{}'))
+    expect(res.status).toBe(200)
+
+    const updateProfile = sb._calls.find(c => c.table === 'profiles' && c.op === 'update')
+    expect(updateProfile?.payload.member_plus_active).toBe(true)
+    expect(updateProfile?.payload.member_plus_expires_at).toBeTruthy()
+  })
+
+  it('member_plus: customer.subscription.deleted desativa member_plus', async () => {
+    const sb = makeSupabaseMock()
+    createServerClientMock.mockResolvedValue(sb as any)
+    stripe.webhooks.constructEvent.mockReturnValue(
+      makeSubscriptionEvent('customer.subscription.deleted', {
+        metadata: { userId: 'user-mp-1', planoTipo: 'member_plus' },
+      })
+    )
+
+    const res = await POST(makeWebhookRequest('{}'))
+    expect(res.status).toBe(200)
+
+    const updateProfile = sb._calls.find(c => c.table === 'profiles' && c.op === 'update')
+    expect(updateProfile?.payload.member_plus_active).toBe(false)
+
+    const updateAssinatura = sb._calls.find(c => c.table === 'assinaturas' && c.op === 'update')
+    expect(updateAssinatura).toBeUndefined()
   })
 })

@@ -1,0 +1,358 @@
+'use client';
+import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
+import { getSupabase } from '@/lib/supabase/singleton';
+import { useAuth } from '@/app/hooks/useAuth';
+import { isMemberPlus, getMemberPlusStatus } from '@/lib/member-plus';
+import LocationCapture from '@/components/LocationCapture';
+import SwipeCard, { type MatchCandidateData } from '@/components/Match/SwipeCard';
+import MemberPlusBlocker from '@/components/Match/MemberPlusBlocker';
+import {
+  Loader2,
+  Map as MapIcon,
+  List,
+  Sliders,
+  RefreshCcw,
+  Crown,
+  Sparkles,
+  Search,
+} from 'lucide-react';
+
+const MatchMap = dynamic(() => import('@/components/Map/MatchMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[420px] rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+      <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+    </div>
+  ),
+})
+
+type View = 'cards' | 'map'
+
+const TARGET_TIPO_OPTIONS = [
+  { value: 'gerador', label: 'Geradores' },
+  { value: 'consumidor', label: 'Consumidores' },
+] as const
+
+const RADIUS_OPTIONS = [25, 50, 100, 250, 500]
+
+export default function DashboardMatchPage() {
+  const { user, profile, loading: authLoading } = useAuth()
+  const router = useRouter()
+  const supabase = getSupabase()
+
+  const [view, setView] = useState<View>('cards')
+  const [targetTipo, setTargetTipo] = useState<'gerador' | 'consumidor'>('gerador')
+  const [radiusKm, setRadiusKm] = useState(100)
+  const [memberPlusActive, setMemberPlusActive] = useState<boolean | null>(null)
+  const [daysRemaining, setDaysRemaining] = useState(0)
+  const [candidates, setCandidates] = useState<MatchCandidateData[]>([])
+  const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [loadingCandidates, setLoadingCandidates] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [proposingId, setProposingId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (authLoading) return
+    if (!user) {
+      router.push('/login?redirect=/dashboard/match')
+      return
+    }
+
+    const checkMemberPlus = async () => {
+      const status = await getMemberPlusStatus(supabase, user.id)
+      setMemberPlusActive(status.active)
+      setDaysRemaining(status.daysRemaining ?? 0)
+    }
+    checkMemberPlus()
+  }, [user, authLoading])
+
+  useEffect(() => {
+    if (!user || !memberPlusActive) return
+    loadMyLocation()
+  }, [user, memberPlusActive])
+
+  useEffect(() => {
+    if (!user || !memberPlusActive) return
+    loadCandidates()
+  }, [user, memberPlusActive, targetTipo, radiusKm])
+
+  const loadMyLocation = async () => {
+    if (!user) return
+    const sb: any = supabase
+    const { data } = await sb
+      .from('user_locations')
+      .select('latitude, longitude')
+      .eq('user_id', user.id)
+      .maybeSingle()
+    if (data) {
+      setMyLocation({ lat: data.latitude, lng: data.longitude })
+    }
+  }
+
+  const loadCandidates = async () => {
+    setLoadingCandidates(true)
+    setError('')
+    try {
+      const params = new URLSearchParams({ targetTipo, radiusKm: String(radiusKm), limit: '20' })
+      const res = await fetch(`/api/matches?${params}`)
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        if (res.status === 412) {
+          setError('Você ainda não tem localização salva. Capture ou busque abaixo.')
+          setCandidates([])
+          return
+        }
+        throw new Error(body.error || 'Erro ao buscar candidatos')
+      }
+      const body = await res.json()
+      const list = (body.candidates || []).map((c: any) => ({
+        id: c.userId,
+        nome: c.nome || c.cidade || 'Usuário',
+        cidade: c.cidade,
+        estado: c.estado,
+        distanciaKm: c.distanciaKm,
+        capacidadeKwp: c.capacidadeKwp,
+        tipo: c.tipo,
+      }))
+      setCandidates(list)
+    } catch (err: any) {
+      setError(err?.message || 'Erro ao carregar candidatos')
+    } finally {
+      setLoadingCandidates(false)
+    }
+  }
+
+  const handlePropose = useCallback(async (candidate: MatchCandidateData) => {
+    if (!user) return
+    setProposingId(candidate.id)
+    setError('')
+    setSuccess('')
+    try {
+      const res = await fetch('/api/matches/propose', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUserId: candidate.id, message: 'Tenho interesse em conectar!' }),
+      })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error || 'Erro ao enviar proposta')
+      setSuccess(`Proposta enviada para ${candidate.nome}!`)
+      setCandidates((prev) => prev.filter((c) => c.id !== candidate.id))
+    } catch (err: any) {
+      setError(err?.message || 'Erro ao enviar proposta')
+    } finally {
+      setProposingId(null)
+    }
+  }, [user])
+
+  const handleSkip = useCallback((candidate: MatchCandidateData) => {
+    setCandidates((prev) => prev.filter((c) => c.id !== candidate.id))
+  }, [])
+
+  const mapCenter = useMemo<[number, number]>(() => {
+    if (myLocation) return [myLocation.lat, myLocation.lng]
+    const first = candidates[0]
+    if (first && first.id) {
+      // não temos lat/lng nos candidatos retornados (privacidade). usar cidade como fallback não funciona
+      // então usamos SP como centro default
+    }
+    return [-23.5505, -46.6333]
+  }, [myLocation, candidates])
+
+  if (authLoading || memberPlusActive === null) {
+    return (
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!user) return null
+
+  if (!memberPlusActive) {
+    return (
+      <div className="min-h-screen bg-[#020617] text-slate-200 p-6">
+        <div className="max-w-2xl mx-auto pt-12">
+          <MemberPlusBlocker daysRemaining={daysRemaining} />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-[#020617] text-slate-200 p-6">
+      <div className="max-w-6xl mx-auto pt-6">
+        <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-white flex items-center gap-2">
+              <Crown className="w-7 h-7 text-yellow-400" />
+              Match Geolocalizado
+            </h1>
+            <p className="text-slate-400 text-sm mt-1">
+              {daysRemaining > 0 ? `Member Plus ativo • ${daysRemaining} dias restantes` : 'Member Plus ativo'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setView('cards')}
+              className={`px-3 py-2 rounded-lg flex items-center gap-1.5 text-sm font-bold transition ${
+                view === 'cards' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/5 text-slate-400 hover:bg-white/10'
+              }`}
+            >
+              <List className="w-4 h-4" /> Cards
+            </button>
+            <button
+              onClick={() => setView('map')}
+              className={`px-3 py-2 rounded-lg flex items-center gap-1.5 text-sm font-bold transition ${
+                view === 'map' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/5 text-slate-400 hover:bg-white/10'
+              }`}
+            >
+              <MapIcon className="w-4 h-4" /> Mapa
+            </button>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-[280px,1fr] gap-6">
+          <aside className="space-y-4">
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+              <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-1.5">
+                <Sliders className="w-4 h-4" /> Filtros
+              </h3>
+
+              <div className="mb-3">
+                <p className="text-xs text-slate-500 mb-1.5">Buscar</p>
+                <div className="grid grid-cols-2 gap-1">
+                  {TARGET_TIPO_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setTargetTipo(opt.value)}
+                      className={`px-2 py-1.5 rounded-lg text-xs font-bold transition ${
+                        targetTipo === opt.value
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          : 'bg-white/5 text-slate-400 hover:bg-white/10 border border-transparent'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs text-slate-500 mb-1.5">Raio: <strong className="text-white">{radiusKm} km</strong></p>
+                <div className="flex flex-wrap gap-1">
+                  {RADIUS_OPTIONS.map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => setRadiusKm(r)}
+                      className={`px-2 py-1 rounded text-xs font-bold transition ${
+                        radiusKm === r
+                          ? 'bg-emerald-500/20 text-emerald-300'
+                          : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                      }`}
+                    >
+                      {r}km
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {!myLocation ? (
+              <LocationCapture
+                supabase={supabase}
+                userId={user.id}
+                onSaved={(lat, lng) => {
+                  setMyLocation({ lat, lng })
+                  loadCandidates()
+                }}
+              />
+            ) : (
+              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30">
+                <p className="text-xs text-emerald-300 font-bold">Localização definida</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  {myLocation.lat.toFixed(3)}, {myLocation.lng.toFixed(3)}
+                </p>
+                <button
+                  onClick={() => setMyLocation(null)}
+                  className="mt-2 text-[10px] text-emerald-400 hover:underline"
+                >
+                  Atualizar
+                </button>
+              </div>
+            )}
+
+            <button
+              onClick={loadCandidates}
+              disabled={loadingCandidates}
+              className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-sm font-bold transition flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <RefreshCcw className={`w-4 h-4 ${loadingCandidates ? 'animate-spin' : ''}`} />
+              Atualizar lista
+            </button>
+          </aside>
+
+          <main>
+            {error && (
+              <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-sm text-red-300">
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-sm text-emerald-300">
+                {success}
+              </div>
+            )}
+
+            {view === 'map' ? (
+              <div>
+                {myLocation ? (
+                  <MatchMap
+                    center={mapCenter}
+                    zoom={radiusKm > 200 ? 7 : radiusKm > 100 ? 8 : 10}
+                    markers={[]}
+                    height="540px"
+                  />
+                ) : (
+                  <div className="p-8 rounded-2xl bg-white/5 border border-white/10 text-center">
+                    <MapIcon className="w-12 h-12 text-slate-500 mx-auto mb-3" />
+                    <p className="text-slate-300 font-bold mb-1">Mapa indisponível sem localização</p>
+                    <p className="text-slate-500 text-sm">Capture sua localização para ver o mapa de candidatos.</p>
+                  </div>
+                )}
+                <p className="text-center text-xs text-slate-500 mt-3">
+                  <Sparkles className="w-3 h-3 inline" /> Visualização em mapa com marcadores em breve.
+                </p>
+              </div>
+            ) : loadingCandidates ? (
+              <div className="p-12 text-center">
+                <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mx-auto mb-3" />
+                <p className="text-slate-400">Buscando candidatos...</p>
+              </div>
+            ) : candidates.length === 0 ? (
+              <div className="p-12 text-center rounded-2xl bg-white/5 border border-white/10">
+                <Search className="w-12 h-12 text-slate-500 mx-auto mb-3" />
+                <p className="text-slate-300 font-bold mb-1">Nenhum candidato por perto</p>
+                <p className="text-slate-500 text-sm">Tente aumentar o raio de busca ou salvar sua localização.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {candidates.map((c) => (
+                  <SwipeCard
+                    key={c.id}
+                    candidate={c}
+                    onPropose={handlePropose}
+                    onSkip={handleSkip}
+                    loading={proposingId === c.id}
+                  />
+                ))}
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
+    </div>
+  )
+}

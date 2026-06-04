@@ -7,9 +7,6 @@
 //   - lib/matches.ts (cálculo de distância)
 // ============================================
 
-import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '@/lib/database.types'
-
 const EARTH_RADIUS_KM = 6371
 
 export interface Coordinates {
@@ -30,24 +27,39 @@ export interface GeocodeResult {
   estado: string
 }
 
+function toRadians(deg: number): number {
+  return (deg * Math.PI) / 180
+}
+
 /**
  * Calcula distância entre dois pontos geográficos (Haversine).
+ * Aceita 4 args (lat1, lng1, lat2, lng2) ou 2 objetos Coordinates.
  * Retorna distância em quilômetros.
  */
-export function calculateDistance(a: Coordinates, b: Coordinates): number {
+export function calculateDistance(
+  lat1OrA: number | Coordinates,
+  lng1OrB: number | Coordinates,
+  lat2?: number,
+  lng2?: number,
+): number {
+  let a: Coordinates
+  let b: Coordinates
+  if (typeof lat1OrA === 'object') {
+    a = lat1OrA
+    b = lng1OrB as Coordinates
+  } else {
+    a = { lat: lat1OrA, lng: lng1OrB as number }
+    b = { lat: lat2!, lng: lng2! }
+  }
   const dLat = toRadians(b.lat - a.lat)
   const dLng = toRadians(b.lng - a.lng)
   const lat1 = toRadians(a.lat)
-  const lat2 = toRadians(b.lat)
+  const lat2R = toRadians(b.lat)
 
   const h =
     Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2
+    Math.cos(lat1) * Math.cos(lat2R) * Math.sin(dLng / 2) ** 2
   return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h))
-}
-
-function toRadians(deg: number): number {
-  return (deg * Math.PI) / 180
 }
 
 export function isValidCoordinate(lat: unknown, lng: unknown): lat is number {
@@ -84,7 +96,9 @@ export async function geocodeCidadeUF(
       },
       signal,
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      throw new Error(`Nominatim retornou ${res.status}`)
+    }
     const data = (await res.json()) as Array<{
       lat: string
       lon: string
@@ -95,67 +109,47 @@ export async function geocodeCidadeUF(
     const lng = Number(data[0].lon)
     if (!isValidCoordinate(lat, lng)) return null
     return { lat, lng, cidade, estado: estado.toUpperCase() }
-  } catch {
-    return null
+  } catch (err) {
+    throw err
   }
 }
 
-export interface SaveLocationDeps {
-  supabase: SupabaseClient<Database>
-  userId: string
-  insert?: (row: Database['public']['Tables']['user_locations']['Insert']) => Promise<{ error: any }>
-  upsert?: (row: Database['public']['Tables']['user_locations']['Insert']) => Promise<{ error: any }>
+type SupabaseLike = {
+  from: (table: string) => any
 }
 
-export interface SaveLocationInput {
-  lat: number
-  lng: number
-  cidade: string
-  estado: string
-  accuracy_meters?: number
-  source?: 'browser' | 'geocoded' | 'manual'
-}
-
-export interface SaveLocationResult {
-  success: boolean
-  message?: string
-}
-
+/**
+ * Salva (upsert) a localização do usuário na tabela user_locations.
+ * - Chave de conflito: user_id (1 location por usuário)
+ */
 export async function saveUserLocation(
-  input: SaveLocationInput,
-  deps: SaveLocationDeps,
-): Promise<SaveLocationResult> {
-  if (!isValidCoordinate(input.lat, input.lng)) {
+  supabase: SupabaseLike,
+  userId: string,
+  lat: number,
+  lng: number,
+  cidade?: string,
+  estado?: string,
+  accuracyMeters?: number,
+  source: 'browser' | 'geocoded' | 'manual' = 'manual',
+): Promise<{ success: boolean; message?: string }> {
+  if (!isValidCoordinate(lat, lng)) {
     return { success: false, message: 'Coordenadas inválidas' }
   }
-  if (!input.cidade?.trim() || !input.estado?.trim()) {
-    return { success: false, message: 'Cidade/estado são obrigatórios' }
-  }
 
-  const row: Database['public']['Tables']['user_locations']['Insert'] = {
-    user_id: deps.userId,
-    lat: input.lat,
-    lng: input.lng,
-    cidade: input.cidade.trim(),
-    estado: input.estado.trim().toUpperCase(),
-    accuracy_meters: input.accuracy_meters ?? null,
-    source: input.source ?? 'manual',
+  const row = {
+    user_id: userId,
+    latitude: lat,
+    longitude: lng,
+    cidade: cidade?.trim() ?? null,
+    estado: estado?.trim().toUpperCase() ?? null,
+    accuracy_meters: accuracyMeters ?? null,
+    source,
+    updated_at: new Date().toISOString(),
   }
 
   try {
-    if (deps.upsert) {
-      const { error } = await deps.upsert(row)
-      if (error) return { success: false, message: error.message ?? 'Erro ao salvar' }
-      return { success: true }
-    }
-    if (deps.insert) {
-      const { error } = await deps.insert(row)
-      if (error) return { success: false, message: error.message ?? 'Erro ao salvar' }
-      return { success: true }
-    }
-    const result = await (deps.supabase
-      .from('user_locations')
-      .upsert(row as any) as any)
+    const sb: any = supabase
+    const result = await sb.from('user_locations').upsert(row, { onConflict: 'user_id' })
     if (result?.error) {
       return { success: false, message: result.error.message ?? 'Erro ao salvar' }
     }
@@ -165,21 +159,36 @@ export async function saveUserLocation(
   }
 }
 
-export function getCurrentPosition(): Promise<GeolocationResult> {
+export interface GetCurrentPositionOptions {
+  timeoutMs?: number
+  enableHighAccuracy?: boolean
+  maximumAge?: number
+}
+
+/**
+ * Wrapper em torno de navigator.geolocation.getCurrentPosition.
+ * Rejeita se o navegador não suportar ou se a permissão for negada.
+ */
+export function getCurrentPosition(
+  options: GetCurrentPositionOptions = {},
+): Promise<GeolocationResult> {
+  const { timeoutMs = 10_000, enableHighAccuracy = true, maximumAge = 60_000 } = options
+
   return new Promise((resolve, reject) => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
       reject(new Error('Geolocalização não suportada neste navegador'))
       return
     }
     navigator.geolocation.getCurrentPosition(
-      (pos) =>
+      (pos) => {
         resolve({
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
           accuracy_meters: Math.round(pos.coords.accuracy),
-        }),
+        })
+      },
       (err) => reject(new Error(err.message || 'Permissão negada')),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+      { enableHighAccuracy, timeout: timeoutMs, maximumAge },
     )
   })
 }

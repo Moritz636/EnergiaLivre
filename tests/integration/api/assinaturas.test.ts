@@ -7,8 +7,9 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 import * as serverModule from '@/lib/supabase/server'
-import Stripe, { __stripeInstance } from 'stripe'
+import { __stripeInstance } from 'stripe'
 import { POST, GET, DELETE } from '@/app/api/assinaturas/route'
+import { STRIPE_PRICE_IDS } from '@/lib/stripe-prices'
 
 const createClientMock = vi.mocked(serverModule.createClient)
 const createServerClientMock = vi.mocked(serverModule.createServerClient)
@@ -87,38 +88,26 @@ describe('POST /api/assinaturas', () => {
     createClientMock.mockResolvedValue(sb as any)
     createServerClientMock.mockResolvedValue(sb as any)
 
-    const res = await POST(jsonRequest({ userId: 'x', planoId: 'basico' }))
+    const res = await POST(jsonRequest({ priceId: STRIPE_PRICE_IDS.CONSUMIDOR_BASICO }))
     expect(res.status).toBe(401)
     const body = await res.json()
     expect(body.error).toBe('Não autenticado')
   })
 
-  it('retorna 400 para plano inválido', async () => {
+  it('retorna 400 quando priceId é inválido', async () => {
     const sb = makeSupabaseMock()
     createClientMock.mockResolvedValue(sb as any)
     createServerClientMock.mockResolvedValue(sb as any)
 
-    const res = await POST(jsonRequest({ userId: mockUser.id, planoId: 'inexistente' }))
+    const res = await POST(jsonRequest({ priceId: 'price_invalido' }))
     expect(res.status).toBe(400)
     const body = await res.json()
-    expect(body.error).toBe('Plano inválido')
+    expect(body.error).toBe('priceId inválido')
     expect(stripe.checkout.sessions.create).not.toHaveBeenCalled()
   })
 
-  it('retorna 401 quando userId do body difere do autenticado', async () => {
+  it('cria sessão de checkout com sucesso', async () => {
     const sb = makeSupabaseMock()
-    createClientMock.mockResolvedValue(sb as any)
-    createServerClientMock.mockResolvedValue(sb as any)
-
-    const res = await POST(jsonRequest({ userId: 'outro-user', planoId: 'basico' }))
-    expect(res.status).toBe(401)
-    expect(stripe.checkout.sessions.create).not.toHaveBeenCalled()
-  })
-
-  it('cria checkout session e assinatura com sucesso (plano basico)', async () => {
-    const sb = makeSupabaseMock({
-      resultFor: (op) => (op === 'single' ? { data: { id: 1, status: 'active' }, error: null } : { data: null, error: null }),
-    })
     createClientMock.mockResolvedValue(sb as any)
     createServerClientMock.mockResolvedValue(sb as any)
     stripe.checkout.sessions.create.mockResolvedValue({
@@ -126,48 +115,69 @@ describe('POST /api/assinaturas', () => {
       url: 'https://stripe.com/checkout/cs_test_1',
     })
 
-    const res = await POST(jsonRequest({ userId: mockUser.id, planoId: 'basico' }))
+    const res = await POST(jsonRequest({ priceId: STRIPE_PRICE_IDS.CONSUMIDOR_BASICO }))
 
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.url).toBe('https://stripe.com/checkout/cs_test_1')
-    expect(body.assinatura).toEqual({ id: 1, status: 'active' })
+    expect(body.sessionId).toBe('cs_test_1')
     expect(stripe.checkout.sessions.create).toHaveBeenCalledTimes(1)
   })
 
-  it('envia metadata correta para Stripe (planoId + planoNome)', async () => {
-    const sb = makeSupabaseMock({
-      resultFor: (op) => (op === 'single' ? { data: { id: 2 }, error: null } : { data: null, error: null }),
-    })
+  it('envia metadata correta para Stripe (planoTipo + planoCodigo + planoNome + userId)', async () => {
+    const sb = makeSupabaseMock()
     createClientMock.mockResolvedValue(sb as any)
     createServerClientMock.mockResolvedValue(sb as any)
     stripe.checkout.sessions.create.mockResolvedValue({ id: 'cs', url: 'x' })
 
-    await POST(jsonRequest({ userId: mockUser.id, planoId: 'premium' }))
+    await POST(jsonRequest({ priceId: STRIPE_PRICE_IDS.CONSUMIDOR_PREMIUM }))
 
     const call = stripe.checkout.sessions.create.mock.calls[0][0]
     expect(call.metadata).toEqual({
       userId: mockUser.id,
-      planoId: 'premium',
+      userEmail: mockUser.email,
+      planoTipo: 'consumidor',
+      planoCodigo: 'premium',
       planoNome: 'Plano Premium',
     })
-    expect(call.line_items[0].price).toBe('price_premium')
+    expect(call.line_items[0].price).toBe(STRIPE_PRICE_IDS.CONSUMIDOR_PREMIUM)
     expect(call.mode).toBe('subscription')
   })
 
-  it('expira a sessão do Stripe se insert no banco falhar', async () => {
-    const sb = makeSupabaseMock({
-      resultFor: (op) => (op === 'single' ? { data: null, error: { message: 'db error' } } : { data: null, error: null }),
-    })
+  it('roteia success_url/cancel_url por tipo de plano', async () => {
+    const sb = makeSupabaseMock()
     createClientMock.mockResolvedValue(sb as any)
     createServerClientMock.mockResolvedValue(sb as any)
-    stripe.checkout.sessions.create.mockResolvedValue({ id: 'cs_x', url: 'x' })
-    stripe.checkout.sessions.expire.mockResolvedValue({})
+    stripe.checkout.sessions.create.mockResolvedValue({ id: 'cs', url: 'x' })
 
-    const res = await POST(jsonRequest({ userId: mockUser.id, planoId: 'familiar' }))
+    await POST(jsonRequest({ priceId: STRIPE_PRICE_IDS.GERADOR_STARTER }))
 
+    const call = stripe.checkout.sessions.create.mock.calls[0][0]
+    expect(call.success_url).toContain('/dashboard-gerador?success=true')
+    expect(call.cancel_url).toContain('/checkout-gerador?canceled=true')
+    expect(call.metadata.planoTipo).toBe('gerador')
+  })
+
+  it('passa subscription_data.metadata para o subscription no Stripe', async () => {
+    const sb = makeSupabaseMock()
+    createClientMock.mockResolvedValue(sb as any)
+    createServerClientMock.mockResolvedValue(sb as any)
+    stripe.checkout.sessions.create.mockResolvedValue({ id: 'cs', url: 'x' })
+
+    await POST(jsonRequest({ priceId: STRIPE_PRICE_IDS.MEMBER_PLUS }))
+
+    const call = stripe.checkout.sessions.create.mock.calls[0][0]
+    expect(call.subscription_data.metadata.planoTipo).toBe('member_plus')
+  })
+
+  it('retorna 500 quando Stripe falha', async () => {
+    const sb = makeSupabaseMock()
+    createClientMock.mockResolvedValue(sb as any)
+    createServerClientMock.mockResolvedValue(sb as any)
+    stripe.checkout.sessions.create.mockRejectedValue(new Error('stripe down'))
+
+    const res = await POST(jsonRequest({ priceId: STRIPE_PRICE_IDS.CONSUMIDOR_BASICO }))
     expect(res.status).toBe(500)
-    expect(stripe.checkout.sessions.expire).toHaveBeenCalledWith('cs_x')
   })
 })
 
