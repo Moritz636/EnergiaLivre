@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { getSupabase } from '@/lib/supabase/singleton';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, Loader2, Eye, EyeOff, Zap } from 'lucide-react';
+import { CheckCircle, Loader2, Eye, EyeOff, Zap, Users } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CadastroPage() {
@@ -13,7 +13,7 @@ export default function CadastroPage() {
   const [cidade, setCidade] = useState('');
   const [estado, setEstado] = useState('');
   const [password, setPassword] = useState('');
-  const [tipo, setTipo] = useState<'consumidor' | 'gerador'>('consumidor');
+  const [tipo, setTipo] = useState<'consumidor' | 'gerador' | 'parceiro'>('consumidor');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -166,11 +166,11 @@ export default function CadastroPage() {
 
           <div className="space-y-2">
             <p className="text-slate-400 text-sm font-medium">Eu sou:</p>
-            <div className="flex gap-4">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setTipo('consumidor')}
-                className={`flex-1 py-3 rounded-xl font-bold transition ${
+                className={`py-3 rounded-xl font-bold transition text-sm ${
                   tipo === 'consumidor'
                     ? 'bg-emerald-500 text-slate-900'
                     : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
@@ -181,13 +181,24 @@ export default function CadastroPage() {
               <button
                 type="button"
                 onClick={() => setTipo('gerador')}
-                className={`flex-1 py-3 rounded-xl font-bold transition ${
+                className={`py-3 rounded-xl font-bold transition text-sm ${
                   tipo === 'gerador'
                     ? 'bg-blue-500 text-white'
                     : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                 }`}
               >
                 Gerador
+              </button>
+              <button
+                type="button"
+                onClick={() => setTipo('parceiro')}
+                className={`py-3 rounded-xl font-bold transition text-sm flex items-center justify-center gap-1 ${
+                  tipo === 'parceiro'
+                    ? 'bg-yellow-500 text-slate-900'
+                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                }`}
+              >
+                <Users className="w-3 h-3" /> Embaixador
               </button>
             </div>
           </div>
