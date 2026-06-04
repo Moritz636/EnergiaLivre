@@ -5,7 +5,7 @@ const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self)' },
   { key: 'X-XSS-Protection', value: '1; mode=block' },
 ];
 
@@ -32,12 +32,19 @@ const nextConfig = {
   async headers() {
     return [
       { source: '/(.*)', headers: securityHeaders },
-      { source: '/parceiros', headers: cacheHeaders },
+      { source: '/embaixador', headers: cacheHeaders },
       { source: '/regulamentacao', headers: cacheHeaders },
       { source: '/simulador', headers: cacheHeaders },
       { source: '/para-geradores', headers: cacheHeaders },
       { source: '/api/health', headers: [{ key: 'Cache-Control', value: 'no-store' }] },
-    ];
+    ]
+  },
+  async redirects() {
+    return [
+      { source: '/parceiros', destination: '/embaixador', permanent: true },
+      { source: '/dashboard-parceiro', destination: '/embaixador/dashboard', permanent: true },
+      { source: '/cadastro-parceiro', destination: '/cadastro-embaixador', permanent: true },
+    ]
   },
   typescript: {
     ignoreBuildErrors: process.env.NODE_ENV !== 'production',

@@ -23,6 +23,9 @@ export interface Database {
           updated_at: string
           last_login: string | null
           is_active: boolean
+          member_plus_active: boolean
+          member_plus_activated_at: string | null
+          member_plus_expires_at: string | null
         }
         Insert: {
           id: string
@@ -37,6 +40,9 @@ export interface Database {
           updated_at?: string
           last_login?: string | null
           is_active?: boolean
+          member_plus_active?: boolean
+          member_plus_activated_at?: string | null
+          member_plus_expires_at?: string | null
         }
         Update: {
           id?: string
@@ -51,6 +57,9 @@ export interface Database {
           updated_at?: string
           last_login?: string | null
           is_active?: boolean
+          member_plus_active?: boolean
+          member_plus_activated_at?: string | null
+          member_plus_expires_at?: string | null
         }
       }
       leads: {
@@ -75,6 +84,8 @@ export interface Database {
           processed_at: string | null
           processed_by: string | null
           observacoes: string | null
+          latitude: number | null
+          longitude: number | null
         }
         Insert: {
           id?: number
@@ -97,6 +108,8 @@ export interface Database {
           processed_at?: string | null
           processed_by?: string | null
           observacoes?: string | null
+          latitude?: number | null
+          longitude?: number | null
         }
         Update: {
           id?: number
@@ -119,6 +132,8 @@ export interface Database {
           processed_at?: string | null
           processed_by?: string | null
           observacoes?: string | null
+          latitude?: number | null
+          longitude?: number | null
         }
       }
       geradores: {
@@ -421,6 +436,82 @@ export interface Database {
           dados?: Json
           gerado_por?: string | null
           created_at?: string
+        }
+      }
+      user_locations: {
+        Row: {
+          user_id: string
+          lat: number
+          lng: number
+          cidade: string
+          estado: string
+          accuracy_meters: number | null
+          source: 'browser' | 'geocoded' | 'manual'
+          updated_at: string
+          created_at: string
+        }
+        Insert: {
+          user_id: string
+          lat: number
+          lng: number
+          cidade: string
+          estado: string
+          accuracy_meters?: number | null
+          source?: 'browser' | 'geocoded' | 'manual'
+          updated_at?: string
+          created_at?: string
+        }
+        Update: {
+          user_id?: string
+          lat?: number
+          lng?: number
+          cidade?: string
+          estado?: string
+          accuracy_meters?: number | null
+          source?: 'browser' | 'geocoded' | 'manual'
+          updated_at?: string
+          created_at?: string
+        }
+      }
+      match_proposals: {
+        Row: {
+          id: number
+          from_user_id: string
+          to_user_id: string
+          gerador_id: string | null
+          consumidor_id: string | null
+          status: 'pending' | 'accepted' | 'rejected' | 'expired' | 'cancelled'
+          message: string | null
+          expires_at: string
+          responded_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          from_user_id: string
+          to_user_id: string
+          gerador_id?: string | null
+          consumidor_id?: string | null
+          status?: 'pending' | 'accepted' | 'rejected' | 'expired' | 'cancelled'
+          message?: string | null
+          expires_at?: string
+          responded_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          from_user_id?: string
+          to_user_id?: string
+          gerador_id?: string | null
+          consumidor_id?: string | null
+          status?: 'pending' | 'accepted' | 'rejected' | 'expired' | 'cancelled'
+          message?: string | null
+          expires_at?: string
+          responded_at?: string | null
+          created_at?: string
+          updated_at?: string
         }
       }
     }

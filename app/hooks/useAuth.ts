@@ -154,7 +154,7 @@ export function useAuthRedirect() {
   if (loading) return { loading: true, canAccess: false };
   if (!user) return { loading: false, canAccess: false, redirect: '/login' };
   if (profile?.tipo === 'gerador') return { loading: false, canAccess: true, redirect: '/dashboard-gerador' };
-  if (profile?.tipo === 'parceiro') return { loading: false, canAccess: true, redirect: '/dashboard-parceiro' };
+  if (profile?.tipo === 'parceiro') return { loading: false, canAccess: true, redirect: '/embaixador/dashboard' };
   return { loading: false, canAccess: true, redirect: '/dashboard-consumidor' };
 }
 

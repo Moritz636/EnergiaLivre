@@ -29,7 +29,7 @@ const CANAL_OPTIONS = [
   { value: 'outro', label: 'Outro' },
 ] as const
 
-export default function ProgramaParceiros() {
+export default function ProgramaEmbaixadores() {
   const [clientes, setClientes] = useState(20);
   const [ticketMedio, setTicketMedio] = useState(400);
 
@@ -38,7 +38,6 @@ export default function ProgramaParceiros() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200">
-      {/* NAV */}
       <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-slate-950/95 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -52,13 +51,12 @@ export default function ProgramaParceiros() {
           <div className="flex items-center gap-4">
             <a href="/login" className="text-slate-300 hover:text-white transition">Entrar</a>
             <a href="#cadastro" className="bg-gradient-to-r from-emerald-500 to-yellow-500 text-slate-900 px-6 py-2.5 rounded-full font-bold hover:shadow-lg transition-all">
-              Ser Parceiro
+              Ser Embaixador
             </a>
           </div>
         </div>
       </nav>
 
-      {/* HERO */}
       <section className="relative pt-32 pb-20 px-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 via-transparent to-transparent" />
 
@@ -113,7 +111,6 @@ export default function ProgramaParceiros() {
         </div>
       </section>
 
-      {/* ANALOGIA */}
       <section className="py-20 px-6 bg-slate-900/40 border-y border-white/5">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
@@ -149,7 +146,6 @@ export default function ProgramaParceiros() {
         </div>
       </section>
 
-      {/* COMO FUNCIONA */}
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
@@ -183,7 +179,6 @@ export default function ProgramaParceiros() {
         </div>
       </section>
 
-      {/* SIMULADOR — interface interativa preservada */}
       <section id="simulador" className="py-20 px-6 bg-gradient-to-br from-emerald-500/10 to-yellow-500/5 border-y border-white/10">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
@@ -241,16 +236,14 @@ export default function ProgramaParceiros() {
         </div>
       </section>
 
-      {/* CADASTRO — captura de lead (mesmo padrão de economizar/vender) */}
-      <ParceiroLeadForm />
+      <EmbaixadorLeadForm />
 
-      {/* BENEFÍCIOS */}
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
-                Por que ser um parceiro?
+                Por que ser um embaixador?
               </h2>
               <div className="space-y-6">
                 <div className="flex gap-4">
@@ -316,7 +309,6 @@ export default function ProgramaParceiros() {
         </div>
       </section>
 
-      {/* COBERTURA */}
       <section className="py-20 px-6 bg-slate-900/40 border-y border-white/5">
         <div className="max-w-6xl mx-auto text-center">
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
@@ -334,7 +326,6 @@ export default function ProgramaParceiros() {
         </div>
       </section>
 
-      {/* FAQ */}
       <section className="py-20 px-6">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl md:text-5xl font-bold text-white text-center mb-12">
@@ -358,7 +349,6 @@ export default function ProgramaParceiros() {
         </div>
       </section>
 
-      {/* CTA FINAL */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <div className="bg-gradient-to-br from-emerald-500/20 to-yellow-500/10 border border-emerald-500/30 rounded-3xl p-12">
@@ -369,13 +359,12 @@ export default function ProgramaParceiros() {
               Cadastro gratuito, sem compromisso. Em 5 minutos você já pode começar a indicar.
             </p>
             <a href="#cadastro" className="inline-flex items-center gap-2 px-10 py-5 bg-gradient-to-r from-emerald-500 to-yellow-500 text-slate-900 rounded-full font-bold text-lg hover:shadow-xl transition-all">
-              Quero Ser Parceiro <ArrowRight className="w-5 h-5" />
+              Quero Ser Embaixador <ArrowRight className="w-5 h-5" />
             </a>
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
       <footer className="py-12 px-6 border-t border-white/10 text-center text-slate-500">
         <p>© 2026 EnergiaLivre. Todos os direitos reservados.</p>
       </footer>
@@ -383,7 +372,7 @@ export default function ProgramaParceiros() {
   );
 }
 
-function ParceiroLeadForm() {
+function EmbaixadorLeadForm() {
   const { user, profile } = useAuth()
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [isLoading, setIsLoading] = useState(false)
@@ -451,7 +440,7 @@ function ParceiroLeadForm() {
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-black mb-4 uppercase tracking-wider">
-            <Briefcase className="w-3 h-3" /> Cadastro de Parceiro
+            <Briefcase className="w-3 h-3" /> Cadastro de Embaixador
           </div>
           <h2 className="text-3xl md:text-5xl font-black text-white mb-4">
             Comece a <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-yellow-400">ganhar hoje</span>
@@ -586,7 +575,7 @@ function ParceiroLeadForm() {
                   type="submit"
                   className="flex-1 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-900 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 group"
                 >
-                  Quero ser parceiro <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  Quero ser embaixador <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
             </form>
@@ -648,17 +637,17 @@ function ParceiroLeadForm() {
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 {isLoggedPartner ? (
                   <Link
-                    href="/dashboard-parceiro"
+                    href="/embaixador/dashboard"
                     className="flex-1 inline-flex items-center justify-center gap-2 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold transition"
                   >
                     Acessar meu dashboard <ArrowRight className="w-4 h-4" />
                   </Link>
                 ) : (
                   <Link
-                    href="/cadastro-parceiro"
+                    href="/cadastro-embaixador"
                     className="flex-1 inline-flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-yellow-500 to-yellow-400 text-slate-900 rounded-xl font-bold hover:from-yellow-400 hover:to-yellow-300 transition"
                   >
-                    Criar conta de parceiro <ArrowRight className="w-4 h-4" />
+                    Criar conta de embaixador <ArrowRight className="w-4 h-4" />
                   </Link>
                 )}
                 <a

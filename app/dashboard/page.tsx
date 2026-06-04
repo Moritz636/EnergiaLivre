@@ -25,7 +25,7 @@ export default function DashboardPage() {
       if (tipo === 'gerador') {
         router.replace('/dashboard-gerador');
       } else if (tipo === 'parceiro') {
-        router.replace('/dashboard-parceiro');
+        router.replace('/embaixador/dashboard');
       } else {
         router.replace('/dashboard-consumidor');
       }

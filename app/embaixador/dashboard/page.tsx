@@ -23,7 +23,7 @@ interface Metrics {
 
 const META_MENSAL = 20
 
-export default function DashboardParceiroPage() {
+export default function DashboardEmbaixadorPage() {
   const { user, profile, loading, logout } = useAuth();
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
@@ -101,7 +101,7 @@ export default function DashboardParceiroPage() {
           createdAt: (profile as Profile | null)?.created_at ?? null,
         })
       } catch (err) {
-        console.error('Erro ao carregar dashboard do parceiro:', err)
+        console.error('Erro ao carregar dashboard do embaixador:', err)
       } finally {
         setLoadingMetrics(false)
       }
@@ -155,13 +155,13 @@ export default function DashboardParceiroPage() {
             </div>
             <span className="text-xl font-black text-white">ENERGIA<span className="text-emerald-500">LIVRE</span></span>
             <div className="ml-3 px-2 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-[9px] font-black text-yellow-400 uppercase tracking-wider">
-              Parceiro
+              Embaixador
             </div>
           </div>
 
           <div className="flex items-center gap-4">
             <span className="text-sm text-slate-400 hidden sm:block">
-              Olá, <span className="text-white font-medium">{profile?.nome || 'Parceiro'}</span>
+              Olá, <span className="text-white font-medium">{profile?.nome || 'Embaixador'}</span>
             </span>
             <Link
               href="/comissoes"
@@ -185,7 +185,7 @@ export default function DashboardParceiroPage() {
           <div>
             <div className="flex items-center gap-3 mb-2">
               <Handshake className="w-6 h-6 text-yellow-400" />
-              <h1 className="text-3xl md:text-4xl font-black text-white">Painel do Parceiro</h1>
+              <h1 className="text-3xl md:text-4xl font-black text-white">Painel do Embaixador</h1>
             </div>
             <p className="text-slate-400">
               {profile?.cidade && profile?.estado
@@ -194,7 +194,7 @@ export default function DashboardParceiroPage() {
             </p>
           </div>
           <Link
-            href="/parceiros#simulador"
+            href="/embaixador#simulador"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-yellow-500 text-slate-900 rounded-xl font-bold hover:bg-yellow-400 transition"
           >
             <Sparkles className="w-4 h-4" /> Simular Ganhos
@@ -301,7 +301,7 @@ export default function DashboardParceiroPage() {
                 <Share2 className="w-4 h-4" /> WhatsApp
               </a>
               <Link
-                href="/parceiros"
+                href="/embaixador"
                 className="flex-1 inline-flex items-center justify-center gap-2 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-sm transition"
               >
                 <Sparkles className="w-4 h-4" /> Materiais
@@ -393,7 +393,7 @@ export default function DashboardParceiroPage() {
         {m.createdAt && (
           <div className="mt-6 flex items-center gap-2 text-xs text-slate-500">
             <Calendar className="w-3 h-3" />
-            Parceiro desde {new Date(m.createdAt).toLocaleDateString('pt-BR')}
+            Embaixador desde {new Date(m.createdAt).toLocaleDateString('pt-BR')}
             {m.leadsCount > 0 && (
               <>
                 <span className="mx-2">•</span>

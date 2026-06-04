@@ -25,7 +25,7 @@ const CANAL_OPTIONS = [
   { value: 'outro', label: 'Outro' },
 ] as const
 
-export default function CadastroParceiroPage() {
+export default function CadastroEmbaixadorPage() {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
@@ -121,7 +121,7 @@ export default function CadastroParceiroPage() {
   return (
     <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
       <div className="max-w-md w-full bg-white/5 border border-white/10 rounded-3xl p-8">
-        <Link href="/parceiros" className="text-slate-500 hover:text-yellow-400 inline-flex items-center gap-2 mb-8 transition">
+        <Link href="/embaixador" className="text-slate-500 hover:text-yellow-400 inline-flex items-center gap-2 mb-8 transition">
           <ArrowLeft className="w-4 h-4" /> Voltar para Embaixadores
         </Link>
 
