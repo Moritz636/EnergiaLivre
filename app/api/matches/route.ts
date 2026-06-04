@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 
     const { data: myLocation, error: locError } = await (supabase
       .from('user_locations')
-      .select('lat, lng')
+      .select('latitude, longitude')
       .eq('user_id', user.id)
       .single() as any)
 
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
     const candidates = await findCandidates(
       {
         userId: user.id,
-        origin: { lat: Number(myLocation.lat), lng: Number(myLocation.lng) },
+        origin: { lat: Number(myLocation.latitude), lng: Number(myLocation.longitude) },
         targetTipo,
         radiusKm: Number.isFinite(radiusKm) ? radiusKm : 50,
         limit: Number.isFinite(limit) ? Math.min(limit, 200) : 50,
