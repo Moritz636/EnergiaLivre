@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { getSupabase } from '@/lib/supabase/singleton';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -71,7 +71,7 @@ export default function CheckoutPage() {
   const [loadingPlano, setLoadingPlano] = useState<string | null>(null);
   const [error, setError] = useState('');
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = getSupabase();
 
   useEffect(() => {
     const checkUser = async () => {

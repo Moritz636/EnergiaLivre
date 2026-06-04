@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { getSupabase } from '@/lib/supabase/singleton';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -41,7 +41,7 @@ export default function AdminLeadsPage() {
   const [filter, setFilter] = useState('pendentes');
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = getSupabase();
 
   useEffect(() => {
     const checkAdmin = async () => {

@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { getSupabase } from '@/lib/supabase/singleton';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -9,7 +9,7 @@ export default function CompletarPerfilConsumidor() {
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({ nome: '', whatsapp: '', cidade: '', gastoMensal: '' });
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = getSupabase();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {

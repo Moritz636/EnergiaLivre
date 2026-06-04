@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { getSupabase } from '@/lib/supabase/singleton';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Zap, Sun, MapPin, Building, ShieldCheck, Loader2, CheckCircle2, Award } from 'lucide-react';
@@ -23,7 +23,7 @@ export default function CadastroGeradorPage() {
   });
 
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = getSupabase();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

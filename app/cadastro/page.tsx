@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { getSupabase } from '@/lib/supabase/singleton';
 import { useRouter } from 'next/navigation';
 import { CheckCircle, Loader2, Eye, EyeOff, Zap } from 'lucide-react';
 import Link from 'next/link';
@@ -11,22 +11,22 @@ export default function CadastroPage() {
   const [email, setEmail] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [cidade, setCidade] = useState('');
+  const [estado, setEstado] = useState('');
   const [password, setPassword] = useState('');
   const [tipo, setTipo] = useState<'consumidor' | 'gerador'>('consumidor');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = getSupabase();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    // Validações (Lei 27: Para dominar, primeiro submeta-se às regras)
     if (password.length < 6) {
       setError('A senha deve ter no mínimo 6 caracteres');
       setLoading(false);
@@ -34,7 +34,6 @@ export default function CadastroPage() {
     }
 
     try {
-      // 1. Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -44,7 +43,9 @@ export default function CadastroPage() {
             tipo,
             whatsapp,
             cidade,
+            estado,
           },
+          emailRedirectTo: `${window.location.origin}/login?cadastro=sucesso`,
         },
       });
 
@@ -59,38 +60,14 @@ export default function CadastroPage() {
       }
 
       if (authData.user) {
-        // 2. Criar perfil do usuário
-        await supabase.from('profiles').upsert({
-          id: authData.user.id,
-          email,
-          nome,
-          tipo,
-          whatsapp,
-          cidade,
-          role: 'user',
-        });
-
-        // 3. Criar lead para o admin gerenciar
-        await supabase.from('leads').insert({
-          user_id: authData.user.id,
-          nome,
-          email,
-          whatsapp,
-          cidade,
-          tipo,
-          status: 'pendente',
-        });
-
+        // O trigger handle_new_user() já cria profile + consumidor/gerador
+        // Aguardar propagação
+        await new Promise(r => setTimeout(r, 800));
         setSuccess(true);
 
-        // Redirecionar para dashboard após 2 segundos
         setTimeout(() => {
-          if (tipo === 'gerador') {
-            router.push('/dashboard-gerador');
-          } else {
-            router.push('/dashboard-consumidor');
-          }
-        }, 2000);
+          router.push('/login?cadastro=sucesso');
+        }, 2500);
       }
     } catch (err: any) {
       console.error('Erro no cadastro:', err);
@@ -106,7 +83,8 @@ export default function CadastroPage() {
         <div className="text-center bg-white/5 p-8 rounded-3xl border border-white/10 max-w-md">
           <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white mb-2">Cadastro Realizado!</h1>
-          <p className="text-slate-400">Redirecionando para seu dashboard...</p>
+          <p className="text-slate-400 mb-4">Verifique seu e-mail para confirmar a conta.</p>
+          <p className="text-slate-500 text-sm">Redirecionando para login...</p>
         </div>
       </div>
     );
@@ -148,14 +126,25 @@ export default function CadastroPage() {
             className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white placeholder:text-slate-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition"
             required
           />
-          <input
-            type="text"
-            placeholder="Cidade - UF"
-            value={cidade}
-            onChange={(e) => setCidade(e.target.value)}
-            className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white placeholder:text-slate-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition"
-            required
-          />
+          <div className="grid grid-cols-3 gap-2">
+            <input
+              type="text"
+              placeholder="Cidade"
+              value={cidade}
+              onChange={(e) => setCidade(e.target.value)}
+              className="col-span-2 w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white placeholder:text-slate-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition"
+              required
+            />
+            <input
+              type="text"
+              placeholder="UF"
+              maxLength={2}
+              value={estado}
+              onChange={(e) => setEstado(e.target.value.toUpperCase())}
+              className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 px-4 text-white placeholder:text-slate-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition"
+              required
+            />
+          </div>
           <div className="relative">
             <input
               type={showPassword ? 'text' : 'password'}

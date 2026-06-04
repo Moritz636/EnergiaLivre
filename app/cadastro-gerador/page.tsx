@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { getSupabase } from '@/lib/supabase/singleton';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Zap, Loader2, ShieldCheck, Sun, Building, CheckCircle2 } from 'lucide-react';
@@ -42,7 +42,7 @@ export default function CadastroGeradorPage() {
   });
 
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = getSupabase();
 
   const handleConcessionariaChange = (value: string) => {
     const selected = CONCESSIONARIAS.find(c => c.nome === value);
@@ -69,32 +69,41 @@ export default function CadastroGeradorPage() {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
-        options: { 
-          data: { 
-            nome: formData.nome, 
-            tipo: 'gerador' 
-          } 
+        options: {
+          data: {
+            nome: formData.nome,
+            tipo: 'gerador',
+            whatsapp: formData.whatsapp,
+            cidade: formData.cidade,
+            estado: formData.estado,
+            nome_usina: formData.nome_usina,
+            capacidade_kwp: parseFloat(formData.capacidade) || 0,
+            excedente_mensal_kwh: parseFloat(formData.excedente) || 0,
+            concessionaria: formData.concessionaria,
+          },
+          emailRedirectTo: `${window.location.origin}/login?cadastro=sucesso`,
         }
       });
 
       if (authError) throw new Error(authError.message);
 
       if (authData.user) {
-        // 2. Salvar lead
+        // 2. Criar lead (separado do auth para evitar conflito com trigger)
         await supabase.from('leads').insert({
+          user_id: authData.user.id,
           nome: formData.nome,
           email: formData.email,
           whatsapp: formData.whatsapp,
           tipo: 'gerador',
+          capacidade_kwp: parseFloat(formData.capacidade) || 0,
           concessionaria: formData.concessionaria,
-          capacidade: formData.capacidade,
           estado: formData.estado,
           cidade: formData.cidade,
           status: 'pendente'
         });
 
-        // 3. Salvar gerador
-        await supabase.from('geradores').insert({
+        // 3. Criar gerador (o trigger pode ter criado - usar upsert)
+        await supabase.from('geradores').upsert({
           id: authData.user.id,
           nome_usina: formData.nome_usina,
           capacidade_kwp: parseFloat(formData.capacidade) || 0,
@@ -103,10 +112,10 @@ export default function CadastroGeradorPage() {
           cidade: formData.cidade,
           estado: formData.estado,
           status: 'pendente'
-        });
+        }, { onConflict: 'id' });
 
         setSuccess(true);
-        setTimeout(() => router.push('/'), 3000);
+        setTimeout(() => router.push('/login?cadastro=sucesso'), 3000);
       }
     } catch (err: any) {
       setError(err.message);

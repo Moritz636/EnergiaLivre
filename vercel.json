@@ -1,8 +1,31 @@
 {
   "version": 2,
+  "framework": "nextjs",
+  "regions": ["gru1"],
   "buildCommand": "next build",
   "devCommand": "next dev",
   "installCommand": "npm install",
-  "framework": "nextjs",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "functions": {
+    "app/api/stripe/webhook/route.ts": {
+      "maxDuration": 30,
+      "memory": 512
+    },
+    "app/api/stripe/checkout/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "app/api/assinaturas/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "app/api/comissoes/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "app/api/admin/stats/route.ts": {
+      "maxDuration": 15,
+      "memory": 512
+    }
+  }
 }

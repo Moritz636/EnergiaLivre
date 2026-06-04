@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { getSupabase } from '@/lib/supabase/singleton'
 import { useRouter } from 'next/navigation'
 import { Shield, Loader2 } from 'lucide-react'
 
@@ -11,7 +11,7 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = getSupabase()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()

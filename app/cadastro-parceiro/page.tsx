@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { getSupabase } from '@/lib/supabase/singleton';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, CheckCircle, User } from 'lucide-react';
 import Link from 'next/link';
@@ -17,7 +17,7 @@ export default function CadastroParceiroPage() {
   const [success, setSuccess] = useState(false);
   
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = getSupabase();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

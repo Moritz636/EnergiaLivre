@@ -45,24 +45,33 @@ export async function POST(request: NextRequest) {
         const userId = subscription.metadata?.userId;
 
         if (userId) {
-          await supabase
+          // Verificar se já existe para evitar duplicação
+          const { data: existing } = await supabase
             .from('assinaturas')
-            .insert({
-              user_id: userId,
-              stripe_subscription_id: subscription.id,
-              stripe_price_id: subscription.items.data[0].price.id,
-              nome_plano: subscription.metadata?.planoNome || 'Plano',
-              valor_mensal: (subscription.items.data[0].price.unit_amount || 0) / 100,
-              kwh_mensais: parseInt(subscription.metadata?.kwh || '300'),
-              economia_percentual: parseInt(subscription.metadata?.economia || '25'),
-              status: subscription.status,
-              current_period_start: new Date(subscription.current_period_start * 1000),
-              current_period_end: new Date(subscription.current_period_end * 1000),
-              cancel_at_period_end: subscription.cancel_at_period_end,
-            });
+            .select('id')
+            .eq('stripe_subscription_id', subscription.id)
+            .single();
 
-          // Criar comissão para embaixador (se houver)
-          await criarComissaoCadastro(supabase, userId, subscription);
+          if (!existing) {
+            await supabase
+              .from('assinaturas')
+              .insert({
+                user_id: userId,
+                stripe_subscription_id: subscription.id,
+                stripe_price_id: subscription.items.data[0].price.id,
+                nome_plano: subscription.metadata?.planoNome || 'Plano',
+                valor_mensal: (subscription.items.data[0].price.unit_amount || 0) / 100,
+                kwh_mensais: parseInt(subscription.metadata?.kwh || '300'),
+                economia_percentual: parseInt(subscription.metadata?.economia || '25'),
+                status: subscription.status,
+                current_period_start: new Date(subscription.current_period_start * 1000),
+                current_period_end: new Date(subscription.current_period_end * 1000),
+                cancel_at_period_end: subscription.cancel_at_period_end,
+              });
+
+            // Criar comissão para embaixador (se houver)
+            await criarComissaoCadastro(supabase, userId, subscription);
+          }
         }
         break;
       }
@@ -75,6 +84,18 @@ export async function POST(request: NextRequest) {
         const subscriptionId = invoice.subscription as string;
 
         if (subscriptionId) {
+          // Buscar user_id a partir da assinatura
+          const { data: assinatura } = await supabase
+            .from('assinaturas')
+            .select('user_id')
+            .eq('stripe_subscription_id', subscriptionId)
+            .single();
+
+          if (!assinatura) {
+            console.error(`Assinatura ${subscriptionId} não encontrada`);
+            break;
+          }
+
           // Atualizar status da assinatura
           await supabase
             .from('assinaturas')
@@ -85,11 +106,11 @@ export async function POST(request: NextRequest) {
             })
             .eq('stripe_subscription_id', subscriptionId);
 
-          // Registrar pagamento
+          // Registrar pagamento com UUID correto
           await supabase
             .from('pagamentos')
             .insert({
-              user_id: invoice.customer_email,
+              user_id: assinatura.user_id,
               tipo_pagamento: 'assinatura',
               valor: invoice.amount_paid / 100,
               status: 'succeeded',
@@ -112,23 +133,29 @@ export async function POST(request: NextRequest) {
         const subscriptionId = invoice.subscription as string;
 
         if (subscriptionId) {
-          await supabase
+          const { data: assinatura } = await supabase
             .from('assinaturas')
-            .update({
-              status: 'past_due',
-            })
-            .eq('stripe_subscription_id', subscriptionId);
+            .select('user_id')
+            .eq('stripe_subscription_id', subscriptionId)
+            .single();
 
-          await supabase
-            .from('pagamentos')
-            .insert({
-              user_id: invoice.customer_email,
-              tipo_pagamento: 'assinatura',
-              valor: invoice.amount_due / 100,
-              status: 'failed',
-              stripe_payment_intent: invoice.payment_intent as string,
-              description: 'Pagamento falhou',
-            });
+          if (assinatura) {
+            await supabase
+              .from('assinaturas')
+              .update({ status: 'past_due' })
+              .eq('stripe_subscription_id', subscriptionId);
+
+            await supabase
+              .from('pagamentos')
+              .insert({
+                user_id: assinatura.user_id,
+                tipo_pagamento: 'assinatura',
+                valor: invoice.amount_due / 100,
+                status: 'failed',
+                stripe_payment_intent: invoice.payment_intent as string,
+                description: 'Pagamento falhou',
+              });
+          }
         }
         break;
       }
@@ -182,18 +209,30 @@ export async function POST(request: NextRequest) {
       // ============================================
       case 'charge.refunded': {
         const charge = event.data.object as Stripe.Charge;
+        const customerId = charge.customer as string;
 
-        await supabase
-          .from('pagamentos')
-          .insert({
-            user_id: charge.receipt_email,
-            tipo_pagamento: 'assinatura',
-            valor: charge.amount_refunded / 100,
-            status: 'refunded',
-            stripe_charge_id: charge.id,
-            description: 'Reembolso processado',
-            processed_at: new Date().toISOString(),
-          });
+        if (customerId) {
+          // Buscar user_id via assinatura
+          const { data: assinatura } = await supabase
+            .from('assinaturas')
+            .select('user_id')
+            .eq('stripe_subscription_id', charge.invoice as string)
+            .single();
+
+          if (assinatura) {
+            await supabase
+              .from('pagamentos')
+              .insert({
+                user_id: assinatura.user_id,
+                tipo_pagamento: 'assinatura',
+                valor: charge.amount_refunded / 100,
+                status: 'refunded',
+                stripe_charge_id: charge.id,
+                description: 'Reembolso processado',
+                processed_at: new Date().toISOString(),
+              });
+          }
+        }
         break;
       }
 
@@ -242,7 +281,7 @@ async function criarComissaoCadastro(
         tipo_comissao: 'cadastro',
         status_pagamento: 'pago',
         data_pagamento: new Date().toISOString(),
-        mes_referencia: new Date().getMonth() + 1,
+        mes_referencia: new Date().toISOString().slice(0, 7) + '-01',
         ano_referencia: new Date().getFullYear(),
       });
   }
@@ -282,7 +321,7 @@ async function criarComissaoRecorrente(
         tipo_comissao: 'recorrente',
         status_pagamento: 'pago',
         data_pagamento: new Date().toISOString(),
-        mes_referencia: new Date().getMonth() + 1,
+        mes_referencia: new Date().toISOString().slice(0, 7) + '-01',
         ano_referencia: new Date().getFullYear(),
       });
   }

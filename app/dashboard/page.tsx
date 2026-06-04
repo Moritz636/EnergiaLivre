@@ -1,11 +1,11 @@
 'use client';
 import { useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { getSupabase } from '@/lib/supabase/singleton';
 import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = getSupabase();
 
   useEffect(() => {
     const checkUser = async () => {

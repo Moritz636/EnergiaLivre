@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAdminAuth } from '@/app/hooks/useAuth';
-import { createClient } from '@/lib/supabase/client';
+import { getSupabase } from '@/lib/supabase/singleton';
 import {
   Users,
   TrendingUp,
@@ -63,7 +63,7 @@ export default function AdminDashboardPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [loadingStats, setLoadingStats] = useState(true);
   const [selectedTab, setSelectedTab] = useState('overview');
-  const supabase = createClient();
+  const supabase = getSupabase();
 
   useEffect(() => {
     if (isAdmin) {

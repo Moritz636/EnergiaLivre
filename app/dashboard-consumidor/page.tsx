@@ -1,37 +1,116 @@
 'use client';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/app/hooks/useAuth';
-import { LogOut, Zap, TrendingDown, DollarSign, Calendar, Award, Crown, ArrowRight, CheckCircle2, Leaf, Home, PiggyBank, BarChart3, ShieldCheck, Sparkles, Flame, Globe } from 'lucide-react';
+import { getSupabase } from '@/lib/supabase/singleton';
+import { LogOut, Zap, TrendingDown, DollarSign, Calendar, Award, Crown, ArrowRight, CheckCircle2, Leaf, Home, PiggyBank, BarChart3, ShieldCheck, Sparkles, Flame, Globe, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+
+interface Metrics {
+  economiaMensal: number;
+  economiaAnual: number;
+  kwhEconomizados: number;
+  co2Evitado: number;
+  arvoresSalvas: number;
+  faturaAtual: number;
+  faturaComDesconto: number;
+  percentualEconomia: number;
+  diasConectado: number;
+  planoAtivo: boolean;
+  nomePlano: string;
+  proximaFatura: string | null;
+}
 
 export default function DashboardConsumidorPage() {
   const { user, profile, loading, logout } = useAuth();
-  
-  // Dados de economia (simulados - virão do banco em breve)
-  const economiaMensal = 187;
-  const economiaAnual = 2244;
-  const kwhEconomizados = 584;
-  const co2Evitado = 412;
-  const faturaAtual = 589;
-  const faturaComDesconto = 402;
-  const percentualEconomia = 32;
-  const diasConectado = 47;
-  const arvoresSalvas = 18;
+  const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [loadingMetrics, setLoadingMetrics] = useState(true);
+  const supabase = getSupabase();
 
-  if (loading) {
+  useEffect(() => {
+    if (!user) return;
+
+    async function loadMetrics() {
+      try {
+        // 1. Buscar dados do consumidor
+        const { data: consumidor } = await supabase
+          .from('consumidores')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        // 2. Buscar assinatura ativa
+        const { data: assinatura } = await supabase
+          .from('assinaturas')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .maybeSingle();
+
+        // 3. Calcular métricas
+        const kwh = assinatura?.kwh_mensais || 0;
+        const valor = assinatura?.valor_mensal || 0;
+        const economiaPercent = assinatura?.economia_percentual || 25;
+        const faturaAtual = kwh * 0.95; // Tarifa média
+        const economia = faturaAtual * (economiaPercent / 100);
+        const faturaFinal = faturaAtual - economia;
+        const diasConectado = consumidor?.created_at
+          ? Math.floor((Date.now() - new Date(consumidor.created_at).getTime()) / 86400000)
+          : 0;
+
+        setMetrics({
+          economiaMensal: Math.round(economia),
+          economiaAnual: Math.round(economia * 12),
+          kwhEconomizados: kwh,
+          co2Evitado: Math.round(kwh * 0.0817),
+          arvoresSalvas: Math.round(kwh * 0.0817 / 22),
+          faturaAtual: Math.round(faturaAtual),
+          faturaComDesconto: Math.round(faturaFinal),
+          percentualEconomia: economiaPercent,
+          diasConectado,
+          planoAtivo: !!assinatura,
+          nomePlano: assinatura?.nome_plano || 'Sem plano',
+          proximaFatura: assinatura?.current_period_end || null,
+        });
+      } catch (err) {
+        console.error('Erro ao carregar métricas:', err);
+      } finally {
+        setLoadingMetrics(false);
+      }
+    }
+
+    loadMetrics();
+  }, [user, supabase]);
+
+  if (loading || loadingMetrics) {
     return (
       <div className="min-h-screen bg-[#020617] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
       </div>
     );
   }
 
   if (!user) {
-    return null; // Será redirecionado pelo hook
+    return null;
   }
+
+  const m = metrics || {
+    economiaMensal: 0,
+    economiaAnual: 0,
+    kwhEconomizados: 0,
+    co2Evitado: 0,
+    arvoresSalvas: 0,
+    faturaAtual: 0,
+    faturaComDesconto: 0,
+    percentualEconomia: 0,
+    diasConectado: 0,
+    planoAtivo: false,
+    nomePlano: 'Sem plano',
+    proximaFatura: null,
+  };
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 font-sans overflow-x-hidden">
-      
+
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/5 via-transparent to-transparent -z-20" />
       <div className="fixed bottom-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] -z-10" />
       <div className="fixed top-40 right-0 w-80 h-80 bg-yellow-500/5 rounded-full blur-[100px] -z-10" />
@@ -47,16 +126,14 @@ export default function DashboardConsumidorPage() {
               Consumidor
             </div>
           </div>
-          
+
           <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2 text-sm text-slate-400">
-              <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-400" /> Protegido</span>
-              <span className="w-1 h-1 rounded-full bg-slate-700" />
-              <span>{user?.email?.split('@')[0]}</span>
-            </div>
+            <span className="text-sm text-slate-400 hidden sm:block">
+              Olá, <span className="text-white font-medium">{profile?.nome || 'Usuário'}</span>
+            </span>
             <button
               onClick={logout}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 text-sm hover:bg-red-500/20 transition-all"
+              className="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-white transition"
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline">Sair</span>
@@ -65,128 +142,146 @@ export default function DashboardConsumidorPage() {
         </div>
       </nav>
 
-      <div className="pt-24 px-6 pb-20">
-        <div className="max-w-7xl mx-auto">
-          
-          <div className="mb-10">
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Crown className="w-5 h-5 text-yellow-400" />
-                  <span className="text-xs text-yellow-400/80 uppercase tracking-wider">Cliente EnergiaLivre • Mês {diasConectado} dias</span>
-                </div>
-                <h1 className="text-3xl md:text-4xl font-bold text-white">
-                  Olá, <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-yellow-400">{profile?.nome || user?.email?.split('@')[0]}</span>
-                </h1>
-                <p className="text-slate-400 mt-2">
-                  Você já economizou <span className="text-emerald-400 font-bold">R$ {economiaMensal}</span> neste mês. Continue assim!
-                </p>
-              </div>
+      <main className="pt-24 pb-12 px-6 max-w-7xl mx-auto">
+
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-black text-white mb-2">
+            Sua economia em tempo real
+          </h1>
+          <p className="text-slate-400">
+            {m.planoAtivo
+              ? `Plano ${m.nomePlano} ativo. Você está economizando ${m.percentualEconomia}% na sua conta.`
+              : 'Ative um plano para começar a economizar com energia solar.'}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/5 border border-emerald-500/30">
+            <div className="flex items-center gap-2 text-emerald-400 mb-2">
+              <DollarSign className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase">Economia Mensal</span>
             </div>
+            <p className="text-3xl font-black text-white">
+              R$ {m.economiaMensal.toLocaleString('pt-BR')}
+            </p>
+            <p className="text-xs text-emerald-300 mt-1">↓ {m.percentualEconomia}% na fatura</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-            <div className="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-green-500/5 border border-emerald-500/30 group hover:scale-105 transition-all">
-              <div className="flex items-center justify-between mb-3">
-                <DollarSign className="w-8 h-8 text-emerald-400" />
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">Economia real</span>
-              </div>
-              <div className="text-3xl font-bold text-white">R$ {economiaMensal}</div>
-              <p className="text-slate-400 text-sm">economizados este mês</p>
-              <div className="mt-3 text-[10px] text-emerald-400/80 flex items-center gap-1">
-                <TrendingDown className="w-3 h-3" /> {economiaAnual} em 12 meses
-              </div>
+          <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+            <div className="flex items-center gap-2 text-yellow-400 mb-2">
+              <Zap className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase">kWh Economizados</span>
             </div>
-
-            <div className="p-6 rounded-2xl bg-white/5 border border-white/10 group hover:scale-105 transition-all">
-              <div className="flex items-center justify-between mb-3">
-                <Zap className="w-8 h-8 text-yellow-400" />
-              </div>
-              <div className="text-3xl font-bold text-white">{kwhEconomizados} kWh</div>
-              <p className="text-slate-400 text-sm">energia limpa consumida</p>
-              <div className="mt-3 text-[10px] text-yellow-400/80 flex items-center gap-1">
-                <Leaf className="w-3 h-3" /> {co2Evitado} kg CO₂ evitados
-              </div>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-white/5 border border-white/10 group hover:scale-105 transition-all">
-              <div className="flex items-center justify-between mb-3">
-                <PiggyBank className="w-8 h-8 text-emerald-400" />
-              </div>
-              <div className="text-3xl font-bold text-white">{percentualEconomia}%</div>
-              <p className="text-slate-400 text-sm">de redução na conta</p>
-              <div className="mt-3 text-[10px] text-emerald-400/80">
-                vs tarifa convencional
-              </div>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-white/5 border border-white/10 group hover:scale-105 transition-all">
-              <div className="flex items-center justify-between mb-3">
-                <Leaf className="w-8 h-8 text-green-400" />
-              </div>
-              <div className="text-3xl font-bold text-white">{arvoresSalvas}</div>
-              <p className="text-slate-400 text-sm">árvores preservadas*</p>
-              <div className="mt-3 text-[10px] text-slate-500">
-                *equivalente ao CO₂ evitado
-              </div>
-            </div>
+            <p className="text-3xl font-black text-white">
+              {m.kwhEconomizados.toLocaleString('pt-BR')}
+            </p>
+            <p className="text-xs text-slate-400 mt-1">por mês</p>
           </div>
 
-          {/* Seção de Assinatura - Stripe Checkout */}
-          <div className="mt-8 p-6 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-green-500/5 border border-emerald-500/30">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div>
-                <h3 className="text-xl font-bold text-white">🚀 Economize ainda mais!</h3>
-                <p className="text-slate-400 text-sm mt-1">
-                  Assine um dos planos e maximize sua economia na conta de luz
-                </p>
-              </div>
-              <Link 
-                href="/checkout" 
-                className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-900 rounded-xl font-bold hover:from-emerald-400 hover:to-emerald-500 transition-all transform hover:scale-105 shadow-lg flex items-center gap-2"
-              >
-                Assinar Agora <ArrowRight className="w-4 h-4" />
-              </Link>
+          <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+            <div className="flex items-center gap-2 text-green-400 mb-2">
+              <Leaf className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase">CO₂ Evitado</span>
             </div>
+            <p className="text-3xl font-black text-white">
+              {m.co2Evitado.toLocaleString('pt-BR')}
+            </p>
+            <p className="text-xs text-slate-400 mt-1">kg por mês</p>
           </div>
 
-          <div className="mb-10 p-8 rounded-3xl bg-gradient-to-r from-slate-800/50 to-slate-900/50 border border-white/10 mt-8">
-            <div className="flex items-center gap-2 mb-6">
-              <Home className="w-6 h-6 text-emerald-400" />
-              <h2 className="text-2xl font-bold text-white">Sua conta de luz</h2>
+          <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+            <div className="flex items-center gap-2 text-emerald-400 mb-2">
+              <Globe className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase">Árvores Salvas</span>
             </div>
-            
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/20">
-                <p className="text-slate-400 text-sm mb-2">Sem energia solar</p>
-                <p className="text-3xl font-bold text-red-400">R$ {faturaAtual}</p>
-                <div className="mt-2 h-2 bg-red-500/20 rounded-full overflow-hidden">
-                  <div className="w-full h-full bg-red-500 rounded-full" style={{ width: '100%' }} />
-                </div>
-                <p className="text-xs text-slate-500 mt-3">Tarifa convencional</p>
-              </div>
-              
-              <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/30 relative">
-                <div className="absolute -top-3 -right-3 px-2 py-1 rounded-full bg-emerald-500 text-slate-900 text-[9px] font-bold">
-                  {percentualEconomia}% OFF
-                </div>
-                <p className="text-slate-400 text-sm mb-2">Com EnergiaLivre</p>
-                <p className="text-3xl font-bold text-emerald-400">R$ {faturaComDesconto}</p>
-                <div className="mt-2 h-2 bg-emerald-500/20 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${100 - percentualEconomia}%` }} />
-                </div>
-                <p className="text-xs text-emerald-400/80 mt-3">Economia de R$ {economiaMensal} este mês</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-10 text-center">
-            <Link href="/" className="text-slate-500 text-sm hover:text-emerald-400 transition">
-              ← Voltar para a página inicial
-            </Link>
+            <p className="text-3xl font-black text-white">
+              {m.arvoresSalvas}
+            </p>
+            <p className="text-xs text-slate-400 mt-1">equivalentes</p>
           </div>
         </div>
-      </div>
+
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-emerald-400" />
+              Comparativo de Fatura
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 rounded-xl bg-red-500/5 border border-red-500/20">
+                <span className="text-slate-400 text-sm">Sem EnergiaLivre</span>
+                <span className="text-red-400 font-bold">R$ {m.faturaAtual.toLocaleString('pt-BR')}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+                <span className="text-slate-400 text-sm">Com EnergiaLivre</span>
+                <span className="text-emerald-400 font-bold">R$ {m.faturaComDesconto.toLocaleString('pt-BR')}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-xl bg-yellow-500/5 border border-yellow-500/20">
+                <span className="text-slate-400 text-sm">Economia anual estimada</span>
+                <span className="text-yellow-400 font-bold">R$ {m.economiaAnual.toLocaleString('pt-BR')}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <Crown className="w-5 h-5 text-yellow-400" />
+              Seu Plano
+            </h3>
+            {m.planoAtivo ? (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400 text-sm">Plano</span>
+                  <span className="text-white font-bold">{m.nomePlano}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400 text-sm">Status</span>
+                  <span className="px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold">Ativo</span>
+                </div>
+                {m.proximaFatura && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 text-sm">Próxima fatura</span>
+                    <span className="text-white text-sm">
+                      {new Date(m.proximaFatura).toLocaleDateString('pt-BR')}
+                    </span>
+                  </div>
+                )}
+                <Link
+                  href="/checkout"
+                  className="w-full mt-3 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition flex items-center justify-center gap-2"
+                >
+                  Mudar Plano <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <ShieldCheck className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
+                <p className="text-slate-300 mb-4">Você ainda não tem um plano ativo</p>
+                <Link
+                  href="/checkout"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 text-slate-900 rounded-xl font-bold hover:bg-emerald-400 transition"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Escolher Plano
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="p-6 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-yellow-500/10 border border-emerald-500/20">
+          <div className="flex items-center gap-3 mb-3">
+            <Award className="w-6 h-6 text-emerald-400" />
+            <h3 className="text-lg font-bold text-white">Continue assim!</h3>
+          </div>
+          <p className="text-slate-300">
+            Você está conectado há <strong className="text-emerald-400">{m.diasConectado} dias</strong> e já
+            evitou a emissão de <strong className="text-emerald-400">{m.co2Evitado * m.diasConectado}kg de CO₂</strong>.
+            Cada dia conta para um planeta mais limpo!
+          </p>
+        </div>
+
+      </main>
     </div>
   );
 }

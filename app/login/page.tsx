@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { getSupabase } from '@/lib/supabase/singleton';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock, Loader2, Eye, EyeOff, Zap } from 'lucide-react';
 import Link from 'next/link';
@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [redirect, setRedirect] = useState('');
   
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = getSupabase();
 
   // Obter redirecionamento da URL
   useEffect(() => {
