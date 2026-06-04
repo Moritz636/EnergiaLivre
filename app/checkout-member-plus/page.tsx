@@ -17,13 +17,11 @@ import {
   Users,
   Clock,
 } from 'lucide-react';
-import { STRIPE_PRICE_IDS } from '@/lib/stripe-prices';
+import { STRIPE_PAYMENT_LINKS } from '@/lib/stripe-prices';
 import { getMemberPlusStatus } from '@/lib/member-plus';
 
 export default function CheckoutMemberPlusPage() {
   const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [alreadyActive, setAlreadyActive] = useState(false);
   const [daysRemaining, setDaysRemaining] = useState<number>(0);
   const router = useRouter();
@@ -47,37 +45,8 @@ export default function CheckoutMemberPlusPage() {
     checkUser();
   }, []);
 
-  const handleAssinar = async () => {
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          priceId: STRIPE_PRICE_IDS.MEMBER_PLUS,
-          planoTipo: 'member_plus',
-          planoCodigo: 'member_plus',
-          planoNome: 'Member Plus',
-          successUrl: `${window.location.origin}/dashboard/match?success=true`,
-          cancelUrl: `${window.location.origin}/dashboard/match?canceled=true`,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        setError('Erro ao criar sessão de pagamento. Tente novamente.');
-      }
-    } catch (err) {
-      console.error('Erro ao criar checkout:', err);
-      setError('Erro ao iniciar assinatura. Tente novamente.');
-    } finally {
-      setLoading(false);
-    }
+  const handleAssinar = () => {
+    window.location.href = STRIPE_PAYMENT_LINKS.MEMBER_PLUS;
   };
 
   if (!user) {
@@ -173,18 +142,12 @@ export default function CheckoutMemberPlusPage() {
                 </li>
               </ul>
 
-              {error && (
-                <p className="text-red-400 text-sm mb-4">{error}</p>
-              )}
-
               <button
                 onClick={handleAssinar}
-                disabled={loading || alreadyActive}
+                disabled={alreadyActive}
                 className="w-full max-w-md mx-auto py-4 rounded-xl font-bold text-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-slate-900 hover:from-yellow-400 hover:to-amber-400 transition-all shadow-lg shadow-yellow-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : alreadyActive ? (
+                {alreadyActive ? (
                   'Você já é Member Plus'
                 ) : (
                   <>

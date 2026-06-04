@@ -3,43 +3,46 @@ import { useState, useEffect } from 'react';
 import { getSupabase } from '@/lib/supabase/singleton';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  ArrowLeft, 
-  Zap, 
-  ShieldCheck, 
-  Loader2, 
-  Crown, 
+import {
+  ArrowLeft,
+  Zap,
+  ShieldCheck,
+  Loader2,
+  Crown,
   Sparkles,
   CheckCircle2,
   Star,
   TrendingUp,
   Clock
 } from 'lucide-react';
+import { STRIPE_PAYMENT_LINKS } from '@/lib/stripe-prices';
 
 const planos = [
   {
-    id: 'price_basico',
+    id: 'basico',
     nome: 'Plano Básico',
     kWh: 300,
     preco: 89.90,
     precoFormatado: 'R$ 89,90',
     destaque: false,
     economia: 25,
+    paymentLink: STRIPE_PAYMENT_LINKS.CONSUMIDOR_BASICO,
     beneficios: [
       '300 kWh de energia limpa/mês',
       'Economia de até 25% na conta',
       'Sem fidelidade',
-      'Suporte优先'
+      'Suporte por WhatsApp'
     ]
   },
   {
-    id: 'price_familiar',
+    id: 'familiar',
     nome: 'Plano Familiar',
     kWh: 500,
     preco: 149.90,
     precoFormatado: 'R$ 149,90',
     destaque: true,
     economia: 32,
+    paymentLink: STRIPE_PAYMENT_LINKS.CONSUMIDOR_FAMILIAR,
     beneficios: [
       '500 kWh de energia limpa/mês',
       'Economia de até 32% na conta',
@@ -48,13 +51,14 @@ const planos = [
     ]
   },
   {
-    id: 'price_premium',
+    id: 'premium',
     nome: 'Plano Premium',
     kWh: 1000,
     preco: 289.90,
     precoFormatado: 'R$ 289,90',
     destaque: false,
     economia: 38,
+    paymentLink: STRIPE_PAYMENT_LINKS.CONSUMIDOR_PREMIUM,
     beneficios: [
       '1000 kWh de energia limpa/mês',
       'Economia de até 38% na conta',
@@ -66,10 +70,8 @@ const planos = [
 
 export default function CheckoutPage() {
   const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
   const [selectedPlano, setSelectedPlano] = useState(planos[1]);
   const [loadingPlano, setLoadingPlano] = useState<string | null>(null);
-  const [error, setError] = useState('');
   const router = useRouter();
   const supabase = getSupabase();
 
@@ -85,37 +87,9 @@ export default function CheckoutPage() {
     checkUser();
   }, []);
 
-  const handleAssinar = async (plano: typeof planos[0]) => {
+  const handleAssinar = (plano: typeof planos[0]) => {
     setLoadingPlano(plano.id);
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          priceId: plano.id,
-          customerEmail: user?.email,
-          successUrl: `${window.location.origin}/dashboard-consumidor?success=true`,
-          cancelUrl: `${window.location.origin}/checkout?canceled=true`
-        })
-      });
-
-      const data = await response.json();
-      
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        setError('Erro ao criar sessão de pagamento. Tente novamente.');
-      }
-    } catch (err) {
-      console.error('Erro ao criar checkout:', err);
-      setError('Erro ao iniciar assinatura. Tente novamente.');
-    } finally {
-      setLoading(false);
-      setLoadingPlano(null);
-    }
+    window.location.href = plano.paymentLink;
   };
 
   return (
@@ -209,12 +183,6 @@ export default function CheckoutPage() {
               </div>
             ))}
           </div>
-
-          {error && (
-            <div className="text-center mb-6">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
 
           <div className="mb-12 p-6 rounded-2xl bg-white/5 border border-white/10">
             <h3 className="text-lg font-bold text-white text-center mb-6">💰 Comparativo de Economia Mensal</h3>

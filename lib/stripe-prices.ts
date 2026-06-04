@@ -26,6 +26,36 @@ export const STRIPE_PRICE_IDS = {
 
 export type StripePriceId = (typeof STRIPE_PRICE_IDS)[keyof typeof STRIPE_PRICE_IDS]
 
+// ============================================
+// STRIPE PAYMENT LINKS - CHECKOUTS HOSPEDADOS
+// ============================================
+// Stripe Payment Links (buy.stripe.com) são páginas de checkout prontas.
+// O frontend redireciona o usuário diretamente para o link.
+// O webhook do Stripe recebe os eventos de assinatura automaticamente.
+//
+// Vantagens:
+//   - Sem necessidade de criar sessão via API
+//   - Stripe cuida de toda a UX do checkout
+//   - Menos código, menos manutenção
+// ============================================
+
+export const STRIPE_PAYMENT_LINKS = {
+  // Planos de Consumidor
+  CONSUMIDOR_BASICO: 'https://buy.stripe.com/8x228r42lcud0Wh9FP7Vm00',
+  CONSUMIDOR_FAMILIAR: 'https://buy.stripe.com/8x25kD7ex51LeN719j7Vm01',
+  CONSUMIDOR_PREMIUM: 'https://buy.stripe.com/dRmfZhgP7eCl5cxcS17Vm04',
+
+  // Planos de Gerador
+  GERADOR_STARTER: 'https://buy.stripe.com/4gM8wP9mFdyh7kFf097Vm05',
+  GERADOR_PRO: 'https://buy.stripe.com/8x26oHeGZeCldJ33hr7Vm06',
+  GERADOR_PREMIUM: 'https://buy.stripe.com/dRm8wP9mFam534p9FP7Vm03',
+
+  // Member Plus
+  MEMBER_PLUS: 'https://buy.stripe.com/9B66oHdCVam520l6tD7Vm02',
+} as const
+
+export type StripePaymentLinkKey = keyof typeof STRIPE_PAYMENT_LINKS
+
 export type PlanoTipo = 'consumidor' | 'gerador' | 'member_plus'
 
 export interface PlanoMetadata {

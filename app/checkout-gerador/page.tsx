@@ -20,10 +20,9 @@ import {
   BarChart3,
   Plug,
 } from 'lucide-react';
-import { STRIPE_PRICE_IDS, type StripePriceId } from '@/lib/stripe-prices';
+import { STRIPE_PAYMENT_LINKS } from '@/lib/stripe-prices';
 
 type GeradorPlano = {
-  priceId: StripePriceId
   codigo: 'starter' | 'pro' | 'premium'
   nome: string
   capacidadeLabel: string
@@ -32,12 +31,12 @@ type GeradorPlano = {
   precoFormatado: string
   destaque: boolean
   economia: string
+  paymentLink: string
   beneficios: string[]
 }
 
 const planos: GeradorPlano[] = [
   {
-    priceId: STRIPE_PRICE_IDS.GERADOR_STARTER,
     codigo: 'starter',
     nome: 'Solar Starter',
     capacidadeLabel: 'até 30 kWp',
@@ -46,6 +45,7 @@ const planos: GeradorPlano[] = [
     precoFormatado: 'R$ 49,90',
     destaque: false,
     economia: 'Conecte até 5 consumidores',
+    paymentLink: STRIPE_PAYMENT_LINKS.GERADOR_STARTER,
     beneficios: [
       'Cadastro da usina em até 7 dias',
       'Match com consumidores próximos',
@@ -54,7 +54,6 @@ const planos: GeradorPlano[] = [
     ],
   },
   {
-    priceId: STRIPE_PRICE_IDS.GERADOR_PRO,
     codigo: 'pro',
     nome: 'Solar Pro',
     capacidadeLabel: 'até 100 kWp',
@@ -63,6 +62,7 @@ const planos: GeradorPlano[] = [
     precoFormatado: 'R$ 99,90',
     destaque: true,
     economia: 'Conecte até 25 consumidores',
+    paymentLink: STRIPE_PAYMENT_LINKS.GERADOR_PRO,
     beneficios: [
       'Match prioritário com consumidores da região',
       'Relatórios mensais de venda e lucro',
@@ -71,7 +71,6 @@ const planos: GeradorPlano[] = [
     ],
   },
   {
-    priceId: STRIPE_PRICE_IDS.GERADOR_PREMIUM,
     codigo: 'premium',
     nome: 'Solar Premium',
     capacidadeLabel: 'acima de 100 kWp',
@@ -80,6 +79,7 @@ const planos: GeradorPlano[] = [
     precoFormatado: 'R$ 199,90',
     destaque: false,
     economia: 'Conexões ilimitadas',
+    paymentLink: STRIPE_PAYMENT_LINKS.GERADOR_PREMIUM,
     beneficios: [
       'Match ilimitado + destaque no mapa',
       'Consultoria financeira mensal dedicada',
@@ -91,10 +91,8 @@ const planos: GeradorPlano[] = [
 
 export default function CheckoutGeradorPage() {
   const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
   const [selectedPlano, setSelectedPlano] = useState<GeradorPlano>(planos[1]);
   const [loadingPlano, setLoadingPlano] = useState<string | null>(null);
-  const [error, setError] = useState('');
   const [profileTipo, setProfileTipo] = useState<string | null>(null);
   const router = useRouter();
   const supabase = getSupabase();
@@ -122,40 +120,9 @@ export default function CheckoutGeradorPage() {
     checkUser();
   }, []);
 
-  const handleAssinar = async (plano: GeradorPlano) => {
+  const handleAssinar = (plano: GeradorPlano) => {
     setLoadingPlano(plano.codigo);
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          priceId: plano.priceId,
-          planoTipo: 'gerador',
-          planoCodigo: plano.codigo,
-          planoNome: plano.nome,
-          customerEmail: user?.email,
-          successUrl: `${window.location.origin}/dashboard-gerador?success=true`,
-          cancelUrl: `${window.location.origin}/checkout-gerador?canceled=true`,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        setError('Erro ao criar sessão de pagamento. Tente novamente.');
-      }
-    } catch (err) {
-      console.error('Erro ao criar checkout:', err);
-      setError('Erro ao iniciar assinatura. Tente novamente.');
-    } finally {
-      setLoading(false);
-      setLoadingPlano(null);
-    }
+    window.location.href = plano.paymentLink;
   };
 
   if (!user || (profileTipo && profileTipo !== 'gerador')) {
@@ -259,12 +226,6 @@ export default function CheckoutGeradorPage() {
               </div>
             ))}
           </div>
-
-          {error && (
-            <div className="text-center mb-6">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
 
           <div className="mb-12 p-6 rounded-2xl bg-white/5 border border-white/10">
             <h3 className="text-lg font-bold text-white text-center mb-6">
