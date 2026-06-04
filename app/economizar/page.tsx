@@ -20,6 +20,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { saveLead } from '@/app/actions';
+import { buildFollowUpUrl, splitCidadeEstado } from '@/lib/leads';
 
 export default function EconomizarPage() {
   const [step, setStep] = useState(1);
@@ -87,7 +88,16 @@ export default function EconomizarPage() {
     setIsLoading(true);
 
     try {
-      const result = await saveLead(formData);
+      const { estado } = splitCidadeEstado(formData.cidade);
+      const result = await saveLead({
+        tipo: 'consumidor',
+        nome: formData.nome,
+        email: formData.email,
+        whatsapp: formData.whatsapp,
+        cidade: formData.cidade,
+        estado: estado || 'ND',
+        gastoMensal: formData.gastoMensal,
+      });
       if (!result.success) throw new Error(result.message);
       
       setStep(5); 
@@ -350,8 +360,9 @@ export default function EconomizarPage() {
                   Envie uma foto da sua última fatura de energia para nosso WhatsApp. Isso torna o cálculo 100% preciso e acelera sua economia.
                 </p>
                 <a 
-                  href={`https://wa.me/5584987858668?text=Olá! Acabei de fazer a análise na EnergiaLivre e quero enviar minha fatura para acelerar o processo. Meu nome é ${formData.nome || 'cliente'} e minha cidade é ${formData.cidade || 'minha região'}.`} 
+                  href={buildFollowUpUrl('consumidor', { nome: formData.nome, cidade: formData.cidade })} 
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="block w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-900 rounded-xl font-bold hover:from-emerald-400 hover:to-emerald-500 transition-all shadow-lg"
                 >
                   Enviar Fatura via WhatsApp

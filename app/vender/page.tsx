@@ -21,6 +21,7 @@ import {
   Flame
 } from 'lucide-react';
 import { saveLead } from '@/app/actions';
+import { buildFollowUpUrl, splitCidadeEstado } from '@/lib/leads';
 
 export default function VenderPage() {
   const [step, setStep] = useState(1);
@@ -88,7 +89,17 @@ export default function VenderPage() {
     setIsLoading(true);
 
     try {
-      const result = await saveLead(formData);
+      const { cidade, estado } = splitCidadeEstado(formData.estado);
+      const result = await saveLead({
+        tipo: 'gerador',
+        nome: formData.nome,
+        email: formData.email,
+        whatsapp: formData.whatsapp,
+        cidade: cidade || formData.estado,
+        estado: estado || 'ND',
+        capacidadeKwp: formData.capacidade,
+        cargo: formData.cargo,
+      });
 
       if (!result.success) {
         throw new Error(result.message);
@@ -382,8 +393,13 @@ export default function VenderPage() {
                   Envie o projeto técnico ou a última fatura de crédito da sua usina para nosso WhatsApp. Análise prioritária!
                 </p>
                 <a 
-                  href={`https://wa.me/5584987858668?text=Olá! Acabei de cadastrar minha usina na EnergiaLivre e quero enviar os documentos para acelerar a monetização. Capacidade: ${formData.capacidade || 'N/I'} kWp | Estado: ${formData.estado || 'N/I'}`} 
+                  href={buildFollowUpUrl('gerador', {
+                    nome: formData.nome,
+                    ...splitCidadeEstado(formData.estado),
+                    capacidadeKwp: Number(formData.capacidade) || 0,
+                  })} 
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="block w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold hover:from-blue-400 hover:to-blue-500 transition-all shadow-lg"
                 >
                   Enviar Documentos via WhatsApp
