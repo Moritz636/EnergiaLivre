@@ -59,11 +59,11 @@ DROP POLICY IF EXISTS "Authenticated users can view all locations" ON user_locat
 CREATE POLICY "Authenticated users can view all locations" ON user_locations
     FOR SELECT TO authenticated USING (true);
 
--- Admin pode tudo
+-- Admin pode tudo (verifica tabela admins separada)
 DROP POLICY IF EXISTS "Admin can manage all locations" ON user_locations;
 CREATE POLICY "Admin can manage all locations" ON user_locations
     FOR ALL USING (
-        EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+        EXISTS (SELECT 1 FROM admins WHERE id = auth.uid())
     );
 
 -- ============================================
@@ -121,7 +121,7 @@ CREATE POLICY "Senders can cancel pending proposals" ON match_proposals
 DROP POLICY IF EXISTS "Admin can manage all proposals" ON match_proposals;
 CREATE POLICY "Admin can manage all proposals" ON match_proposals
     FOR ALL USING (
-        EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+        EXISTS (SELECT 1 FROM admins WHERE id = auth.uid())
     );
 
 -- ============================================
