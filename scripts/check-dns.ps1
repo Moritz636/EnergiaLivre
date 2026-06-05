@@ -1,16 +1,16 @@
 # ============================================
 # SCRIPT DE MONITORAMENTO DE DNS
 # ============================================
-# Verifica propagação DNS do domínio energialivre.com.br
+# Verifica propagação DNS do domínio energialivre.dev.br
 # Roda em loop até o domínio estar propagado ou timeout.
 #
 # Uso:
 #   powershell -ExecutionPolicy Bypass -File scripts\check-dns.ps1
-#   powershell -ExecutionPolicy Bypass -File scripts\check-dns.ps1 -Domain "energialivre.com.br" -TimeoutMinutes 130
+#   powershell -ExecutionPolicy Bypass -File scripts\check-dns.ps1 -Domain "energialivre.dev.br" -TimeoutMinutes 130
 # ============================================
 
 param(
-    [string]$Domain = "energialivre.com.br",
+    [string]$Domain = "energialivre.dev.br",
     [int]$TimeoutMinutes = 130,
     [int]$IntervalSeconds = 60
 )

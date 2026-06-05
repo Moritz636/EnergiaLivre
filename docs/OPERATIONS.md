@@ -55,7 +55,7 @@ Verificação pós-config: fazer login e checar o JWT em `/api/health` (response
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Supabase → Settings → API |
 | `STRIPE_SECRET_KEY` | ✅ | Stripe Dashboard → Developers → API keys |
 | `STRIPE_WEBHOOK_SECRET` | ✅ | Stripe Dashboard → Webhooks → endpoint |
-| `NEXT_PUBLIC_SITE_URL` | ✅ (prod) | URL canônica (ex: `https://energialivre.com.br`) |
+| `NEXT_PUBLIC_SITE_URL` | ✅ (prod) | URL canônica (ex: `https://energialivre.dev.br`) |
 | `ADMIN_EMAIL` | Recomendável | Email do admin principal |
 | `NEXT_PUBLIC_SENTRY_DSN` | Opcional | Sentry → Project Settings |
 | `SENTRY_DSN` | Opcional | Sentry → Project Settings |
@@ -82,7 +82,7 @@ Configurar endpoint em **Stripe Dashboard → Developers → Webhooks**:
 ### 1.5 Domínio Custom (Vercel)
 
 1. **Vercel → Project → Settings → Domains**
-2. Adicionar `energialivre.com.br` e `www.energialivre.com.br`
+2. Adicionar `energialivre.dev.br` e `www.energialivre.dev.br`
 3. Configurar DNS no registrador (ex: Registro.br):
    - `A @ → 76.76.21.21` (Vercel IP)
    - `CNAME www → cname.vercel-dns.com`
@@ -93,7 +93,7 @@ Configurar endpoint em **Stripe Dashboard → Developers → Webhooks**:
 
 ```powershell
 # Rápido
-nslookup energialivre.com.br 8.8.8.8
+nslookup energialivre.dev.br 8.8.8.8
 
 # Detalhado
 powershell -ExecutionPolicy Bypass -File scripts\check-dns.ps1 -TimeoutMinutes 130
@@ -107,12 +107,12 @@ powershell -ExecutionPolicy Bypass -File scripts\check-dns.ps1 -TimeoutMinutes 1
 
 ```bash
 # Health check
-curl https://energialivre.com.br/api/health
+curl https://energialivre.dev.br/api/health
 
 # Páginas públicas
-curl -I https://energialivre.com.br/
-curl -I https://energialivre.com.br/economizar
-curl -I https://energialivre.com.br/vender
+curl -I https://energialivre.dev.br/
+curl -I https://energialivre.dev.br/economizar
+curl -I https://energialivre.dev.br/vender
 ```
 
 ### 2.2 Teste end-to-end do checkout
@@ -216,12 +216,12 @@ Solução: verificar env var e redeploy.
 ### DNS: domínio não resolve
 
 ```powershell
-Resolve-DnsName energialivre.com.br -Type NS
-Resolve-DnsName energialivre.com.br -Type A
+Resolve-DnsName energialivre.dev.br -Type NS
+Resolve-DnsName energialivre.dev.br -Type A
 # Se vier SOA-only, ainda não propagou (pode levar até 48h)
 ```
 
-Online: https://dnschecker.org/#NS/energialivre.com.br
+Online: https://dnschecker.org/#NS/energialivre.dev.br
 
 ---
 

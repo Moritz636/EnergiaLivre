@@ -1,7 +1,7 @@
 # DNS Check Log
 
 Este arquivo contém o histórico de checagens DNS feitas durante
-transições de nameservers ou delegates do domínio energialivre.com.br.
+transições de nameservers ou delegates do domínio energialivre.dev.br.
 
 Cada entrada segue o formato:
 ```

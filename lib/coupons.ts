@@ -101,7 +101,7 @@ export async function getMyReferralCode(
 }
 
 export function buildShareLink(code: string, origin?: string): string {
-  const base = origin ?? (typeof window !== 'undefined' ? window.location.origin : 'https://energialivre.com.br')
+  const base = origin ?? (typeof window !== 'undefined' ? window.location.origin : 'https://energialivre.dev.br')
   return `${base}/cadastro?ref=${encodeURIComponent(code)}`
 }
 

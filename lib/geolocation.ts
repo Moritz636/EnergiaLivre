@@ -91,7 +91,7 @@ export async function geocodeCidadeUF(
   try {
     const res = await fetch(url, {
       headers: {
-        'User-Agent': 'EnergiaLivre/1.0 (https://energialivre.com.br)',
+        'User-Agent': 'EnergiaLivre/1.0 (https://energialivre.dev.br)',
         'Accept-Language': 'pt-BR,pt;q=0.9',
       },
       signal,
