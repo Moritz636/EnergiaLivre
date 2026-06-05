@@ -217,6 +217,9 @@ export async function respondToProposal(
     if (deps.update) {
       const { error } = await deps.update(input.proposalId, patch)
       if (error) return { success: false, message: error.message ?? 'Erro ao responder' }
+      if (input.response === 'accepted') {
+        await fireMatchCommissions(deps.supabase, input.proposalId)
+      }
       return { success: true }
     }
     const sb: any = deps.supabase
@@ -225,11 +228,30 @@ export async function respondToProposal(
       .update(patch as any)
       .eq('id', input.proposalId)
     if (result?.error) {
-      return { success: false, message: result.error.message ?? 'Erro ao responder' }
+      return { success: false, message: result?.error.message ?? 'Erro ao responder' }
+    }
+    if (input.response === 'accepted') {
+      await fireMatchCommissions(deps.supabase, input.proposalId)
     }
     return { success: true }
   } catch (err: any) {
     return { success: false, message: err?.message ?? 'Erro inesperado' }
+  }
+}
+
+async function fireMatchCommissions(
+  supabase: SupabaseClient<Database>,
+  proposalId: number,
+): Promise<void> {
+  try {
+    const { error } = await (supabase.rpc('process_match_commissions', {
+      p_proposal_id: proposalId,
+    } as any) as any)
+    if (error) {
+      console.error(`[commissions] process_match_commissions falhou (#${proposalId}):`, error)
+    }
+  } catch (err) {
+    console.error(`[commissions] exception no match #${proposalId}:`, err)
   }
 }
 

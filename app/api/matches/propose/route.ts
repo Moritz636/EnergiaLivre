@@ -111,6 +111,17 @@ export async function POST(request: NextRequest) {
         console.error('Erro ao marcar minha proposta como aceita:', acceptMineErr)
       }
 
+      // 4) Processar comissões para ambas as proposals (idempotente)
+      const { error: comm1 } = await (supabase.rpc('process_match_commissions', {
+        p_proposal_id: reverseProposalId,
+      } as any) as any)
+      if (comm1) console.error('[commissions] mutual-reverse falhou:', comm1)
+
+      const { error: comm2 } = await (supabase.rpc('process_match_commissions', {
+        p_proposal_id: result.id,
+      } as any) as any)
+      if (comm2) console.error('[commissions] mutual-mine falhou:', comm2)
+
       return NextResponse.json({
         success: true,
         id: result.id,

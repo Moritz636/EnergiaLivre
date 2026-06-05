@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/app/hooks/useAuth';
 import { getSupabase } from '@/lib/supabase/singleton';
 import { LogOut, Zap, TrendingUp, DollarSign, Sun, Building2, MapPin, Users, Loader2, Sparkles, ArrowRight, ShieldCheck, Award, Crown, Calendar, BarChart3, MessageCircle, Heart, FileText } from 'lucide-react';
+import { ConsentModal } from '@/components/ConsentModal';
+import { CURRENT_TERMS_VERSION } from '@/lib/commissions';
 import Link from 'next/link';
 import type { Database } from '@/lib/database.types';
 
@@ -43,10 +45,21 @@ export default function DashboardGeradorPage() {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
   const [loadingMetrics, setLoadingMetrics] = useState(true);
+  const [showConsent, setShowConsent] = useState(false);
+  const [consentChecked, setConsentChecked] = useState(false);
   const supabase = getSupabase();
 
   useEffect(() => {
     if (!user) return;
+    if (consentChecked) return;
+    if (profile) {
+      const accepted = !!(profile as any).agreed_to_payment_terms_at;
+      const version = (profile as any).last_terms_version;
+      if (!accepted || version !== CURRENT_TERMS_VERSION) {
+        setShowConsent(true);
+      }
+      setConsentChecked(true);
+    }
 
     async function loadMetrics() {
       try {
@@ -129,6 +142,10 @@ export default function DashboardGeradorPage() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 font-sans overflow-x-hidden">
+      <ConsentModal
+        open={showConsent}
+        onAccepted={() => { setShowConsent(false); window.location.reload(); }}
+      />
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-500/5 via-transparent to-transparent -z-20" />
       <div className="fixed bottom-0 left-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] -z-10" />
       <div className="fixed top-40 right-0 w-80 h-80 bg-cyan-500/5 rounded-full blur-[100px] -z-10" />

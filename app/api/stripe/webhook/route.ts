@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Registra pagamento (todos os tipos)
-        await supabase
+        const { data: newPag } = await supabase
           .from('pagamentos')
           .insert({
             user_id: assinatura.user_id,
@@ -181,7 +181,19 @@ export async function POST(request: NextRequest) {
             stripe_payment_intent: (invoice.payment_intent as string | null) ?? null,
             description: `${planoTipo} - ${invoice.lines.data[0]?.description || 'Plano'}`,
             processed_at: new Date().toISOString(),
-          });
+          })
+          .select('id')
+          .single();
+
+        // Processa comissões 5% embaixador + 15% UFV (idempotente)
+        if (newPag?.id) {
+          const { error: commErr } = await (supabase.rpc('process_payment_commissions', {
+            p_payment_id: newPag.id,
+          } as any) as any);
+          if (commErr) {
+            console.error(`[commissions] payment #${newPag.id} falhou:`, commErr);
+          }
+        }
         break;
       }
 
