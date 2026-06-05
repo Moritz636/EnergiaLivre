@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
             tipo_pagamento: 'assinatura',
             valor: invoice.amount_paid / 100,
             status: 'succeeded',
-            stripe_payment_intent: invoice.payment_intent as string,
+            stripe_payment_intent: (invoice.payment_intent as string | null) ?? null,
             description: `${planoTipo} - ${invoice.lines.data[0]?.description || 'Plano'}`,
             processed_at: new Date().toISOString(),
           });
@@ -150,16 +150,16 @@ export async function POST(request: NextRequest) {
             .eq('stripe_subscription_id', subscriptionId);
         }
 
-        await supabase
-          .from('pagamentos')
-          .insert({
-            user_id: assinatura.user_id,
-            tipo_pagamento: 'assinatura',
-            valor: invoice.amount_due / 100,
-            status: 'failed',
-            stripe_payment_intent: invoice.payment_intent as string,
-            description: 'Pagamento falhou',
-          });
+      await supabase
+        .from('pagamentos')
+        .insert({
+          user_id: assinatura.user_id,
+          tipo_pagamento: 'assinatura',
+          valor: invoice.amount_due / 100,
+          status: 'failed',
+          stripe_payment_intent: (invoice.payment_intent as string | null) ?? null,
+          description: 'Pagamento falhou',
+        });
         break;
       }
 
@@ -230,11 +230,20 @@ export async function POST(request: NextRequest) {
       // ============================================
       case 'charge.refunded': {
         const charge = event.data.object as Stripe.Charge;
+        const invoiceId = (charge.invoice as string | null) ?? null;
+
+        // charge.invoice é null em pagamentos únicos fora de assinatura.
+        // Nesses casos, o reembolso é registrado apenas se houver invoice
+        // vinculada a uma assinatura conhecida.
+        if (!invoiceId) {
+          console.warn(`charge.refunded sem invoice vinculada: ${charge.id}`);
+          break;
+        }
 
         const { data: assinatura } = await supabase
           .from('assinaturas')
           .select('user_id')
-          .eq('stripe_subscription_id', charge.invoice as string)
+          .eq('stripe_subscription_id', invoiceId)
           .single();
 
         if (assinatura) {

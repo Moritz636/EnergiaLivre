@@ -243,6 +243,8 @@ export interface Database {
           valor_mensal: number
           kwh_mensais: number
           economia_percentual: number
+          tipo_plano: 'consumidor' | 'gerador' | 'member_plus'
+          capacidade_kwp: number | null
           status: 'active' | 'past_due' | 'canceled' | 'unpaid'
           current_period_start: string
           current_period_end: string
@@ -261,6 +263,8 @@ export interface Database {
           valor_mensal: number
           kwh_mensais: number
           economia_percentual: number
+          tipo_plano?: 'consumidor' | 'gerador' | 'member_plus'
+          capacidade_kwp?: number | null
           status?: 'active' | 'past_due' | 'canceled' | 'unpaid'
           current_period_start: string
           current_period_end: string
@@ -279,6 +283,8 @@ export interface Database {
           valor_mensal?: number
           kwh_mensais?: number
           economia_percentual?: number
+          tipo_plano?: 'consumidor' | 'gerador' | 'member_plus'
+          capacidade_kwp?: number | null
           status?: 'active' | 'past_due' | 'canceled' | 'unpaid'
           current_period_start?: string
           current_period_end?: string
@@ -436,6 +442,32 @@ export interface Database {
           dados?: Json
           gerado_por?: string | null
           created_at?: string
+        }
+      }
+      admins: {
+        Row: {
+          id: string
+          email: string
+          nome: string | null
+          role: 'admin' | 'super_admin'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          email: string
+          nome?: string | null
+          role?: 'admin' | 'super_admin'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          nome?: string | null
+          role?: 'admin' | 'super_admin'
+          created_at?: string
+          updated_at?: string
         }
       }
       user_locations: {
