@@ -41,6 +41,71 @@ export async function POST(request: NextRequest) {
   try {
     switch (event.type) {
       // ============================================
+      // CHECKOUT ONE-TIME COMPLETED (COMPRA DE MOEDAS)
+      // ============================================
+      // Dispara após pagamento confirmado em mode=payment.
+      // Credita o wallet via RPC credit_wallet (idempotente).
+      // ============================================
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session;
+
+        // Ignora checkouts de assinatura (processados via
+        // customer.subscription.* abaixo)
+        if (session.mode !== 'payment') break;
+
+        // Só processa quando o pagamento foi confirmado
+        if (session.payment_status !== 'paid') break;
+
+        const userId = session.metadata?.userId;
+        const coinsRaw = session.metadata?.coins;
+        const packageIdRaw = session.metadata?.packageId;
+        const packageCode = session.metadata?.packageCode ?? 'pacote';
+
+        const coins = parseInt(coinsRaw ?? '0', 10);
+        const packageId = parseInt(packageIdRaw ?? '0', 10);
+
+        if (!userId || !Number.isFinite(coins) || coins <= 0) {
+          console.error(
+            '[webhook] checkout.session.completed sem metadata válido:',
+            { userId, coins, packageId }
+          );
+          break;
+        }
+
+        const { data: rpcResult, error: rpcErr } = await supabase.rpc(
+          'credit_wallet',
+          {
+            p_user_id: userId,
+            p_amount: coins,
+            p_type: 'purchase',
+            p_reason: `Compra de pacote (${packageCode})`,
+            p_coin_package_id:
+              Number.isFinite(packageId) && packageId > 0
+                ? packageId
+                : null,
+            p_stripe_session_id: session.id,
+            p_stripe_payment_intent_id:
+              (session.payment_intent as string | null) ?? null,
+            p_metadata: {
+              packageCode,
+              amount_total: session.amount_total,
+              currency: session.currency,
+            },
+          }
+        );
+
+        if (rpcErr) {
+          console.error('[webhook] credit_wallet rpc falhou:', rpcErr);
+          throw rpcErr;
+        }
+
+        console.log(
+          `[webhook] Moedas creditadas: user=${userId} coins=${coins} tx=${rpcResult?.[0]?.transaction_id}`
+        );
+        break;
+      }
+
+      // ============================================
       // ASSINATURA CRIADA
       // ============================================
       case 'customer.subscription.created': {

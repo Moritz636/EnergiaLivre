@@ -1,8 +1,8 @@
 -- ============================================
--- MIGRATION 20260105: TABELA ADMINS (PARA RLS)
+-- MIGRATION 20260104: TABELA ADMINS (PARA RLS)
 -- EnergiaLivre v2.1
 -- ============================================
--- A migration 20260104_match_member_plus.sql referencia
+-- A migration 20260105_match_member_plus.sql referencia
 --     EXISTS (SELECT 1 FROM admins WHERE id = auth.uid())
 -- nas policies de user_locations e match_proposals.
 --
@@ -15,6 +15,15 @@
 --
 -- Apos aplicar, a tabela admins pode ser mantida em sincronia
 -- via trigger (opcional - ver secao 4).
+--
+-- Pre-requisito: a tabela profiles precisa ter a coluna `role`
+-- (tipo TEXT, default 'user'). Se não existir, criamos aqui.
+-- ============================================
+
+-- 0. PRE-REQUISITO: garantir coluna role em profiles
+ALTER TABLE profiles
+    ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'user';
+
 -- ============================================
 
 -- ============================================

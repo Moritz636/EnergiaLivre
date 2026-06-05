@@ -19,6 +19,7 @@ const SCHEMA: EnvSchema[] = [
   // Stripe
   { name: 'STRIPE_SECRET_KEY', required: true },
   { name: 'STRIPE_WEBHOOK_SECRET', required: true },
+  { name: 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY', required: false },
 
   // Admin
   { name: 'ADMIN_EMAIL', required: false },
