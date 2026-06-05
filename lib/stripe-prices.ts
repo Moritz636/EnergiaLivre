@@ -41,17 +41,17 @@ export type StripePriceId = (typeof STRIPE_PRICE_IDS)[keyof typeof STRIPE_PRICE_
 
 export const STRIPE_PAYMENT_LINKS = {
   // Planos de Consumidor
-  CONSUMIDOR_BASICO: 'https://buy.stripe.com/8x228r42lcud0Wh9FP7Vm00',
-  CONSUMIDOR_FAMILIAR: 'https://buy.stripe.com/8x25kD7ex51LeN719j7Vm01',
-  CONSUMIDOR_PREMIUM: 'https://buy.stripe.com/dRmfZhgP7eCl5cxcS17Vm04',
+  CONSUMIDOR_BASICO: 'https://buy.stripe.com/4gMdR9buN2TD6gBg4d7Vm0d',
+  CONSUMIDOR_FAMILIAR: 'https://buy.stripe.com/bJe5kD7exbq9gVfdW57Vm0e',
+  CONSUMIDOR_PREMIUM: 'https://buy.stripe.com/eVqaEX56p65P5cx8BL7Vm0i',
 
   // Planos de Gerador
-  GERADOR_STARTER: 'https://buy.stripe.com/4gM8wP9mFdyh7kFf097Vm05',
-  GERADOR_PRO: 'https://buy.stripe.com/8x26oHeGZeCldJ33hr7Vm06',
-  GERADOR_PREMIUM: 'https://buy.stripe.com/dRm8wP9mFam534p9FP7Vm03',
+  GERADOR_STARTER: 'https://buy.stripe.com/bJefZhgP71PzawR2dn7Vm0j',
+  GERADOR_PRO: 'https://buy.stripe.com/4gMbJ10Q979TgVfbNX7Vm0f',
+  GERADOR_PREMIUM: 'https://buy.stripe.com/5kQbJ156p3XH5cxaJT7Vm0l',
 
   // Member Plus
-  MEMBER_PLUS: 'https://buy.stripe.com/9B66oHdCVam520l6tD7Vm02',
+  MEMBER_PLUS: 'https://buy.stripe.com/8x29ATgP7eCl6gB3hr7Vm0k',
 } as const
 
 export type StripePaymentLinkKey = keyof typeof STRIPE_PAYMENT_LINKS
