@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/app/hooks/useAuth';
 import { getSupabase } from '@/lib/supabase/singleton';
-import { LogOut, Zap, TrendingDown, DollarSign, Calendar, Award, Crown, ArrowRight, CheckCircle2, Leaf, Home, PiggyBank, BarChart3, ShieldCheck, Sparkles, Flame, Globe, Loader2, MessageCircle, Heart } from 'lucide-react';
+import { LogOut, Zap, TrendingDown, DollarSign, Calendar, Award, Crown, ArrowRight, CheckCircle2, Leaf, Home, PiggyBank, BarChart3, ShieldCheck, Sparkles, Flame, Globe, Loader2, MessageCircle, Heart, FileText } from 'lucide-react';
 import Link from 'next/link';
 import type { Database } from '@/lib/database.types';
 
@@ -144,6 +144,13 @@ export default function DashboardConsumidorPage() {
             >
               <Heart className="w-4 h-4" />
               <span className="hidden sm:inline">Propostas</span>
+            </Link>
+            <Link
+              href="/dashboard/faturas"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm text-slate-300 hover:text-cyan-400 transition"
+            >
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">Faturas</span>
             </Link>
             <Link
               href="/dashboard/chat"
