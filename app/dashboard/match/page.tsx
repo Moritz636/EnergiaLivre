@@ -8,6 +8,7 @@ import { isMemberPlus, getMemberPlusStatus } from '@/lib/member-plus';
 import LocationCapture from '@/components/LocationCapture';
 import SwipeCard, { type MatchCandidateData } from '@/components/Match/SwipeCard';
 import MemberPlusBlocker from '@/components/Match/MemberPlusBlocker';
+import type { MapMarker } from '@/components/Map/MatchMap';
 import {
   Loader2,
   Map as MapIcon,
@@ -28,14 +29,23 @@ const MatchMap = dynamic(() => import('@/components/Map/MatchMap'), {
   ),
 })
 
-type View = 'cards' | 'map'
-
 const TARGET_TIPO_OPTIONS = [
   { value: 'gerador', label: 'Geradores' },
   { value: 'consumidor', label: 'Consumidores' },
 ] as const
 
 const RADIUS_OPTIONS = [25, 50, 100, 250, 500]
+
+type View = 'cards' | 'map'
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
 
 export default function DashboardMatchPage() {
   const { user, profile, loading: authLoading } = useAuth()
@@ -109,13 +119,15 @@ export default function DashboardMatchPage() {
       }
       const body = await res.json()
       const list = (body.candidates || []).map((c: any) => ({
-        id: c.userId,
+        id: c.user_id || c.userId,
         nome: c.nome || c.cidade || 'Usuário',
         cidade: c.cidade,
         estado: c.estado,
-        distanciaKm: c.distanciaKm,
-        capacidadeKwp: c.capacidadeKwp,
+        distanciaKm: c.distance_km ?? c.distanciaKm ?? null,
+        lat: c.lat,
+        lng: c.lng,
         tipo: c.tipo,
+        isMemberPlus: !!c.is_member_plus,
       }))
       setCandidates(list)
     } catch (err: any) {
@@ -153,13 +165,47 @@ export default function DashboardMatchPage() {
 
   const mapCenter = useMemo<[number, number]>(() => {
     if (myLocation) return [myLocation.lat, myLocation.lng]
-    const first = candidates[0]
-    if (first && first.id) {
-      // não temos lat/lng nos candidatos retornados (privacidade). usar cidade como fallback não funciona
-      // então usamos SP como centro default
-    }
+    const first = candidates.find((c) => typeof c.lat === 'number' && typeof c.lng === 'number')
+    if (first && first.lat != null && first.lng != null) return [first.lat, first.lng]
     return [-23.5505, -46.6333]
   }, [myLocation, candidates])
+
+  const mapMarkers = useMemo<MapMarker[]>(() => {
+    const markers: MapMarker[] = []
+    if (myLocation) {
+      markers.push({
+        id: 'me',
+        lat: myLocation.lat,
+        lng: myLocation.lng,
+        label: 'Você',
+        color: 'blue',
+        popupHtml: '<strong>📍 Você está aqui</strong>',
+      })
+    }
+    for (const c of candidates) {
+      if (typeof c.lat !== 'number' || typeof c.lng !== 'number') continue
+      const dist = c.distanciaKm != null ? `${c.distanciaKm.toFixed(0)} km` : ''
+      const mp = c.isMemberPlus ? '<span style="display:inline-block;background:#eab308;color:#020617;padding:1px 6px;border-radius:6px;font-size:10px;font-weight:800;margin-left:4px;">PLUS</span>' : ''
+      const popup = `<div style="font-family:sans-serif;color:#020617;"><strong>${escapeHtml(c.nome)}</strong>${mp}<br/><span style="color:#475569;font-size:11px;">${escapeHtml(c.cidade || '')}${c.estado ? ' / ' + escapeHtml(c.estado) : ''}</span>${dist ? `<br/><span style="color:#10b981;font-weight:700;">${dist}</span>` : ''}</div>`
+      markers.push({
+        id: c.id,
+        lat: c.lat,
+        lng: c.lng,
+        label: c.nome,
+        color: c.isMemberPlus ? 'yellow' : 'emerald',
+        popupHtml: popup,
+      })
+    }
+    return markers
+  }, [candidates, myLocation])
+
+  const mapZoom = useMemo(() => {
+    if (radiusKm > 300) return 6
+    if (radiusKm > 150) return 7
+    if (radiusKm > 75) return 8
+    if (radiusKm > 35) return 9
+    return 10
+  }, [radiusKm])
 
   if (authLoading || memberPlusActive === null) {
     return (
@@ -308,13 +354,23 @@ export default function DashboardMatchPage() {
 
             {view === 'map' ? (
               <div>
-                {myLocation ? (
-                  <MatchMap
-                    center={mapCenter}
-                    zoom={radiusKm > 200 ? 7 : radiusKm > 100 ? 8 : 10}
-                    markers={[]}
-                    height="540px"
-                  />
+                {myLocation || candidates.some((c) => c.lat != null) ? (
+                  <>
+                    <div className="mb-3 flex items-center justify-between text-xs text-slate-400">
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-500 border-2 border-[#020617]"></span> Você</span>
+                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[#020617]"></span> Candidato</span>
+                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-yellow-500 border-2 border-[#020617]"></span> Member Plus</span>
+                      </div>
+                      <span>{candidates.length} {candidates.length === 1 ? 'candidato' : 'candidatos'} no raio</span>
+                    </div>
+                    <MatchMap
+                      center={mapCenter}
+                      zoom={mapZoom}
+                      markers={mapMarkers}
+                      height="540px"
+                    />
+                  </>
                 ) : (
                   <div className="p-8 rounded-2xl bg-white/5 border border-white/10 text-center">
                     <MapIcon className="w-12 h-12 text-slate-500 mx-auto mb-3" />
@@ -323,7 +379,7 @@ export default function DashboardMatchPage() {
                   </div>
                 )}
                 <p className="text-center text-xs text-slate-500 mt-3">
-                  <Sparkles className="w-3 h-3 inline" /> Visualização em mapa com marcadores em breve.
+                  <Sparkles className="w-3 h-3 inline" /> Mapa interativo via OpenStreetMap. Clique nos pinos para ver detalhes.
                 </p>
               </div>
             ) : loadingCandidates ? (

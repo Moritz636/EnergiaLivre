@@ -9,6 +9,9 @@ export type MatchCandidateData = {
   estado?: string
   capacidadeKwp?: number
   distanciaKm?: number | null
+  lat?: number | null
+  lng?: number | null
+  isMemberPlus?: boolean
   // tipo='gerador' ou 'consumidor'
   tipo: 'gerador' | 'consumidor'
   // extras opcionais
