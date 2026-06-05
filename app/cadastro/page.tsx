@@ -45,7 +45,7 @@ export default function CadastroPage() {
             cidade,
             estado,
           },
-          emailRedirectTo: `${window.location.origin}/login?cadastro=sucesso`,
+          emailRedirectTo: `${window.location.origin}/login?cadastro=sucesso&from=${tipo}`,
         },
       });
 
@@ -66,7 +66,7 @@ export default function CadastroPage() {
         setSuccess(true);
 
         setTimeout(() => {
-          router.push('/login?cadastro=sucesso');
+          router.push(`/login?cadastro=sucesso&from=${tipo}`);
         }, 2500);
       }
     } catch (err: any) {

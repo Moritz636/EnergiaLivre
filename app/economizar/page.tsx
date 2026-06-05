@@ -1,12 +1,13 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { 
-  ArrowRight, 
-  CheckCircle2, 
-  Zap, 
-  ShieldCheck, 
-  Loader2, 
-  ArrowLeft, 
+import { useRouter } from 'next/navigation';
+import {
+  ArrowRight,
+  CheckCircle2,
+  Zap,
+  ShieldCheck,
+  Loader2,
+  ArrowLeft,
   FileText,
   Crown,
   Flame,
@@ -23,6 +24,7 @@ import { saveLead } from '@/app/actions';
 import { buildFollowUpUrl, splitCidadeEstado } from '@/lib/leads';
 
 export default function EconomizarPage() {
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [rotatingMessageIndex, setRotatingMessageIndex] = useState(0);
@@ -61,17 +63,25 @@ export default function EconomizarPage() {
       const interval = setInterval(() => {
         setRotatingMessageIndex((prev) => (prev + 1) % rotatingMessages.length);
       }, 2000);
-      
+
       const timer = setTimeout(() => {
         setStep(4);
       }, 8000); // Aumentado para 8 segundos para mostrar mais mensagens
-      
+
       return () => {
         clearInterval(interval);
         clearTimeout(timer);
       };
     }
   }, [step]);
+
+  // Redirecionamento automático do Passo 5 para /login após captura
+  useEffect(() => {
+    if (step === 5) {
+      const t = setTimeout(() => router.push('/login?from=consumidor'), 6000);
+      return () => clearTimeout(t);
+    }
+  }, [step, router]);
 
   const handleNext = () => {
     setIsLoading(true);
@@ -336,41 +346,55 @@ export default function EconomizarPage() {
             </div>
           )}
 
-          {/* STEP 5 - Sucesso com CTA Forte */}
+          {/* STEP 5 - Sucesso com mensagem de fatura recebida e redirecionamento para /login */}
           {step === 5 && (
-            <div className="text-center space-y-8 animate-in zoom-in duration-500">
-              <div className="inline-flex items-center justify-center w-24 h-24 bg-emerald-500/20 rounded-full text-emerald-500 mb-4 animate-bounce">
+            <div className="text-center space-y-6 animate-in zoom-in duration-500">
+              <div className="inline-flex items-center justify-center w-24 h-24 bg-emerald-500/20 rounded-full text-emerald-500 mb-2 animate-bounce">
                 <CheckCircle2 className="w-14 h-14" />
               </div>
-              
+
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold text-white">Relatório Gerado! 🚀</h2>
-                <p className="text-emerald-400 text-sm font-medium uppercase tracking-wider">Análise concluída com sucesso</p>
+                <h2 className="text-3xl font-bold text-white">Tudo Pronto! 🚀</h2>
+                <p className="text-emerald-400 text-sm font-medium uppercase tracking-wider">Fatura recebida ✓</p>
               </div>
-              
-              <p className="text-slate-400 leading-relaxed">
-                Seu relatório está sendo gerado. Nossa equipe entrará em contato via WhatsApp para validar os valores.
+
+              <p className="text-slate-300 leading-relaxed text-sm">
+                Nossa equipe <strong className="text-white">já recebeu seus dados de consumo</strong> e vai priorizar a sua análise. Continue para o painel do consumidor e acompanhe sua economia em tempo real.
               </p>
-              
-              <div className="p-6 rounded-3xl bg-gradient-to-r from-emerald-500/10 to-emerald-600/5 border border-emerald-500/30 space-y-4">
-                <p className="text-sm text-emerald-400 font-medium flex items-center justify-center gap-2">
-                  <FileText className="w-4 h-4" /> Quer acelerar a análise em até 50%?
+
+              {/* CTA: Enviar Fatura via WhatsApp (opcional) */}
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/30 space-y-3">
+                <p className="text-xs text-emerald-300 font-bold uppercase tracking-wider flex items-center justify-center gap-2">
+                  <FileText className="w-3.5 h-3.5" /> Quer acelerar em até 50%?
                 </p>
-                <p className="text-xs text-slate-500">
-                  Envie uma foto da sua última fatura de energia para nosso WhatsApp. Isso torna o cálculo 100% preciso e acelera sua economia.
+                <p className="text-xs text-slate-400">
+                  Envie uma foto da sua última fatura de energia. Isso torna o cálculo 100% preciso e acelera sua economia.
                 </p>
-                <a 
-                  href={buildFollowUpUrl('consumidor', { nome: formData.nome, cidade: formData.cidade })} 
+                <a
+                  href={buildFollowUpUrl('consumidor', { nome: formData.nome, cidade: formData.cidade })}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-900 rounded-xl font-bold hover:from-emerald-400 hover:to-emerald-500 transition-all shadow-lg"
+                  className="block w-full py-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 rounded-xl font-bold text-sm transition border border-emerald-500/30"
                 >
-                  Enviar Fatura via WhatsApp
+                  📄 Enviar Fatura via WhatsApp
                 </a>
               </div>
 
+              {/* CTA: Continuar para Login → Dashboard Consumidor */}
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-500/10 to-blue-500/5 border border-blue-500/30 space-y-3">
+                <p className="text-xs text-blue-300 font-bold uppercase tracking-wider flex items-center justify-center gap-2">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecionando para o Painel do Consumidor…
+                </p>
+                <button
+                  onClick={() => router.push('/login?from=consumidor')}
+                  className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-900 rounded-xl font-black hover:from-emerald-400 hover:to-emerald-500 transition-all shadow-lg flex items-center justify-center gap-2"
+                >
+                  Continuar para o Login <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+
               <p className="text-[10px] text-slate-600">
-                🔒 Seus dados estão seguros. Não compartilhamos informações com terceiros.
+                🔒 Seus dados estão protegidos pela LGPD. Não compartilhamos com terceiros.
               </p>
             </div>
           )}

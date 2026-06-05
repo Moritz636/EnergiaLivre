@@ -3,8 +3,37 @@
 import { useState, useEffect } from 'react';
 import { getSupabase } from '@/lib/supabase/singleton';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, Loader2, Eye, EyeOff, Zap } from 'lucide-react';
+import { Mail, Lock, Loader2, Eye, EyeOff, Zap, ArrowRight, Sparkles, Sun, Wallet } from 'lucide-react';
 import Link from 'next/link';
+
+const FROM_ROLE_MAP: Record<string, string> = {
+  consumidor: '/dashboard-consumidor',
+  gerador: '/dashboard-gerador',
+  parceiro: '/embaixador/dashboard',
+  embaixador: '/embaixador/dashboard',
+  admin: '/admin/dashboard',
+};
+
+function isSafePath(p: string): boolean {
+  return typeof p === 'string' && p.startsWith('/') && !p.startsWith('//');
+}
+
+function resolveTarget(params: URLSearchParams, role: string | null, tipo: string | null): string {
+  const next = params.get('next');
+  if (isSafePath(next || '')) return next as string;
+  const from = params.get('from');
+  if (from) {
+    if (FROM_ROLE_MAP[from]) return FROM_ROLE_MAP[from];
+    if (isSafePath(from)) return from;
+  }
+  const redirect = params.get('redirect');
+  if (isSafePath(redirect || '')) return redirect as string;
+  if (role === 'admin') return '/admin/dashboard';
+  if (tipo === 'gerador' || role === 'gerador') return '/dashboard-gerador';
+  if (tipo === 'parceiro' || role === 'parceiro') return '/embaixador/dashboard';
+  if (tipo === 'consumidor' || role === 'consumidor') return '/dashboard-consumidor';
+  return '/dashboard';
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -12,18 +41,52 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [redirect, setRedirect] = useState('');
-  
+  const [authChecked, setAuthChecked] = useState(false);
+  const [cadastroSucesso, setCadastroSucesso] = useState(false);
+  const [fromLabel, setFromLabel] = useState<string>('');
+
   const router = useRouter();
   const supabase = getSupabase();
 
-  // Obter redirecionamento da URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const redirectParam = urlParams.get('redirect');
-    if (redirectParam) {
-      setRedirect(redirectParam);
+    if (urlParams.get('cadastro') === 'sucesso') setCadastroSucesso(true);
+    const from = urlParams.get('from');
+    if (from && FROM_ROLE_MAP[from]) {
+      const labels: Record<string, string> = {
+        consumidor: 'Painel do Consumidor',
+        gerador: 'Painel do Gerador',
+        parceiro: 'Painel do Embaixador',
+        embaixador: 'Painel do Embaixador',
+      };
+      setFromLabel(labels[from] || '');
     }
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!mounted) return;
+      if (!user) {
+        setAuthChecked(true);
+        return;
+      }
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, tipo')
+        .eq('id', user.id)
+        .single();
+      const urlParams = new URLSearchParams(window.location.search);
+      const target = resolveTarget(
+        urlParams,
+        (profile as { role?: string } | null)?.role ?? null,
+        (profile as { tipo?: string } | null)?.tipo ?? null,
+      );
+      router.replace(target);
+    });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -44,20 +107,19 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        // Verificar se é admin e redirecionar corretamente
         const { data: profile } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, tipo')
           .eq('id', data.user.id)
           .single();
 
-        const role = (profile as { role?: string } | null)?.role
-        if (role === 'admin') {
-          router.push('/admin/dashboard');
-        } else {
-          const redirectPath = redirect || '/dashboard';
-          router.push(redirectPath);
-        }
+        const urlParams = new URLSearchParams(window.location.search);
+        const target = resolveTarget(
+          urlParams,
+          (profile as { role?: string } | null)?.role ?? null,
+          (profile as { tipo?: string } | null)?.tipo ?? null,
+        );
+        router.push(target);
       }
     } catch (err: any) {
       setError('Erro ao fazer login. Tente novamente.');
@@ -73,8 +135,11 @@ export default function LoginPage() {
     setError('');
 
     try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const emailRedirectTo = `${window.location.origin}/login?${urlParams.toString()}`;
       const { error: magicLinkError } = await supabase.auth.signInWithOtp({
         email,
+        options: { emailRedirectTo },
       });
 
       if (magicLinkError) {
@@ -93,17 +158,45 @@ export default function LoginPage() {
     }
   };
 
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
       <div className="max-w-md w-full bg-white/5 border border-white/10 rounded-3xl p-8">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Zap className="text-slate-900 w-8 h-8 fill-current" />
+        <Link href="/" className="flex items-center gap-2 justify-center mb-6 group">
+          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-400 rounded-xl flex items-center justify-center group-hover:scale-105 transition">
+            <Zap className="text-slate-900 w-5 h-5 fill-current" />
           </div>
+          <span className="text-xl font-black text-white tracking-tight">ENERGIA<span className="text-emerald-500">LIVRE</span></span>
+        </Link>
+
+        <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Login</h1>
-          <p className="text-slate-400">Acesse sua conta EnergiaLivre</p>
+          <p className="text-slate-400">
+            {fromLabel ? `Entre para acessar o ${fromLabel}` : 'Acesse sua conta EnergiaLivre'}
+          </p>
         </div>
-        
+
+        {cadastroSucesso && (
+          <div className="mb-6 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm flex items-start gap-2">
+            <Sparkles className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>Cadastro realizado! Confirme seu e-mail (se aplicável) e faça login para acessar seu painel.</span>
+          </div>
+        )}
+
+        {fromLabel && (
+          <div className="mb-6 p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-300 text-sm flex items-center gap-2">
+            <ArrowRight className="w-4 h-4 shrink-0" />
+            <span>Você será direcionado para o {fromLabel} após o login.</span>
+          </div>
+        )}
+
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -116,11 +209,11 @@ export default function LoginPage() {
               required
             />
           </div>
-          
+
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <input
-              type={showPassword ? "text" : "password"}
+              type={showPassword ? 'text' : 'password'}
               placeholder="Senha"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -172,14 +265,14 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <div className="mt-8 text-center">
+        <div className="mt-8 space-y-2 text-center">
           <p className="text-slate-400 text-sm">
             Não tem conta?{' '}
             <Link href="/cadastro" className="text-emerald-400 hover:text-emerald-300 transition font-medium">
               Cadastre-se
             </Link>
           </p>
-          <p className="text-slate-400 text-sm mt-2">
+          <p className="text-slate-500 text-xs">
             <Link href="/admin-login" className="text-purple-400 hover:text-purple-300 transition font-medium">
               Acessar Painel Admin
             </Link>

@@ -81,7 +81,7 @@ export default function CadastroGeradorPage() {
             excedente_mensal_kwh: parseFloat(formData.excedente) || 0,
             concessionaria: formData.concessionaria,
           },
-          emailRedirectTo: `${window.location.origin}/login?cadastro=sucesso`,
+          emailRedirectTo: `${window.location.origin}/login?cadastro=sucesso&from=gerador`,
         }
       });
 
@@ -115,7 +115,7 @@ export default function CadastroGeradorPage() {
         }, { onConflict: 'id' });
 
         setSuccess(true);
-        setTimeout(() => router.push('/login?cadastro=sucesso'), 3000);
+        setTimeout(() => router.push('/login?cadastro=sucesso&from=gerador'), 3000);
       }
     } catch (err: any) {
       setError(err.message);

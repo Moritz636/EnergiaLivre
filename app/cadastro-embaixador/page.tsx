@@ -64,7 +64,7 @@ export default function CadastroEmbaixadorPage() {
             cidade,
             estado,
           },
-          emailRedirectTo: `${window.location.origin}/login?cadastro=sucesso`,
+          emailRedirectTo: `${window.location.origin}/login?cadastro=sucesso&from=parceiro`,
         },
       });
 
@@ -95,7 +95,7 @@ export default function CadastroEmbaixadorPage() {
         }
 
         setSuccess(true);
-        setTimeout(() => router.push('/login?cadastro=sucesso'), 2500);
+        setTimeout(() => router.push('/login?cadastro=sucesso&from=parceiro'), 2500);
       }
     } catch (err: any) {
       console.error('Erro no cadastro:', err);

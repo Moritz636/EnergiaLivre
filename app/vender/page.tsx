@@ -1,13 +1,14 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { 
-  ArrowRight, 
-  ShieldCheck, 
-  Loader2, 
-  ArrowLeft, 
-  DollarSign, 
-  CheckCircle2, 
-  Award, 
+import { useRouter } from 'next/navigation';
+import {
+  ArrowRight,
+  ShieldCheck,
+  Loader2,
+  ArrowLeft,
+  DollarSign,
+  CheckCircle2,
+  Award,
   FileText,
   Crown,
   Zap,
@@ -24,6 +25,7 @@ import { saveLead } from '@/app/actions';
 import { buildFollowUpUrl, splitCidadeEstado } from '@/lib/leads';
 
 export default function VenderPage() {
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [analysisPhase, setAnalysisPhase] = useState(0);
@@ -73,6 +75,14 @@ export default function VenderPage() {
     }
   }, [step, formData.estado]);
 
+  // Redirecionamento automático do Passo 5 para /login após captura
+  useEffect(() => {
+    if (step === 5) {
+      const t = setTimeout(() => router.push('/login?from=gerador'), 6000);
+      return () => clearTimeout(t);
+    }
+  }, [step, router]);
+
   const handleNext = () => {
     setIsLoading(true);
     setTimeout(() => {
@@ -105,7 +115,7 @@ export default function VenderPage() {
         throw new Error(result.message);
       }
 
-      setStep(5); 
+      setStep(5);
     } catch (error: any) {
       console.error("Falha no envio:", error);
       alert(`Erro ao salvar: ${error.message}`);
@@ -369,45 +379,59 @@ export default function VenderPage() {
             </div>
           )}
 
-          {/* STEP 5 - Sucesso com CTA Forte (Lei 32: Explore os Sonhos) */}
+          {/* STEP 5 - Sucesso com mensagem de fatura recebida e redirecionamento para /login */}
           {step === 5 && (
-            <div className="text-center space-y-8 animate-in zoom-in duration-500">
-              <div className="inline-flex items-center justify-center w-24 h-24 bg-blue-500/20 rounded-full text-blue-500 mb-4 animate-bounce">
+            <div className="text-center space-y-6 animate-in zoom-in duration-500">
+              <div className="inline-flex items-center justify-center w-24 h-24 bg-blue-500/20 rounded-full text-blue-500 mb-2 animate-bounce">
                 <CheckCircle2 className="w-14 h-14" />
               </div>
-              
+
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold text-white">Tudo Pronto! 🚀</h2>
-                <p className="text-blue-400 text-sm font-medium uppercase tracking-wider">Relatório de Lucratividade Gerado</p>
+                <p className="text-blue-400 text-sm font-medium uppercase tracking-wider">Fatura recebida ✓</p>
               </div>
-              
-              <p className="text-slate-400 leading-relaxed">
-                Seu relatório de lucratividade está sendo gerado. Nossa equipe entrará em contato via WhatsApp para validar os dados da usina.
+
+              <p className="text-slate-300 leading-relaxed text-sm">
+                Nossa equipe <strong className="text-white">já recebeu seus dados</strong> e vai priorizar a análise da sua usina. Continue para o painel do gerador e acompanhe em tempo real.
               </p>
-              
-              <div className="p-6 rounded-3xl bg-gradient-to-r from-blue-500/10 to-cyan-500/5 border border-blue-500/30 space-y-4">
-                <p className="text-sm text-blue-400 font-medium flex items-center justify-center gap-2">
-                  <FileText className="w-4 h-4" /> Quer acelerar a monetização?
+
+              {/* CTA: Enviar Fatura via WhatsApp (opcional) */}
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-500/10 to-cyan-500/5 border border-blue-500/30 space-y-3">
+                <p className="text-xs text-blue-300 font-bold uppercase tracking-wider flex items-center justify-center gap-2">
+                  <FileText className="w-3.5 h-3.5" /> Quer adiantar ainda mais?
                 </p>
-                <p className="text-xs text-slate-500">
-                  Envie o projeto técnico ou a última fatura de crédito da sua usina para nosso WhatsApp. Análise prioritária!
+                <p className="text-xs text-slate-400">
+                  Envie o projeto técnico ou a foto da última fatura de crédito da sua usina para o nosso WhatsApp. Análise prioritária!
                 </p>
-                <a 
+                <a
                   href={buildFollowUpUrl('gerador', {
                     nome: formData.nome,
                     ...splitCidadeEstado(formData.estado),
                     capacidadeKwp: Number(formData.capacidade) || 0,
-                  })} 
+                  })}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold hover:from-blue-400 hover:to-blue-500 transition-all shadow-lg"
+                  className="block w-full py-2.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 rounded-xl font-bold text-sm transition border border-blue-500/30"
                 >
-                  Enviar Documentos via WhatsApp
+                  📄 Enviar Documentos via WhatsApp
                 </a>
               </div>
 
+              {/* CTA: Continuar para Login → Dashboard Gerador */}
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/30 space-y-3">
+                <p className="text-xs text-emerald-300 font-bold uppercase tracking-wider flex items-center justify-center gap-2">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Redirecionando para o Painel do Gerador…
+                </p>
+                <button
+                  onClick={() => router.push('/login?from=gerador')}
+                  className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-slate-900 rounded-xl font-black hover:from-emerald-400 hover:to-emerald-500 transition-all shadow-lg flex items-center justify-center gap-2"
+                >
+                  Continuar para o Login <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+
               <p className="text-[10px] text-slate-600">
-                🔒 Seus dados estão seguros. Não compartilhamos informações com terceiros.
+                🔒 Seus dados estão protegidos pela LGPD. Não compartilhamos com terceiros.
               </p>
             </div>
           )}
