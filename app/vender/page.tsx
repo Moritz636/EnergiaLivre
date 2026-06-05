@@ -41,6 +41,13 @@ export default function VenderPage() {
     cargo: 'Proprietário',
   });
 
+  const [acceptedLgpd, setAcceptedLgpd] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const whatsappRegex = /^\(?\d{2}\)?\s?9?\d{4}-?\d{4}$/;
+  const isValidWhatsapp = whatsappRegex.test(formData.whatsapp.replace(/\s/g, ''));
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
+
   // Cálculo do ROI projetado em tempo real (Step 1)
   useEffect(() => {
     const capacidade = parseFloat(formData.capacidade);

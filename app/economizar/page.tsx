@@ -18,7 +18,11 @@ import {
   MapPin,
   Wallet,
   Send,
-  AlertCircle
+  AlertCircle,
+  Gift,
+  Users,
+  Award,
+  TrendingUp
 } from 'lucide-react';
 import { saveLead } from '@/app/actions';
 import { buildFollowUpUrl, splitCidadeEstado } from '@/lib/leads';
@@ -36,6 +40,13 @@ export default function EconomizarPage() {
     whatsapp: '',
     email: '',
   });
+
+  const [acceptedLgpd, setAcceptedLgpd] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const whatsappRegex = /^\(?\d{2}\)?\s?9?\d{4}-?\d{4}$/;
+  const isValidWhatsapp = whatsappRegex.test(formData.whatsapp.replace(/\s/g, ''));
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
 
   // Mensagens rotativas para o step 3 (carregamento persuasivo)
   const rotatingMessages = [
@@ -95,6 +106,21 @@ export default function EconomizarPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
+
+    if (!isValidWhatsapp) {
+      setSubmitError('WhatsApp inválido. Use o formato (84) 98785-8668.');
+      return;
+    }
+    if (!isValidEmail) {
+      setSubmitError('E-mail inválido.');
+      return;
+    }
+    if (!acceptedLgpd) {
+      setSubmitError('É necessário aceitar os termos de privacidade para continuar.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -109,10 +135,11 @@ export default function EconomizarPage() {
         gastoMensal: formData.gastoMensal,
       });
       if (!result.success) throw new Error(result.message);
-      
-      setStep(5); 
+
+      setStep(5);
     } catch (error: any) {
-      alert(`Erro ao salvar: ${error.message}`);
+      console.error('Falha no envio:', error);
+      setSubmitError('Não conseguimos enviar agora. Tente novamente ou chame no WhatsApp.');
     } finally {
       setIsLoading(false);
     }
@@ -174,10 +201,12 @@ export default function EconomizarPage() {
               </div>
               
               <div className="relative">
-                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-2xl">R$</span>
-                <input 
-                  type="number" 
-                  placeholder="350" 
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-2xl" id="gasto-label">R$</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="350"
+                  aria-label="Gasto mensal em reais"
                   className="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-5 pl-14 pr-6 text-2xl text-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all hover:border-emerald-500/50"
                   value={formData.gastoMensal}
                   onChange={(e) => setFormData({...formData, gastoMensal: e.target.value})}
@@ -223,9 +252,10 @@ export default function EconomizarPage() {
               
               <div className="relative">
                 <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
-                <input 
-                  type="text" 
-                  placeholder="Ex: São Paulo - SP" 
+                <input
+                  type="text"
+                  placeholder="Ex: São Paulo - SP"
+                  aria-label="Cidade e estado"
                   className="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-5 pl-14 pr-6 text-xl text-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all hover:border-emerald-500/50"
                   value={formData.cidade}
                   onChange={(e) => setFormData({...formData, cidade: e.target.value})}
@@ -292,9 +322,10 @@ export default function EconomizarPage() {
               
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="relative">
-                  <input 
-                    type="text" 
-                    placeholder="Seu nome completo" 
+                  <input
+                    type="text"
+                    placeholder="Seu nome completo"
+                    aria-label="Nome completo"
                     required
                     className="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all hover:border-emerald-500/50"
                     value={formData.nome}
@@ -302,9 +333,10 @@ export default function EconomizarPage() {
                   />
                 </div>
                 <div className="relative">
-                  <input 
-                    type="email" 
-                    placeholder="Seu melhor e-mail" 
+                  <input
+                    type="email"
+                    placeholder="Seu melhor e-mail"
+                    aria-label="E-mail"
                     required
                     className="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all hover:border-emerald-500/50"
                     value={formData.email}
@@ -312,17 +344,48 @@ export default function EconomizarPage() {
                   />
                 </div>
                 <div className="relative">
-                  <input 
-                    type="tel" 
-                    placeholder="Seu WhatsApp com DDD" 
+                  <input
+                    type="tel"
+                    placeholder="Seu WhatsApp com DDD"
+                    aria-label="WhatsApp com DDD"
+                    aria-invalid={formData.whatsapp.length > 0 && !isValidWhatsapp}
                     required
                     className="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all hover:border-emerald-500/50"
                     value={formData.whatsapp}
                     onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
                   />
+                  {formData.whatsapp.length > 0 && !isValidWhatsapp && (
+                    <p className="mt-1 text-[10px] text-red-400">Formato: (84) 98785-8668</p>
+                  )}
                 </div>
 
-                {/* Selos de Confiança */}
+                {/* Resumo dos dados para confiança */}
+                <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-[11px] text-slate-500 flex items-center justify-between">
+                  <span>💰 R$ {formData.gastoMensal || '0'}/mês</span>
+                  <span>📍 {formData.cidade || 'Não informado'}</span>
+                  <span>⚡ Economia: até 32%</span>
+                </div>
+
+                <label className="flex items-start gap-2 text-[11px] text-slate-400 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={acceptedLgpd}
+                    onChange={(e) => setAcceptedLgpd(e.target.checked)}
+                    required
+                    className="mt-0.5 w-3.5 h-3.5 accent-emerald-500"
+                  />
+                  <span>
+                    Concordo com a <a href="/termos" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">Política de Privacidade</a> e
+                    autorizo o contato comercial. Posso revogar a qualquer momento.
+                  </span>
+                </label>
+
+                {submitError && (
+                  <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-[11px] text-red-300" role="alert">
+                    {submitError}
+                  </div>
+                )}
+
                 <div className="flex items-center justify-center gap-4 py-2">
                   <div className="flex items-center gap-1 text-[10px] text-slate-500">
                     <ShieldCheck className="w-3 h-3 text-emerald-500" /> LGPD
@@ -335,10 +398,10 @@ export default function EconomizarPage() {
                   </div>
                 </div>
 
-                <button 
+                <button
                   type="submit"
-                  disabled={isLoading}
-                  className="w-full py-5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 disabled:from-slate-700 disabled:to-slate-800 text-slate-900 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-3 group shadow-[0_0_25px_rgba(16,185,129,0.3)]"
+                  disabled={isLoading || !acceptedLgpd}
+                  className="w-full py-5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 disabled:from-slate-700 disabled:to-slate-800 disabled:cursor-not-allowed text-slate-900 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-3 group shadow-[0_0_25px_rgba(16,185,129,0.3)]"
                 >
                   {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Receber Relatório Agora <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>}
                 </button>
