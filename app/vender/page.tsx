@@ -12,14 +12,16 @@ import {
   FileText,
   Crown,
   Zap,
-  Sparkles,
   TrendingUp,
   Clock,
   BadgeCheck,
   MapPin,
   Building,
   Send,
-  Flame
+  Flame,
+  Gift,
+  Users,
+  BarChart3
 } from 'lucide-react';
 import { saveLead } from '@/app/actions';
 import { buildFollowUpUrl, splitCidadeEstado } from '@/lib/leads';
@@ -96,6 +98,21 @@ export default function VenderPage() {
   // FUNÇÃO DE ENVIO BLINDADA (Envia todos os campos para o Supabase)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
+
+    if (!isValidWhatsapp) {
+      setSubmitError('WhatsApp inválido. Use o formato (84) 98785-8668.');
+      return;
+    }
+    if (!isValidEmail) {
+      setSubmitError('E-mail inválido.');
+      return;
+    }
+    if (!acceptedLgpd) {
+      setSubmitError('É necessário aceitar os termos de privacidade para continuar.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -118,7 +135,7 @@ export default function VenderPage() {
       setStep(5);
     } catch (error: any) {
       console.error("Falha no envio:", error);
-      alert(`Erro ao salvar: ${error.message}`);
+      setSubmitError('Não conseguimos enviar agora. Tente novamente ou chame no WhatsApp.');
     } finally {
       setIsLoading(false);
     }
@@ -181,10 +198,12 @@ export default function VenderPage() {
               </div>
               
               <div className="relative">
-                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xl">kWp</span>
-                <input 
-                  type="text" 
-                  placeholder="Ex: 100" 
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xl" id="capacidade-label">kWp</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="Ex: 100"
+                  aria-label="Capacidade da usina em quilowatts pico"
                   className="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-5 pl-16 pr-6 text-2xl text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all hover:border-blue-500/50"
                   value={formData.capacidade}
                   onChange={(e) => setFormData({...formData, capacidade: e.target.value})}
@@ -230,9 +249,10 @@ export default function VenderPage() {
               
               <div className="relative">
                 <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
-                <input 
-                  type="text" 
-                  placeholder="Ex: Minas Gerais - MG" 
+                <input
+                  type="text"
+                  placeholder="Ex: Minas Gerais - MG"
+                  aria-label="Estado da usina"
                   className="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-5 pl-14 pr-6 text-xl text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all hover:border-blue-500/50"
                   value={formData.estado}
                   onChange={(e) => setFormData({...formData, estado: e.target.value})}
@@ -304,9 +324,10 @@ export default function VenderPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="relative">
-                    <input 
-                      type="text" 
-                      placeholder="Nome completo" 
+                    <input
+                      type="text"
+                      placeholder="Nome completo"
+                      aria-label="Nome completo"
                       required
                       className="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-4 pl-6 pr-6 text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all hover:border-blue-500/50"
                       value={formData.nome}
@@ -314,7 +335,8 @@ export default function VenderPage() {
                     />
                   </div>
                   <div className="relative">
-                    <select 
+                    <select
+                      aria-label="Cargo ou função"
                       className="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-4 px-6 text-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all appearance-none cursor-pointer hover:border-blue-500/50"
                       value={formData.cargo}
                       onChange={(e) => setFormData({...formData, cargo: e.target.value})}
@@ -328,9 +350,10 @@ export default function VenderPage() {
                   </div>
                 </div>
                 <div className="relative">
-                  <input 
-                    type="email" 
-                    placeholder="E-mail corporativo" 
+                  <input
+                    type="email"
+                    placeholder="E-mail corporativo"
+                    aria-label="E-mail corporativo"
                     required
                     className="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all hover:border-blue-500/50"
                     value={formData.email}
@@ -338,24 +361,47 @@ export default function VenderPage() {
                   />
                 </div>
                 <div className="relative">
-                  <input 
-                    type="tel" 
-                    placeholder="WhatsApp com DDD" 
+                  <input
+                    type="tel"
+                    placeholder="WhatsApp com DDD"
+                    aria-label="WhatsApp com DDD"
+                    aria-invalid={formData.whatsapp.length > 0 && !isValidWhatsapp}
                     required
                     className="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all hover:border-blue-500/50"
                     value={formData.whatsapp}
                     onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
                   />
+                  {formData.whatsapp.length > 0 && !isValidWhatsapp && (
+                    <p className="mt-1 text-[10px] text-red-400">Formato: (84) 98785-8668</p>
+                  )}
                 </div>
 
-                {/* Resumo dos dados para confiança */}
                 <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/10 text-[11px] text-slate-500 flex items-center justify-between">
                   <span>⚡ {formData.capacidade || '0'} kWp</span>
                   <span>📍 {formData.estado || 'Não informado'}</span>
                   <span>💰 R$ {roiProjetado.toLocaleString('pt-BR')}/mês</span>
                 </div>
 
-                {/* Selos de Confiança */}
+                <label className="flex items-start gap-2 text-[11px] text-slate-400 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={acceptedLgpd}
+                    onChange={(e) => setAcceptedLgpd(e.target.checked)}
+                    required
+                    className="mt-0.5 w-3.5 h-3.5 accent-blue-500"
+                  />
+                  <span>
+                    Concordo com a <a href="/termos" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Política de Privacidade</a> e
+                    autorizo o contato comercial. Posso revogar a qualquer momento.
+                  </span>
+                </label>
+
+                {submitError && (
+                  <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-[11px] text-red-300" role="alert">
+                    {submitError}
+                  </div>
+                )}
+
                 <div className="flex items-center justify-center gap-4 py-2">
                   <div className="flex items-center gap-1 text-[10px] text-slate-500">
                     <ShieldCheck className="w-3 h-3 text-blue-500" /> LGPD
@@ -368,10 +414,10 @@ export default function VenderPage() {
                   </div>
                 </div>
 
-                <button 
+                <button
                   type="submit"
-                  disabled={isLoading}
-                  className="w-full py-5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 disabled:from-slate-700 disabled:to-slate-800 text-white rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-3 group shadow-[0_0_25px_rgba(59,130,246,0.3)]"
+                  disabled={isLoading || !acceptedLgpd}
+                  className="w-full py-5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 disabled:from-slate-700 disabled:to-slate-800 disabled:cursor-not-allowed text-white rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-3 group shadow-[0_0_25px_rgba(59,130,246,0.3)]"
                 >
                   {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Receber Proposta de Lucro <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>}
                 </button>
