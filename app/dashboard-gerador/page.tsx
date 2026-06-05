@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/app/hooks/useAuth';
 import { getSupabase } from '@/lib/supabase/singleton';
-import { LogOut, Zap, TrendingUp, DollarSign, Sun, Building2, MapPin, Users, Loader2, Sparkles, ArrowRight, ShieldCheck, Award, Crown, Calendar, BarChart3 } from 'lucide-react';
+import { LogOut, Zap, TrendingUp, DollarSign, Sun, Building2, MapPin, Users, Loader2, Sparkles, ArrowRight, ShieldCheck, Award, Crown, Calendar, BarChart3, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import type { Database } from '@/lib/database.types';
 
@@ -149,6 +149,13 @@ export default function DashboardGeradorPage() {
             <span className="text-sm text-slate-400 hidden sm:block">
               Olá, <span className="text-white font-medium">{profile?.nome || 'Usuário'}</span>
             </span>
+            <Link
+              href="/dashboard/chat"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm text-slate-300 hover:text-emerald-400 transition"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">Chat</span>
+            </Link>
             <button
               onClick={logout}
               className="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-white transition"
