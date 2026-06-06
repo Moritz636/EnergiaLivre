@@ -123,6 +123,7 @@ interface Coupon {
   used_at: string | null;
   expires_at: string | null;
   created_at: string;
+  created_by: string | null;
 }
 
 interface SystemSetting {
@@ -1014,8 +1015,8 @@ function CouponsSection({ coupons, users, searchTerm, setSearchTerm }: any) {
     return c.code.toLowerCase().includes(t);
   });
 
-  const used = coupons.filter(c => c.used_by).length;
-  const available = coupons.filter(c => !c.used_by).length;
+  const used = (coupons as Coupon[]).filter(c => c.used_by).length;
+  const available = (coupons as Coupon[]).filter(c => !c.used_by).length;
 
   return (
     <div className="space-y-4">
@@ -1054,7 +1055,7 @@ function CouponsSection({ coupons, users, searchTerm, setSearchTerm }: any) {
                 <tr><td colSpan={6} className="p-8 text-center text-slate-600 text-xs">Nenhum cupom</td></tr>
               ) : (
                 filtered.map(c => {
-                  const creator = userById.get(c.created_by);
+                  const creator = c.created_by ? userById.get(c.created_by) : null;
                   const user = c.used_by ? userById.get(c.used_by) : null;
                   return (
                     <tr key={c.id} className="border-b border-white/5 hover:bg-white/[0.02]">
