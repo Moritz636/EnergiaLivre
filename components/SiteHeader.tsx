@@ -35,6 +35,9 @@ export default function SiteHeader({ showNav = true, backHref, backLabel }: Site
             <Link href="/regulamentacao" className="hidden md:inline text-slate-300 hover:text-white transition">
               Regulamentação
             </Link>
+            <Link href="/manifesto" className="hidden md:inline text-slate-300 hover:text-white transition">
+              Manifesto
+            </Link>
             <Link href="/login" className="text-slate-300 hover:text-white transition px-3 py-1.5">
               Entrar
             </Link>
