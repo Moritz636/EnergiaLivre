@@ -13,7 +13,8 @@ import {
 import {
   TOKEN_PACKAGES, TOKEN_LAUNCH_DATE, PRESALE_END_DATE, KWATT_UNIT_PRICE,
   KWH_REFERENCE_PRICE, KWATT_TO_KWH_RATIO, TOKEN_TOTAL_SUPPLY, TOKEN_DISTRIBUTION,
-  TOKEN_USE_CASES, getFinalPrice, getTotalTokens, formatBRL, formatTokens
+  TOKEN_USE_CASES, getFinalPrice, getTotalTokens, formatBRL, formatTokens,
+  KWATT_CONTRACT_ADDRESS, KWATT_DEPLOY_STATUS, KWATT_EXPLORER_URL
 } from '@/lib/tokenomics';
 
 type Countdown = { days: number; hours: number; minutes: number; seconds: number }
@@ -173,6 +174,9 @@ export default function TokenPresalePage() {
           <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
           <p className="text-[11px] text-amber-200 leading-tight">
             <strong>Token de utilidade</strong> — Não é valor mobiliário. Não há promessa de valorização. Lei 14.478/2022.
+            {KWATT_DEPLOY_STATUS === 'not_deployed' && (
+              <> · <strong>Status on-chain:</strong> pre-deploy (contrato sera publicado em 05/01/2027).</>
+            )}
           </p>
         </div>
       </div>
@@ -493,6 +497,90 @@ export default function TokenPresalePage() {
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* ON-CHAIN STATUS */}
+        <section id="onchain" className="max-w-6xl mx-auto mt-24">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-[10px] font-black text-cyan-300 uppercase tracking-wider mb-4">
+              <Activity className="w-3 h-3" /> On-chain transparente
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-3">Contrato inteligente KWATT</h2>
+            <p className="text-slate-400 max-w-2xl mx-auto">
+              Token ERC-20 (Polygon PoS) com Burnable, Pausable, Permit e Votes. Open source, auditado, multisig.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="p-6 rounded-2xl bg-slate-900 border border-white/10 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-400">Status do deploy</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 text-[10px] font-black uppercase">
+                  <Clock className="w-3 h-3" /> Pre-launch
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-400">Network</span>
+                <span className="text-sm font-bold text-white">Polygon PoS</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-400">Chain ID</span>
+                <span className="text-sm font-bold text-white">137</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-400">Padrao</span>
+                <span className="text-sm font-bold text-white">ERC-20 + EIP-2612 + EIP-5805</span>
+              </div>
+              <div className="pt-2 border-t border-white/10">
+                <p className="text-xs text-slate-400 mb-1">Endereco do contrato</p>
+                <code className="text-[11px] text-amber-300 font-mono break-all block bg-slate-950 p-2 rounded border border-white/5">
+                  {KWATT_CONTRACT_ADDRESS}
+                </code>
+                <p className="text-[10px] text-slate-500 mt-1">
+                  Endereco placeholder. O contrato sera publicado em 05/01/2027 no bloco ~75.500.000.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-slate-900 border border-white/10 space-y-3">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" /> Recursos on-chain
+              </h3>
+              <ul className="space-y-2 text-xs text-slate-300">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                  <span><strong className="text-white">ERC-20 Burnable:</strong> supply reduz com uso real</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                  <span><strong className="text-white">Pausable:</strong> circuit-breaker de emergencia (multisig 5/9)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                  <span><strong className="text-white">Permit (EIP-2612):</strong> approve sem gas via signature</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                  <span><strong className="text-white">Votes (EIP-5805):</strong> governanca on-chain para holders</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                  <span><strong className="text-white">AccessControl:</strong> roles MINTER/PAUSER com multisig</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                  <span><strong className="text-white">MAX_SUPPLY guard:</strong> impossivel ultrapassar 1B tokens</span>
+                </li>
+              </ul>
+              <Link
+                href="/dashboard/token"
+                className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold text-xs"
+              >
+                <Coins className="w-3.5 h-3.5" /> Acompanhar minha carteira
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
           </div>
         </section>
 

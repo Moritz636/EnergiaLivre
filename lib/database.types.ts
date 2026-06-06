@@ -824,12 +824,303 @@ export interface Database {
           updated_at?: string
         }
       }
+      token_holdings: {
+        Row: {
+          id: string
+          user_id: string
+          wallet_address: string | null
+          balance: number
+          balance_locked: number
+          balance_available: number
+          lifetime_earned: number
+          lifetime_burned: number
+          lifetime_transferred_in: number
+          lifetime_transferred_out: number
+          last_synced_at: string | null
+          last_synced_block: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          wallet_address?: string | null
+          balance?: number
+          balance_locked?: number
+          lifetime_earned?: number
+          lifetime_burned?: number
+          lifetime_transferred_in?: number
+          lifetime_transferred_out?: number
+          last_synced_at?: string | null
+          last_synced_block?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          wallet_address?: string | null
+          balance?: number
+          balance_locked?: number
+          lifetime_earned?: number
+          lifetime_burned?: number
+          lifetime_transferred_in?: number
+          lifetime_transferred_out?: number
+          last_synced_at?: string | null
+          last_synced_block?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      token_transactions: {
+        Row: {
+          id: string
+          user_id: string
+          tx_hash: string | null
+          block_number: number | null
+          log_index: number | null
+          tx_type: string
+          amount: number
+          direction: 'in' | 'out' | 'self'
+          counterparty_user_id: string | null
+          counterparty_wallet: string | null
+          purpose: string | null
+          ref_id: string | null
+          ref_table: string | null
+          status: 'pending' | 'confirmed' | 'failed' | 'reverted'
+          metadata: Json | null
+          confirmed_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          tx_hash?: string | null
+          block_number?: number | null
+          log_index?: number | null
+          tx_type: string
+          amount: number
+          direction: 'in' | 'out' | 'self'
+          counterparty_user_id?: string | null
+          counterparty_wallet?: string | null
+          purpose?: string | null
+          ref_id?: string | null
+          ref_table?: string | null
+          status?: 'pending' | 'confirmed' | 'failed' | 'reverted'
+          metadata?: Json | null
+          confirmed_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          tx_hash?: string | null
+          block_number?: number | null
+          log_index?: number | null
+          tx_type?: string
+          amount?: number
+          direction?: 'in' | 'out' | 'self'
+          counterparty_user_id?: string | null
+          counterparty_wallet?: string | null
+          purpose?: string | null
+          ref_id?: string | null
+          ref_table?: string | null
+          status?: 'pending' | 'confirmed' | 'failed' | 'reverted'
+          metadata?: Json | null
+          confirmed_at?: string | null
+          created_at?: string
+        }
+      }
+      token_redemptions: {
+        Row: {
+          id: string
+          user_id: string
+          redemption_type: 'invoice_payment' | 'celular_recharge' | 'cashback' | 'donation' | 'other'
+          amount_tokens: number
+          amount_brl: number
+          kwh_equivalent: number | null
+          target_id: string | null
+          target_type: string | null
+          target_metadata: Json | null
+          tx_hash: string | null
+          status: 'pending' | 'approved' | 'processing' | 'fulfilled' | 'rejected' | 'failed' | 'refunded'
+          approved_by: string | null
+          approved_at: string | null
+          rejected_reason: string | null
+          fulfilled_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          redemption_type: 'invoice_payment' | 'celular_recharge' | 'cashback' | 'donation' | 'other'
+          amount_tokens: number
+          amount_brl: number
+          kwh_equivalent?: number | null
+          target_id?: string | null
+          target_type?: string | null
+          target_metadata?: Json | null
+          tx_hash?: string | null
+          status?: 'pending' | 'approved' | 'processing' | 'fulfilled' | 'rejected' | 'failed' | 'refunded'
+          approved_by?: string | null
+          approved_at?: string | null
+          rejected_reason?: string | null
+          fulfilled_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          redemption_type?: 'invoice_payment' | 'celular_recharge' | 'cashback' | 'donation' | 'other'
+          amount_tokens?: number
+          amount_brl?: number
+          kwh_equivalent?: number | null
+          target_id?: string | null
+          target_type?: string | null
+          target_metadata?: Json | null
+          tx_hash?: string | null
+          status?: 'pending' | 'approved' | 'processing' | 'fulfilled' | 'rejected' | 'failed' | 'refunded'
+          approved_by?: string | null
+          approved_at?: string | null
+          rejected_reason?: string | null
+          fulfilled_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      token_airdrops: {
+        Row: {
+          id: string
+          pre_registration_id: string | null
+          user_id: string | null
+          email: string
+          wallet_address: string | null
+          amount: number
+          package_code: string | null
+          source: string
+          tx_hash: string | null
+          status: 'pending' | 'queued' | 'sent' | 'confirmed' | 'failed' | 'rejected'
+          attempted_at: string | null
+          confirmed_at: string | null
+          error_message: string | null
+          metadata: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          pre_registration_id?: string | null
+          user_id?: string | null
+          email: string
+          wallet_address?: string | null
+          amount: number
+          package_code?: string | null
+          source?: string
+          tx_hash?: string | null
+          status?: 'pending' | 'queued' | 'sent' | 'confirmed' | 'failed' | 'rejected'
+          attempted_at?: string | null
+          confirmed_at?: string | null
+          error_message?: string | null
+          metadata?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          pre_registration_id?: string | null
+          user_id?: string | null
+          email?: string
+          wallet_address?: string | null
+          amount?: number
+          package_code?: string | null
+          source?: string
+          tx_hash?: string | null
+          status?: 'pending' | 'queued' | 'sent' | 'confirmed' | 'failed' | 'rejected'
+          attempted_at?: string | null
+          confirmed_at?: string | null
+          error_message?: string | null
+          metadata?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      token_contracts: {
+        Row: {
+          id: string
+          network: string
+          chain_id: number
+          contract_address: string
+          deploy_tx_hash: string | null
+          deploy_block: number | null
+          deployer_address: string | null
+          name: string
+          symbol: string
+          decimals: number
+          is_active: boolean
+          verified_at: string | null
+          metadata: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          network: string
+          chain_id: number
+          contract_address: string
+          deploy_tx_hash?: string | null
+          deploy_block?: number | null
+          deployer_address?: string | null
+          name: string
+          symbol: string
+          decimals?: number
+          is_active?: boolean
+          verified_at?: string | null
+          metadata?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          network?: string
+          chain_id?: number
+          contract_address?: string
+          deploy_tx_hash?: string | null
+          deploy_block?: number | null
+          deployer_address?: string | null
+          name?: string
+          symbol?: string
+          decimals?: number
+          is_active?: boolean
+          verified_at?: string | null
+          metadata?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_token_metrics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_user_token_ledger: {
+        Args: { p_user_id: string; p_limit?: number }
+        Returns: {
+          id: string
+          tx_type: string
+          direction: string
+          amount: number
+          purpose: string | null
+          status: string
+          tx_hash: string | null
+          created_at: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

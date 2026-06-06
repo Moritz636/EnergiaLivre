@@ -1,0 +1,47 @@
+{
+  "name": "@energialivre/contracts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Smart contracts KWATT - EnergiaLivre token (Polygon PoS, ERC-20 utility token conforme Lei 14.478/2022)",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "test:gas": "REPORT_GAS=true hardhat test",
+    "test:coverage": "hardhat coverage",
+    "node": "hardhat node",
+    "deploy:amoy": "hardhat run deploy/polygon-amoy.ts --network amoy",
+    "deploy:polygon": "hardhat run deploy/polygon-mainnet.ts --network polygon",
+    "verify:amoy": "hardhat run scripts/verify.ts --network amoy",
+    "verify:polygon": "hardhat run scripts/verify.ts --network polygon",
+    "lint": "solhint 'contracts/**/*.sol'",
+    "lint:fix": "solhint --fix 'contracts/**/*.sol'",
+    "slither": "slither . --filter-paths node_modules",
+    "clean": "hardhat clean"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.7",
+    "@nomicfoundation/hardhat-ethers": "^3.0.8",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.11",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.10",
+    "@typechain/ethers-v6": "^0.5.1",
+    "@typechain/hardhat": "^9.1.0",
+    "@types/chai": "^4.3.16",
+    "@types/mocha": "^10.0.7",
+    "@types/node": "^20.14.10",
+    "chai": "^4.4.1",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.1",
+    "hardhat": "^2.22.10",
+    "hardhat-gas-reporter": "^1.0.10",
+    "solhint": "^5.0.2",
+    "solidity-coverage": "^0.8.12",
+    "ts-node": "^10.9.2",
+    "typechain": "^8.3.2",
+    "typescript": "^5.5.3"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2",
+    "@openzeppelin/contracts-upgradeable": "^5.0.2"
+  }
+}

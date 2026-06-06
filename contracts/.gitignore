@@ -1,0 +1,14 @@
+node_modules/
+artifacts/
+cache/
+typechain-types/
+coverage/
+coverage.json
+.env
+.env.local
+.openzeppelin/
+deployments/
+deployments-amoy/
+deployments-polygon/
+*.log
+.DS_Store

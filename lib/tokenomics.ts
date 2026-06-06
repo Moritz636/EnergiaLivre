@@ -12,6 +12,26 @@ export const KWATT_UNIT_PRICE = KWH_REFERENCE_PRICE * KWATT_TO_KWH_RATIO // R$ 0
 export const KWATT_SYMBOL = 'KWATT'
 export const KWATT_DECIMALS = 18 // Padrão ERC-20/BEP-20
 
+// ─── ON-CHAIN (placeholder até deploy) ────────────────────────────────
+export const KWATT_CHAIN_ID = 137 // Polygon PoS
+export const KWATT_NETWORK = 'polygon-mainnet'
+export const KWATT_RPC_URL = 'https://polygon-rpc.com'
+export const KWATT_CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000' // placeholder pre-deploy
+export const KWATT_EXPLORER_URL = 'https://polygonscan.com/token/' + KWATT_CONTRACT_ADDRESS
+export const KWATT_DEPLOY_STATUS = 'not_deployed' // not_deployed | pending | deployed | verified
+export const KWATT_LAUNCH_BLOCK_TARGET = 75_500_000 // ~05/01/2027
+
+export function getTokenExplorerLink(addr?: string): string {
+  const a = addr && addr !== '0x0000000000000000000000000000000000000000' ? addr : KWATT_CONTRACT_ADDRESS
+  return `https://polygonscan.com/token/${a}`
+}
+
+export function getTokenDeployStatus(): 'not_deployed' | 'pending' | 'deployed' | 'verified' {
+  return KWATT_CONTRACT_ADDRESS === '0x0000000000000000000000000000000000000000'
+    ? 'not_deployed'
+    : 'deployed'
+}
+
 export const TOKEN_LAUNCH_DATE = new Date(2027, 0, 5, 0, 0, 0) // 05/01/2027
 export const PRESALE_END_DATE = new Date(2026, 8, 9, 23, 59, 59) // 09/09/2026
 

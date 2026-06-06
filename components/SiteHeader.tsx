@@ -38,6 +38,9 @@ export default function SiteHeader({ showNav = true, backHref, backLabel }: Site
             <Link href="/manifesto" className="hidden md:inline text-slate-300 hover:text-white transition">
               Manifesto
             </Link>
+            <Link href="/token" className="hidden md:inline text-amber-300 hover:text-amber-200 transition font-bold">
+              Token
+            </Link>
             <Link href="/login" className="text-slate-300 hover:text-white transition px-3 py-1.5">
               Entrar
             </Link>
