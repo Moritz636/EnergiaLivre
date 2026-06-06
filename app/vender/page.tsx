@@ -168,7 +168,7 @@ export default function VenderPage() {
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Voltar ao Portal
           </a>
           <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500/20 to-cyan-500/10 border border-blue-500/30 text-[9px] font-black text-blue-400 uppercase tracking-wider flex items-center gap-1">
-            <Crown className="w-3 h-3" /> Monetização Garantida • Demanda Alta
+            <Crown className="w-3 h-3" /> Análise de Viabilidade para Gerador
           </div>
         </div>
 
