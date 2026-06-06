@@ -20,6 +20,9 @@ export async function GET(request: NextRequest) {
     const targetTipo = searchParams.get('targetTipo') as TargetTipo | null
     const radiusKm = Number(searchParams.get('radiusKm') ?? '50')
     const limit = Number(searchParams.get('limit') ?? '50')
+    const mode = (searchParams.get('mode') ?? 'radius') as 'radius' | 'state' | 'distributor'
+    const estado = searchParams.get('estado') || undefined
+    const distribuidora = searchParams.get('distribuidora') || undefined
 
     if (!targetTipo || !ALLOWED_TIPOS.includes(targetTipo)) {
       return NextResponse.json(
@@ -48,31 +51,55 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Para mode='radius' precisamos de localizacao obrigatoria
+    // Para state/distributor, localizacao e opcional (mas recomendado para ordernacao)
     const { data: myLocation, error: locError } = await (supabase
       .from('user_locations')
-      .select('latitude, longitude')
+      .select('latitude, longitude, estado')
       .eq('user_id', user.id)
-      .single() as any)
+      .maybeSingle() as any)
 
-    if (locError || !myLocation) {
+    if (mode === 'radius' && (locError || !myLocation)) {
       return NextResponse.json(
         { error: 'Você precisa configurar sua localização para usar o match' },
         { status: 412 },
       )
     }
 
+    if (mode === 'state' && !estado && (!myLocation || !myLocation.estado)) {
+      return NextResponse.json(
+        { error: 'Para buscar por estado, defina sua localização (UF)' },
+        { status: 412 },
+      )
+    }
+
+    if (mode === 'distributor' && !distribuidora) {
+      return NextResponse.json(
+        { error: 'Para buscar por distribuidora, selecione uma distribuidora' },
+        { status: 412 },
+      )
+    }
+
+    // origin: lat/lng ou ponto neutro do Brasil (se mode!=radius)
+    const origin = myLocation
+      ? { lat: Number(myLocation.latitude), lng: Number(myLocation.longitude) }
+      : { lat: -15.7801, lng: -47.9292 } // centro do Brasil, nao usado no filtro
+
     const candidates = await findCandidates(
       {
         userId: user.id,
-        origin: { lat: Number(myLocation.latitude), lng: Number(myLocation.longitude) },
+        origin,
         targetTipo,
         radiusKm: Number.isFinite(radiusKm) ? radiusKm : 50,
         limit: Number.isFinite(limit) ? Math.min(limit, 200) : 50,
+        mode,
+        estadoFilter: estado || myLocation?.estado,
+        distribuidoraFilter: distribuidora,
       },
       { supabase },
     )
 
-    return NextResponse.json({ success: true, candidates })
+    return NextResponse.json({ success: true, candidates, mode })
   } catch (err: any) {
     console.error('GET /api/matches error:', err)
     return NextResponse.json(

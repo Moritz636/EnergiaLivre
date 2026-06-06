@@ -26,12 +26,15 @@ export async function GET(request: NextRequest) {
     const lat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')!) : null
     const lng = searchParams.get('lng') ? parseFloat(searchParams.get('lng')!) : null
     const radiusKm = searchParams.get('radiusKm') ? parseInt(searchParams.get('radiusKm')!, 10) : 100
+    const mode = (searchParams.get('mode') ?? 'radius') as 'radius' | 'state' | 'distributor'
+    const distribuidora = searchParams.get('distribuidora')
 
     // Tentar usar a RPC; se falhar, fallback query direta
     const rpcParams: Record<string, any> = { p_limit: limit }
     if (cidade) rpcParams.p_cidade = cidade
     if (estado) rpcParams.p_estado = estado
-    if (lat !== null && lng !== null) {
+    if (distribuidora) rpcParams.p_distribuidora = distribuidora
+    if (lat !== null && lng !== null && mode === 'radius') {
       rpcParams.p_user_lat = lat
       rpcParams.p_user_lng = lng
       rpcParams.p_radius_km = radiusKm
@@ -47,13 +50,14 @@ export async function GET(request: NextRequest) {
     // Fallback: query direta
     let q = supabase
       .from('geradores')
-      .select('id, nome_usina, capacidade_kwp, excedente_mensal_kwh, cidade, estado, latitude, longitude, preco_kwh, desconto_percentual, pacote_kwh, pacote_preco, ranking_score, total_avaliacoes, media_avaliacoes, status')
+      .select('id, nome_usina, capacidade_kwp, excedente_mensal_kwh, cidade, estado, latitude, longitude, preco_kwh, desconto_percentual, pacote_kwh, pacote_preco, ranking_score, total_avaliacoes, media_avaliacoes, concessionaria, status')
       .eq('status', 'ativo')
       .order('ranking_score', { ascending: false })
       .limit(limit)
 
     if (cidade) q = q.ilike('cidade', cidade)
     if (estado) q = q.ilike('estado', estado)
+    if (distribuidora) q = q.ilike('concessionaria', distribuidora)
 
     const { data, error } = await q
     if (error) {
@@ -62,7 +66,7 @@ export async function GET(request: NextRequest) {
     }
 
     let ranked = data ?? []
-    if (lat !== null && lng !== null && ranked.length > 0) {
+    if (lat !== null && lng !== null && mode === 'radius' && ranked.length > 0) {
       const { calculateDistance } = await import('@/lib/geolocation')
       ranked = ranked
         .filter((g) => g.latitude != null && g.longitude != null)
@@ -74,7 +78,7 @@ export async function GET(request: NextRequest) {
         .sort((a, b) => (b.ranking_score ?? 0) - (a.ranking_score ?? 0))
     }
 
-    return NextResponse.json({ success: true, ranking: ranked, source: 'fallback' })
+    return NextResponse.json({ success: true, ranking: ranked, source: 'fallback', mode })
   } catch (err: any) {
     console.error('[geradores/ranking] exception:', err)
     return NextResponse.json({ error: err?.message ?? 'Erro interno' }, { status: 500 })

@@ -9,6 +9,8 @@ import LocationCapture from '@/components/LocationCapture';
 import SwipeCard, { type MatchCandidateData } from '@/components/Match/SwipeCard';
 import MemberPlusBlocker from '@/components/Match/MemberPlusBlocker';
 import type { MapMarker } from '@/components/Map/MatchMap';
+import { DISTRIBUIDORAS, getDistribuidorasPorEstado } from '@/lib/distribuidoras';
+import type { MatchMode } from '@/lib/matches';
 import {
   Loader2,
   Map as MapIcon,
@@ -18,6 +20,10 @@ import {
   Crown,
   Sparkles,
   Search,
+  MapPin,
+  Globe2,
+  Zap,
+  Check,
 } from 'lucide-react';
 
 const MatchMap = dynamic(() => import('@/components/Map/MatchMap'), {
@@ -35,6 +41,12 @@ const TARGET_TIPO_OPTIONS = [
 ] as const
 
 const RADIUS_OPTIONS = [25, 50, 100, 250, 500]
+
+const MATCH_MODES: Array<{ value: MatchMode; label: string; icon: typeof MapPin; desc: string }> = [
+  { value: 'radius', label: 'Perto', icon: MapPin, desc: 'Por distância (km)' },
+  { value: 'state', label: 'Estado', icon: Globe2, desc: 'Mesma UF' },
+  { value: 'distributor', label: 'Distribuidora', icon: Zap, desc: 'Mesma rede' },
+]
 
 type View = 'cards' | 'map'
 
@@ -55,6 +67,9 @@ export default function DashboardMatchPage() {
   const [view, setView] = useState<View>('cards')
   const [targetTipo, setTargetTipo] = useState<'gerador' | 'consumidor'>('gerador')
   const [radiusKm, setRadiusKm] = useState(100)
+  const [matchMode, setMatchMode] = useState<MatchMode>('radius')
+  const [distribuidoraFilter, setDistribuidoraFilter] = useState<string>('')
+  const [myEstado, setMyEstado] = useState<string>('')
   const [memberPlusActive, setMemberPlusActive] = useState<boolean | null>(null)
   const [daysRemaining, setDaysRemaining] = useState(0)
   const [candidates, setCandidates] = useState<MatchCandidateData[]>([])
@@ -87,18 +102,19 @@ export default function DashboardMatchPage() {
   useEffect(() => {
     if (!user || !memberPlusActive) return
     loadCandidates()
-  }, [user, memberPlusActive, targetTipo, radiusKm])
+  }, [user, memberPlusActive, targetTipo, radiusKm, matchMode, distribuidoraFilter, myEstado])
 
   const loadMyLocation = async () => {
     if (!user) return
     const sb: any = supabase
     const { data } = await sb
       .from('user_locations')
-      .select('latitude, longitude')
+      .select('latitude, longitude, estado')
       .eq('user_id', user.id)
       .maybeSingle()
     if (data) {
       setMyLocation({ lat: data.latitude, lng: data.longitude })
+      if (data.estado) setMyEstado(data.estado)
     }
   }
 
@@ -106,7 +122,16 @@ export default function DashboardMatchPage() {
     setLoadingCandidates(true)
     setError('')
     try {
-      const params = new URLSearchParams({ targetTipo, radiusKm: String(radiusKm), limit: '20' })
+      const params = new URLSearchParams({
+        targetTipo,
+        radiusKm: String(radiusKm),
+        limit: '20',
+        mode: matchMode,
+      })
+      if (matchMode === 'state' && myEstado) params.set('estado', myEstado)
+      if (matchMode === 'distributor' && distribuidoraFilter) {
+        params.set('distribuidora', distribuidoraFilter)
+      }
       const res = await fetch(`/api/matches?${params}`)
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
@@ -135,6 +160,7 @@ export default function DashboardMatchPage() {
         rankingScore: c.ranking_score ?? null,
         totalAvaliacoes: c.total_avaliacoes ?? null,
         mediaAvaliacoes: c.media_avaliacoes ?? null,
+        concessionaria: c.concessionaria ?? null,
       }))
       setCandidates(list)
     } catch (err: any) {
@@ -274,6 +300,74 @@ export default function DashboardMatchPage() {
                 <Sliders className="w-4 h-4" /> Filtros
               </h3>
 
+              <div className="mb-4">
+                <p className="text-xs text-slate-500 mb-1.5">Modo de busca</p>
+                <div className="grid grid-cols-3 gap-1">
+                  {MATCH_MODES.map((m) => {
+                    const Icon = m.icon
+                    return (
+                      <button
+                        key={m.value}
+                        onClick={() => {
+                          setMatchMode(m.value)
+                          // Auto-preencher se temos UF do usuario (modo state)
+                          if (m.value === 'state' && !myEstado && myLocation === null) {
+                            // precisa de localizacao para saber a UF
+                          }
+                          // Auto-sugerir distribuidora se for modo distributor e temos UF
+                          if (m.value === 'distributor' && myEstado && !distribuidoraFilter) {
+                            const sugestoes = getDistribuidorasPorEstado(myEstado)
+                            if (sugestoes[0]) setDistribuidoraFilter(sugestoes[0].nome)
+                          }
+                        }}
+                        title={m.desc}
+                        className={`px-2 py-2 rounded-lg text-[10px] font-bold transition flex flex-col items-center gap-1 ${
+                          matchMode === m.value
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            : 'bg-white/5 text-slate-400 hover:bg-white/10 border border-transparent'
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                        {m.label}
+                      </button>
+                    )
+                  })}
+                </div>
+                {matchMode === 'state' && !myEstado && (
+                  <p className="text-[10px] text-amber-300 mt-1.5">Defina sua localização para usar este modo.</p>
+                )}
+                {matchMode === 'distributor' && !distribuidoraFilter && (
+                  <p className="text-[10px] text-amber-300 mt-1.5">Escolha uma distribuidora abaixo.</p>
+                )}
+              </div>
+
+              {matchMode === 'distributor' && (
+                <div className="mb-3">
+                  <p className="text-xs text-slate-500 mb-1.5">Distribuidora</p>
+                  <div className="space-y-1 max-h-56 overflow-y-auto pr-1">
+                    {DISTRIBUIDORAS.map((d) => (
+                      <button
+                        key={d.codigo}
+                        onClick={() => setDistribuidoraFilter(d.nome)}
+                        className={`w-full px-2 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-between gap-2 ${
+                          distribuidoraFilter === d.nome
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            : 'bg-white/5 text-slate-300 hover:bg-white/10 border border-transparent'
+                        }`}
+                      >
+                        <span className="flex flex-col items-start min-w-0">
+                          <span className="truncate">{d.nome}</span>
+                          <span className="text-[9px] text-slate-500 font-normal">
+                            {d.estados.join(', ')} • {d.market_share}% share
+                          </span>
+                        </span>
+                        {distribuidoraFilter === d.nome && <Check className="w-3.5 h-3.5 shrink-0" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="mb-3">
                 <p className="text-xs text-slate-500 mb-1.5">Buscar</p>
                 <div className="grid grid-cols-2 gap-1">
@@ -293,24 +387,38 @@ export default function DashboardMatchPage() {
                 </div>
               </div>
 
-              <div>
-                <p className="text-xs text-slate-500 mb-1.5">Raio: <strong className="text-white">{radiusKm} km</strong></p>
-                <div className="flex flex-wrap gap-1">
-                  {RADIUS_OPTIONS.map((r) => (
-                    <button
-                      key={r}
-                      onClick={() => setRadiusKm(r)}
-                      className={`px-2 py-1 rounded text-xs font-bold transition ${
-                        radiusKm === r
-                          ? 'bg-emerald-500/20 text-emerald-300'
-                          : 'bg-white/5 text-slate-400 hover:bg-white/10'
-                      }`}
-                    >
-                      {r}km
-                    </button>
-                  ))}
+              {matchMode === 'radius' && (
+                <div>
+                  <p className="text-xs text-slate-500 mb-1.5">Raio: <strong className="text-white">{radiusKm} km</strong></p>
+                  <div className="flex flex-wrap gap-1">
+                    {RADIUS_OPTIONS.map((r) => (
+                      <button
+                        key={r}
+                        onClick={() => setRadiusKm(r)}
+                        className={`px-2 py-1 rounded text-xs font-bold transition ${
+                          radiusKm === r
+                            ? 'bg-emerald-500/20 text-emerald-300'
+                            : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                        }`}
+                      >
+                        {r}km
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {matchMode === 'state' && myEstado && (
+                <p className="text-xs text-emerald-300 mt-1">
+                  Buscando em <strong className="text-white">{myEstado}</strong> (todas as distâncias)
+                </p>
+              )}
+
+              {matchMode === 'distributor' && distribuidoraFilter && (
+                <p className="text-xs text-emerald-300 mt-1">
+                  Mesma rede: <strong className="text-white">{distribuidoraFilter}</strong>
+                </p>
+              )}
             </div>
 
             {!myLocation ? (

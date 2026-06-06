@@ -14,6 +14,14 @@ import { calculateDistance, type Coordinates } from '@/lib/geolocation'
 
 export type TargetTipo = 'consumidor' | 'gerador'
 
+/**
+ * Modo de descoberta de matches:
+ * - radius: busca por proximidade geografica (default, UX Tinder)
+ * - state: busca todos os geradores do mesmo estado (mesma UF, qualquer distancia)
+ * - distributor: busca geradores da mesma distribuidora (sistema de compensacao igual)
+ */
+export type MatchMode = 'radius' | 'state' | 'distributor'
+
 export interface MatchCandidate {
   user_id: string
   nome: string
@@ -32,6 +40,8 @@ export interface MatchCandidate {
   ranking_score?: number | null
   total_avaliacoes?: number | null
   media_avaliacoes?: number | null
+  // Match por distribuidora
+  concessionaria?: string | null
 }
 
 export interface MatchProposalRecord {
@@ -56,6 +66,12 @@ export interface FindCandidatesInput {
   targetTipo: TargetTipo
   radiusKm?: number
   limit?: number
+  /** Modo de busca (default: radius) */
+  mode?: MatchMode
+  /** Obrigatorio para mode='state' (UF do usuario) */
+  estadoFilter?: string
+  /** Obrigatorio para mode='distributor' (nome da distribuidora) */
+  distribuidoraFilter?: string
 }
 
 export interface FindCandidatesDeps {
@@ -63,6 +79,9 @@ export interface FindCandidatesDeps {
   fetchLocations?: (
     userId: string,
     targetTipo: TargetTipo,
+    mode: MatchMode,
+    estadoFilter?: string,
+    distribuidoraFilter?: string,
   ) => Promise<Array<{
     user_id: string
     lat: number
@@ -79,6 +98,7 @@ export interface FindCandidatesDeps {
     ranking_score?: number | null
     total_avaliacoes?: number | null
     media_avaliacoes?: number | null
+    concessionaria?: string | null
   }>>
 }
 
@@ -86,13 +106,23 @@ export async function findCandidates(
   input: FindCandidatesInput,
   deps: FindCandidatesDeps,
 ): Promise<MatchCandidate[]> {
+  const mode: MatchMode = input.mode ?? 'radius'
   const radius = input.radiusKm ?? 50
   const limit = input.limit ?? 50
 
   const fetcher = deps.fetchLocations
     ? deps.fetchLocations
-    : async (userId: string, targetTipo: TargetTipo) => {
-        const result = await (deps.supabase
+    : async (
+        userId: string,
+        targetTipo: TargetTipo,
+        modeParam: MatchMode,
+        estadoFilter?: string,
+        distribuidoraFilter?: string,
+      ) => {
+        // Para mode='distributor', precisamos fazer join com geradores para filtrar por concessionaria
+        // Para mode='state', filtramos no client depois (pq user_locations.estado e geradores.estado
+        // podem divergir - usamos user_locations.estado para o match)
+        let q = deps.supabase
           .from('user_locations')
           .select(`
             user_id,
@@ -101,67 +131,99 @@ export async function findCandidates(
             cidade,
             estado,
             profiles!inner(nome, tipo, is_active, member_plus_active),
-            geradores!left(preco_kwh, desconto_percentual, pacote_kwh, pacote_preco, ranking_score, total_avaliacoes, media_avaliacoes, status)
+            geradores!left(preco_kwh, desconto_percentual, pacote_kwh, pacote_preco, ranking_score, total_avaliacoes, media_avaliacoes, status, concessionaria)
           `)
           .eq('profiles.tipo', targetTipo)
-          .neq('user_id', userId) as any)
+          .neq('user_id', userId)
+
+        if (modeParam === 'state' && estadoFilter) {
+          q = q.ilike('estado', estadoFilter.toUpperCase())
+        }
+
+        const result = await (q as any)
         const rows = (result?.data ?? []) as Array<any>
-        return rows.map((r) => {
-          const g = r.geradores
-          const isGeradorAtivo = g && g.status === 'ativo'
-          return {
-            user_id: r.user_id,
-            lat: r.lat,
-            lng: r.lng,
-            cidade: r.cidade,
-            estado: r.estado,
-            nome: (r.profiles?.nome as string) ?? 'Usuário',
-            tipo: ((r.profiles?.tipo as TargetTipo) ?? targetTipo),
-            member_plus_active: !!(r.profiles?.member_plus_active),
-            preco_kwh: isGeradorAtivo ? (g.preco_kwh ?? null) : null,
-            desconto_percentual: isGeradorAtivo ? (g.desconto_percentual ?? null) : null,
-            pacote_kwh: isGeradorAtivo ? (g.pacote_kwh ?? null) : null,
-            pacote_preco: isGeradorAtivo ? (g.pacote_preco ?? null) : null,
-            ranking_score: isGeradorAtivo ? (g.ranking_score ?? null) : null,
-            total_avaliacoes: isGeradorAtivo ? (g.total_avaliacoes ?? null) : null,
-            media_avaliacoes: isGeradorAtivo ? (g.media_avaliacoes ?? null) : null,
-          }
-        })
+        return rows
+          .map((r) => {
+            const g = r.geradores
+            const isGeradorAtivo = g && g.status === 'ativo'
+            return {
+              user_id: r.user_id,
+              lat: r.lat,
+              lng: r.lng,
+              cidade: r.cidade,
+              estado: r.estado,
+              nome: (r.profiles?.nome as string) ?? 'Usuário',
+              tipo: ((r.profiles?.tipo as TargetTipo) ?? targetTipo),
+              member_plus_active: !!(r.profiles?.member_plus_active),
+              preco_kwh: isGeradorAtivo ? (g.preco_kwh ?? null) : null,
+              desconto_percentual: isGeradorAtivo ? (g.desconto_percentual ?? null) : null,
+              pacote_kwh: isGeradorAtivo ? (g.pacote_kwh ?? null) : null,
+              pacote_preco: isGeradorAtivo ? (g.pacote_preco ?? null) : null,
+              ranking_score: isGeradorAtivo ? (g.ranking_score ?? null) : null,
+              total_avaliacoes: isGeradorAtivo ? (g.total_avaliacoes ?? null) : null,
+              media_avaliacoes: isGeradorAtivo ? (g.media_avaliacoes ?? null) : null,
+              concessionaria: isGeradorAtivo ? (g.concessionaria ?? null) : null,
+            }
+          })
+          .filter((r) => {
+            if (modeParam === 'distributor' && distribuidoraFilter) {
+              return r.concessionaria?.toLowerCase() === distribuidoraFilter.toLowerCase()
+            }
+            return true
+          })
       }
 
-  const rows = await fetcher(input.userId, input.targetTipo)
+  const rows = await fetcher(
+    input.userId,
+    input.targetTipo,
+    mode,
+    input.estadoFilter,
+    input.distribuidoraFilter,
+  )
 
   const candidates: MatchCandidate[] = rows
     .filter((r) => r.tipo === input.targetTipo && r.user_id !== input.userId)
-    .map((r) => ({
-      user_id: r.user_id,
-      nome: r.nome,
-      cidade: r.cidade,
-      estado: r.estado,
-      lat: r.lat,
-      lng: r.lng,
-      distance_km: calculateDistance(input.origin, { lat: r.lat, lng: r.lng }),
-      tipo: r.tipo,
-      is_member_plus: r.member_plus_active,
-      preco_kwh: r.preco_kwh ?? null,
-      desconto_percentual: r.desconto_percentual ?? null,
-      pacote_kwh: r.pacote_kwh ?? null,
-      pacote_preco: r.pacote_preco ?? null,
-      ranking_score: r.ranking_score ?? null,
-      total_avaliacoes: r.total_avaliacoes ?? null,
-      media_avaliacoes: r.media_avaliacoes ?? null,
-    }))
-    .filter((c) => c.distance_km <= radius)
+    .map((r) => {
+      const distanceKm = calculateDistance(input.origin, { lat: r.lat, lng: r.lng })
+      return {
+        user_id: r.user_id,
+        nome: r.nome,
+        cidade: r.cidade,
+        estado: r.estado,
+        lat: r.lat,
+        lng: r.lng,
+        distance_km: distanceKm,
+        tipo: r.tipo,
+        is_member_plus: r.member_plus_active,
+        preco_kwh: r.preco_kwh ?? null,
+        desconto_percentual: r.desconto_percentual ?? null,
+        pacote_kwh: r.pacote_kwh ?? null,
+        pacote_preco: r.pacote_preco ?? null,
+        ranking_score: r.ranking_score ?? null,
+        total_avaliacoes: r.total_avaliacoes ?? null,
+        media_avaliacoes: r.media_avaliacoes ?? null,
+        concessionaria: r.concessionaria ?? null,
+      }
+    })
+    .filter((c) => {
+      // radius: filtra por distancia. state e distributor: ignora distancia.
+      if (mode === 'radius') return c.distance_km <= radius
+      return true
+    })
 
-  // Ordenação: geradores ranqueados por score (melhor rank primeiro), depois por distância
-  // Consumidores: por distância apenas
+  // Ordenacao
+  // - radius: ranking_score desc, depois distancia asc
+  // - state/distributor: ranking_score desc (distancia vira tie-breaker)
   const sorted = candidates.sort((a, b) => {
     if (a.tipo === 'gerador' && b.tipo === 'gerador') {
       const scoreDiff = (b.ranking_score ?? 0) - (a.ranking_score ?? 0)
       if (Math.abs(scoreDiff) > 0.001) return scoreDiff
       return a.distance_km - b.distance_km
     }
-    return a.distance_km - b.distance_km
+    // Consumidores: por distancia apenas
+    if (mode === 'radius') return a.distance_km - b.distance_km
+    // Em state/distributor, consumidores vao pro final (geradores sao prioritarios)
+    return a.tipo === 'consumidor' ? 1 : -1
   })
 
   return sorted.slice(0, limit)
@@ -187,6 +249,7 @@ export interface GeneratorRanking {
   ranking_score: number | null
   total_avaliacoes: number | null
   media_avaliacoes: number | null
+  concessionaria: string | null
   distance_km?: number
 }
 
@@ -197,6 +260,8 @@ export interface GetRankingInput {
   userLng?: number
   radiusKm?: number
   limit?: number
+  mode?: MatchMode
+  distribuidora?: string
 }
 
 export interface GetRankingDeps {
@@ -209,23 +274,27 @@ export async function getGeradoresRanking(
 ): Promise<GeneratorRanking[]> {
   const limit = input.limit ?? 20
   const radius = input.radiusKm ?? 100
+  const mode: MatchMode = input.mode ?? 'radius'
 
   let q = deps.supabase
     .from('geradores')
-    .select('id, nome_usina, capacidade_kwp, excedente_mensal_kwh, cidade, estado, latitude, longitude, preco_kwh, desconto_percentual, pacote_kwh, pacote_preco, ranking_score, total_avaliacoes, media_avaliacoes, status')
+    .select('id, nome_usina, capacidade_kwp, excedente_mensal_kwh, cidade, estado, latitude, longitude, preco_kwh, desconto_percentual, pacote_kwh, pacote_preco, ranking_score, total_avaliacoes, media_avaliacoes, concessionaria, status')
     .eq('status', 'ativo')
     .order('ranking_score', { ascending: false })
     .limit(limit)
 
   if (input.cidade) q = q.ilike('cidade', input.cidade)
   if (input.estado) q = q.ilike('estado', input.estado)
+  if (input.distribuidora) q = q.ilike('concessionaria', input.distribuidora)
 
   const { data, error } = await q
   if (error || !data) return []
 
   let ranked: GeneratorRanking[] = data as GeneratorRanking[]
 
-  if (input.userLat !== undefined && input.userLng !== undefined) {
+  // Para mode='radius', filtra por distancia
+  // Para mode='state' ou 'distributor', mantem todos (ja filtrados por estado/distribuidora)
+  if (mode === 'radius' && input.userLat !== undefined && input.userLng !== undefined) {
     ranked = ranked
       .filter((g) => g.latitude != null && g.longitude != null)
       .map((g) => ({

@@ -55,6 +55,13 @@ CREATE INDEX IF NOT EXISTS idx_geradores_status_ativo
     ON geradores(status)
     WHERE status = 'ativo';
 
+-- Indice para match por estado (modo 'state' do match Tinder)
+CREATE INDEX IF NOT EXISTS idx_geradores_estado
+    ON geradores(estado)
+    WHERE status = 'ativo';
+
+COMMENT ON COLUMN geradores.concessionaria IS 'Distribuidora local (CEMIG, Enel, CPFL, etc). Habilita match por distribuidora - mesmo sistema de compensacao';
+
 -- 2.5) USER_LOCATIONS - endereco + cep (Google Places Autocomplete)
 ALTER TABLE user_locations
     ADD COLUMN IF NOT EXISTS endereco TEXT,
