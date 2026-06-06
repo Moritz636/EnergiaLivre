@@ -1,13 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAdminAuth } from '@/app/hooks/useAuth';
 import { getSupabase } from '@/lib/supabase/singleton';
 import {
+  LayoutDashboard,
   Users,
-  TrendingUp,
+  UserCheck,
   DollarSign,
-  Activity,
+  CreditCard,
+  Zap,
+  Ticket,
+  Settings,
   LogOut,
   Loader2,
   Search,
@@ -17,21 +21,25 @@ import {
   Mail,
   Phone,
   MapPin,
-  Calendar,
   RefreshCw,
-  BarChart3,
-  UserCheck,
-  Zap,
-  Target,
-  Sparkles,
-  ArrowUpRight,
-  AlertCircle,
-  Eye,
-  Settings,
-  Download,
-  Share2,
   Shield,
+  ArrowUpRight,
+  Edit3,
+  Save,
+  Calendar,
+  TrendingUp,
+  X,
 } from 'lucide-react';
+
+type Section =
+  | 'overview'
+  | 'leads'
+  | 'users'
+  | 'commissions'
+  | 'finance'
+  | 'matches'
+  | 'coupons'
+  | 'settings';
 
 interface Lead {
   id: number;
@@ -39,425 +47,1114 @@ interface Lead {
   email: string;
   whatsapp: string;
   cidade: string;
+  estado: string;
   tipo: string;
   status: string;
   created_at: string;
 }
 
-interface Estatisticas {
-  total_usuarios: number;
-  total_geradores: number;
-  total_consumidores: number;
-  total_leads: number;
-  leads_aprovados: number;
-  assinaturas_ativas: number;
-  faturamento_mensal: number;
-  total_comissoes: number;
-  volume_transacoes: number;
+interface ProfileRow {
+  id: string;
+  nome: string | null;
+  email: string | null;
+  tipo: string | null;
+  role: string | null;
+  whatsapp: string | null;
+  cidade: string | null;
+  estado: string | null;
+  created_at: string;
 }
 
+interface Commission {
+  id: number;
+  valor_comissao: number;
+  percentual: number;
+  tipo_comissao: string;
+  status_pagamento: string;
+  mes_referencia: number;
+  ano_referencia: number;
+  profiles: { nome: string | null; email: string | null } | null;
+  created_at: string;
+}
+
+interface Pagamento {
+  id: number;
+  user_id: string;
+  tipo_pagamento: string;
+  valor: number;
+  status: string;
+  description: string | null;
+  stripe_payment_intent: string | null;
+  created_at: string;
+  processed_at: string | null;
+}
+
+interface Assinatura {
+  id: number;
+  user_id: string;
+  nome_plano: string;
+  tipo_plano: string;
+  valor_mensal: number;
+  status: string;
+  current_period_start: string;
+  current_period_end: string;
+  cancel_at_period_end: boolean;
+  created_at: string;
+}
+
+interface MatchProposal {
+  id: number;
+  from_user_id: string;
+  to_user_id: string;
+  status: string;
+  kwh_proposto: number | null;
+  valor_proposto: number | null;
+  created_at: string;
+  responded_at: string | null;
+  message: string | null;
+}
+
+interface Coupon {
+  id: string;
+  code: string;
+  bonus_coins: number;
+  inviter_bonus_coins: number;
+  used_by: string | null;
+  used_at: string | null;
+  expires_at: string | null;
+  created_at: string;
+}
+
+interface SystemSetting {
+  key: string;
+  value: any;
+  description: string | null;
+  category: string;
+  is_public: boolean;
+  updated_at: string;
+}
+
+interface Stats {
+  totalUsuarios: number;
+  totalLeads: number;
+  leadsPendentes: number;
+  leadsAprovados: number;
+  leadsRecusados: number;
+  totalComissoes: number;
+  comissoesPendentes: number;
+  embaixadores: number;
+  geradores: number;
+  consumidores: number;
+  faturamentoMensal: number;
+  faturamentoTotal: number;
+  assinaturasAtivas: number;
+}
+
+const SECTION_LABELS: Record<Section, string> = {
+  overview: 'Visão Geral',
+  leads: 'Leads',
+  users: 'Usuários',
+  commissions: 'Comissões',
+  finance: 'Financeiro',
+  matches: 'Match',
+  coupons: 'Cupons',
+  settings: 'Configurações',
+};
+
 export default function AdminDashboardPage() {
-  const { user, profile, loading, isAdmin, logout } = useAdminAuth();
+  const { user, loading, isAdmin, logout } = useAdminAuth();
+  const [section, setSection] = useState<Section>('overview');
+
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [estatisticas, setEstatisticas] = useState<Estatisticas | null>(null);
-  const [filter, setFilter] = useState('todos');
+  const [users, setUsers] = useState<ProfileRow[]>([]);
+  const [commissions, setCommissions] = useState<Commission[]>([]);
+  const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
+  const [assinaturas, setAssinaturas] = useState<Assinatura[]>([]);
+  const [matches, setMatches] = useState<MatchProposal[]>([]);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [settings, setSettings] = useState<SystemSetting[]>([]);
+
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [dataLoading, setDataLoading] = useState(true);
+
   const [searchTerm, setSearchTerm] = useState('');
-  const [loadingStats, setLoadingStats] = useState(true);
-  const [selectedTab, setSelectedTab] = useState('overview');
-  const supabase = getSupabase();
+  const [leadFilter, setLeadFilter] = useState<'todos' | 'pendentes' | 'aprovados' | 'recusados'>('todos');
+  const [userFilter, setUserFilter] = useState<'todos' | 'consumidor' | 'gerador' | 'parceiro'>('todos');
+  const [financeTab, setFinanceTab] = useState<'pagamentos' | 'assinaturas'>('pagamentos');
+  const [editingSetting, setEditingSetting] = useState<string | null>(null);
+
+  const loadAll = useCallback(async () => {
+    setDataLoading(true);
+    const supabase = getSupabase();
+
+    const [
+      leadsRes,
+      usersRes,
+      commissionsRes,
+      pagamentosRes,
+      assinaturasRes,
+      matchesRes,
+      couponsRes,
+      settingsRes,
+    ] = await Promise.all([
+      supabase.from('leads').select('*').order('created_at', { ascending: false }).limit(500),
+      supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(500),
+      (supabase.from('comissoes') as any)
+        .select('*, profiles!comissoes_embaixador_id_fkey(nome, email)')
+        .order('created_at', { ascending: false })
+        .limit(500),
+      supabase.from('pagamentos').select('*').order('created_at', { ascending: false }).limit(500),
+      supabase.from('assinaturas').select('*').order('created_at', { ascending: false }).limit(500),
+      (supabase.from('match_proposals') as any)
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(500),
+      supabase.from('coupons').select('*').order('created_at', { ascending: false }).limit(500),
+      supabase.from('system_settings').select('*').order('category', { ascending: true }),
+    ]);
+
+    if (leadsRes.data) setLeads(leadsRes.data as Lead[]);
+    if (usersRes.data) setUsers(usersRes.data as ProfileRow[]);
+    if (commissionsRes.data) setCommissions(commissionsRes.data as Commission[]);
+    if (pagamentosRes.data) setPagamentos(pagamentosRes.data as Pagamento[]);
+    if (assinaturasRes.data) setAssinaturas(assinaturasRes.data as Assinatura[]);
+    if (matchesRes.data) setMatches(matchesRes.data as MatchProposal[]);
+    if (couponsRes.data) setCoupons(couponsRes.data as Coupon[]);
+    if (settingsRes.data) setSettings(settingsRes.data as SystemSetting[]);
+
+    const leadsList = (leadsRes.data || []) as Lead[];
+    const usersList = (usersRes.data || []) as ProfileRow[];
+    const commissionsList = (commissionsRes.data || []) as Commission[];
+    const pagamentosList = (pagamentosRes.data || []) as Pagamento[];
+    const assinaturasList = (assinaturasRes.data || []) as Assinatura[];
+
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const faturamentoMensal = pagamentosList
+      .filter(p => p.status === 'succeeded' && p.created_at >= monthStart)
+      .reduce((acc, p) => acc + Number(p.valor || 0), 0);
+    const faturamentoTotal = pagamentosList
+      .filter(p => p.status === 'succeeded')
+      .reduce((acc, p) => acc + Number(p.valor || 0), 0);
+
+    setStats({
+      totalUsuarios: usersList.length,
+      totalLeads: leadsList.length,
+      leadsPendentes: leadsList.filter(l => !l.status || l.status === 'pendente').length,
+      leadsAprovados: leadsList.filter(l => l.status === 'aprovado').length,
+      leadsRecusados: leadsList.filter(l => l.status === 'recusado').length,
+      totalComissoes: commissionsList
+        .filter(c => c.status_pagamento === 'pago')
+        .reduce((acc, c) => acc + Number(c.valor_comissao || 0), 0),
+      comissoesPendentes: commissionsList.filter(c => c.status_pagamento === 'pendente').length,
+      embaixadores: usersList.filter(u => u.tipo === 'parceiro').length,
+      geradores: usersList.filter(u => u.tipo === 'gerador').length,
+      consumidores: usersList.filter(u => u.tipo === 'consumidor' || !u.tipo).length,
+      faturamentoMensal,
+      faturamentoTotal,
+      assinaturasAtivas: assinaturasList.filter(a => a.status === 'active').length,
+    });
+
+    setDataLoading(false);
+  }, []);
 
   useEffect(() => {
-    if (isAdmin) {
-      loadLeads();
-      loadEstatisticas();
+    if (isAdmin) loadAll();
+  }, [isAdmin, loadAll]);
+
+  const updateLeadStatus = async (id: number, status: string) => {
+    const supabase = getSupabase();
+    const { error } = await (supabase.from('leads') as any).update({ status }).eq('id', id);
+    if (!error) loadAll();
+  };
+
+  const updateSetting = async (key: string, value: any) => {
+    const supabase = getSupabase();
+    const { data: { user: u } } = await supabase.auth.getUser();
+    const { error } = await (supabase.from('system_settings') as any)
+      .update({ value, updated_by: u?.id })
+      .eq('key', key);
+    if (!error) {
+      setEditingSetting(null);
+      loadAll();
     }
-  }, [isAdmin]);
-
-  const loadLeads = async () => {
-    setLoadingStats(true);
-    const { data, error } = await supabase
-      .from('leads')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (data) setLeads(data);
-    setLoadingStats(false);
-  };
-
-  const loadEstatisticas = async () => {
-    setLoadingStats(true);
-    try {
-      const { data } = await (supabase as any)
-        .from('view_estatisticas_sistema')
-        .select('*')
-        .single();
-
-      if (data) setEstatisticas(data as Estatisticas);
-    } catch (error) {
-      console.error('Error loading stats:', error);
-    } finally {
-      setLoadingStats(false);
-    }
-  };
-
-  const updateStatus = async (id: number, status: string) => {
-    const { error } = await (supabase as any)
-      .from('leads')
-      .update({ status })
-      .eq('id', id);
-
-    if (!error) loadLeads();
-  };
-
-  const filteredLeads = leads.filter(lead => {
-    if (filter === 'pendentes') return lead.status === 'pendente' || !lead.status;
-    if (filter === 'aprovados') return lead.status === 'aprovado';
-    if (filter === 'recusados') return lead.status === 'recusado';
-    return true;
-  }).filter(lead => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return (
-      lead.nome?.toLowerCase().includes(term) ||
-      lead.email?.toLowerCase().includes(term) ||
-      lead.whatsapp?.includes(term) ||
-      lead.cidade?.toLowerCase().includes(term)
-    );
-  });
-
-  const stats = {
-    total: leads.length,
-    pendentes: leads.filter(l => l.status === 'pendente' || !l.status).length,
-    aprovados: leads.filter(l => l.status === 'aprovado').length,
-    recusados: leads.filter(l => l.status === 'recusado').length,
   };
 
   if (loading || !isAdmin) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <Loader2 className="w-6 h-6 text-purple-500 animate-spin" />
       </div>
     );
   }
 
-  const tabs = [
-    { id: 'overview', name: 'Visão Geral', icon: BarChart3 },
-    { id: 'leads', name: 'Leads', icon: Users },
-    { id: 'comissoes', name: 'Comissões', icon: DollarSign },
-    { id: 'config', name: 'Configurações', icon: Settings },
+  const navItems: { id: Section; name: string; icon: any; badge?: number }[] = [
+    { id: 'overview', name: 'Visão Geral', icon: LayoutDashboard },
+    { id: 'leads', name: 'Leads', icon: UserCheck, badge: stats?.leadsPendentes },
+    { id: 'users', name: 'Usuários', icon: Users },
+    { id: 'commissions', name: 'Comissões', icon: DollarSign, badge: stats?.comissoesPendentes },
+    { id: 'finance', name: 'Financeiro', icon: CreditCard },
+    { id: 'matches', name: 'Match', icon: Zap },
+    { id: 'coupons', name: 'Cupons', icon: Ticket },
+    { id: 'settings', name: 'Configurações', icon: Settings },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-200">
-      {/* Navbar */}
-      <nav className="border-b border-white/10 bg-slate-900/90 backdrop-blur-xl fixed top-0 w-full z-50">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+    <div className="min-h-screen bg-slate-950 text-slate-200 flex">
+      <aside className="w-60 border-r border-white/5 bg-slate-900/40 flex flex-col fixed h-full">
+        <div className="p-5 border-b border-white/5">
+          <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
               <Shield className="text-white w-4 h-4" />
             </div>
-            <span className="text-xl font-bold text-white">ENERGIA<span className="text-purple-500">LIVRE</span></span>
-            <div className="ml-3 px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-500/30 text-[9px] font-bold text-purple-300 uppercase">
-              Admin
+            <div>
+              <div className="text-sm font-semibold text-white">Admin</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider">Modo Deus</div>
             </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2 text-sm text-slate-400">
-              <Shield className="w-4 h-4 text-purple-500" />
-              <span>{user?.email}</span>
-            </div>
-            <button
-              onClick={logout}
-              className="px-4 py-2 rounded-full bg-red-500/20 border border-red-500/30 text-red-400 text-sm hover:bg-red-500/30 transition-all flex items-center gap-2"
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">Sair</span>
-            </button>
           </div>
         </div>
-      </nav>
 
-      <div className="pt-20 px-6 pb-20">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Painel Administrativo</h1>
-            <p className="text-slate-400">Gerencie leads, visualize estatísticas e controle o sistema</p>
+        <nav className="flex-1 p-3 space-y-0.5">
+          {navItems.map(item => {
+            const Icon = item.icon;
+            const active = section === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setSection(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition ${
+                  active
+                    ? 'bg-purple-500/15 text-white border border-purple-500/30'
+                    : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span className="flex-1 text-left">{item.name}</span>
+                {item.badge ? (
+                  <span className="px-1.5 min-w-[18px] text-center text-[10px] font-bold rounded-full bg-purple-500 text-white">
+                    {item.badge}
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="p-3 border-t border-white/5">
+          <div className="flex items-center gap-2 mb-2 px-2 py-1.5">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-[11px] font-bold">
+              {user?.email?.[0]?.toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[11px] text-white truncate">{user?.email}</div>
+              <div className="text-[9px] text-slate-500 uppercase tracking-wider">Administrador</div>
+            </div>
           </div>
+          <button
+            onClick={logout}
+            className="w-full flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 text-[11px] font-medium hover:bg-red-500/20 transition"
+          >
+            <LogOut className="w-3 h-3" />
+            Sair
+          </button>
+        </div>
+      </aside>
 
-          {/* Tabs */}
-          <div className="flex gap-2 mb-8 border-b border-white/10">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
+      <main className="flex-1 ml-60">
+        <header className="border-b border-white/5 bg-slate-950/80 backdrop-blur sticky top-0 z-10">
+          <div className="px-8 h-14 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-semibold text-white">{SECTION_LABELS[section]}</h1>
+              <span className="text-[10px] text-slate-600 uppercase tracking-wider">/ EnergiaLivre</span>
+            </div>
+            <button
+              onClick={loadAll}
+              disabled={dataLoading}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] text-slate-400 hover:text-white border border-white/10 rounded-lg hover:bg-white/5 transition disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3 h-3 ${dataLoading ? 'animate-spin' : ''}`} />
+              Atualizar
+            </button>
+          </div>
+        </header>
+
+        <div className="p-8">
+          {dataLoading && !stats ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-6 h-6 text-purple-500 animate-spin" />
+            </div>
+          ) : (
+            <>
+              {section === 'overview' && stats && <OverviewSection stats={stats} leads={leads} commissions={commissions} pagamentos={pagamentos} />}
+              {section === 'leads' && (
+                <LeadsSection
+                  leads={leads}
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  leadFilter={leadFilter}
+                  setLeadFilter={setLeadFilter}
+                  updateLeadStatus={updateLeadStatus}
+                />
+              )}
+              {section === 'users' && (
+                <UsersSection
+                  users={users}
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  userFilter={userFilter}
+                  setUserFilter={setUserFilter}
+                />
+              )}
+              {section === 'commissions' && (
+                <CommissionsSection
+                  commissions={commissions}
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                />
+              )}
+              {section === 'finance' && (
+                <FinanceSection
+                  pagamentos={pagamentos}
+                  assinaturas={assinaturas}
+                  users={users}
+                  tab={financeTab}
+                  setTab={setFinanceTab}
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                />
+              )}
+              {section === 'matches' && <MatchesSection matches={matches} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />}
+              {section === 'coupons' && <CouponsSection coupons={coupons} users={users} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />}
+              {section === 'settings' && (
+                <SettingsSection
+                  settings={settings}
+                  editing={editingSetting}
+                  setEditing={setEditingSetting}
+                  updateSetting={updateSetting}
+                />
+              )}
+            </>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function StatCard({ icon: Icon, label, value, sub, accent }: { icon: any; label: string; value: string | number; sub?: string; accent: string }) {
+  const accentMap: Record<string, string> = {
+    purple: 'text-purple-400',
+    yellow: 'text-yellow-400',
+    emerald: 'text-emerald-400',
+    blue: 'text-blue-400',
+    pink: 'text-pink-400',
+  };
+  return (
+    <div className="p-4 rounded-xl bg-slate-900/40 border border-white/5">
+      <div className="flex items-center justify-between mb-3">
+        <Icon className={`w-4 h-4 ${accentMap[accent]}`} />
+        <ArrowUpRight className="w-3 h-3 text-slate-600" />
+      </div>
+      <div className="text-2xl font-semibold text-white tracking-tight">{value}</div>
+      <div className="text-[11px] text-slate-500 mt-0.5">{label}</div>
+      {sub && <div className="text-[10px] text-slate-600 mt-1">{sub}</div>}
+    </div>
+  );
+}
+
+function OverviewSection({ stats, leads, commissions, pagamentos }: { stats: Stats; leads: Lead[]; commissions: Commission[]; pagamentos: Pagamento[] }) {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard icon={Users} label="Usuários" value={stats.totalUsuarios} sub={`${stats.embaixadores} embaixadores`} accent="purple" />
+        <StatCard icon={UserCheck} label="Leads pendentes" value={stats.leadsPendentes} sub={`${stats.totalLeads} no total`} accent="yellow" />
+        <StatCard icon={CheckCircle} label="Leads aprovados" value={stats.leadsAprovados} accent="emerald" />
+        <StatCard icon={DollarSign} label="Faturamento do mês" value={`R$ ${stats.faturamentoMensal.toFixed(2)}`} sub={`R$ ${stats.faturamentoTotal.toFixed(2)} total`} accent="blue" />
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard icon={Zap} label="Geradores" value={stats.geradores} accent="yellow" />
+        <StatCard icon={UserCheck} label="Embaixadores" value={stats.embaixadores} accent="purple" />
+        <StatCard icon={CreditCard} label="Assinaturas ativas" value={stats.assinaturasAtivas} accent="emerald" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="p-5 rounded-xl bg-slate-900/40 border border-white/5">
+          <h3 className="text-sm font-medium text-white mb-4">Leads recentes</h3>
+          <div className="space-y-2">
+            {leads.slice(0, 5).map(lead => (
+              <div key={lead.id} className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.02]">
+                <div className="min-w-0">
+                  <div className="text-[13px] text-white truncate">{lead.nome || '—'}</div>
+                  <div className="text-[10px] text-slate-500 truncate">{lead.email}</div>
+                </div>
+                <div className="text-[10px] text-slate-500 ml-2 whitespace-nowrap">
+                  {new Date(lead.created_at).toLocaleDateString('pt-BR')}
+                </div>
+              </div>
+            ))}
+            {leads.length === 0 && <div className="text-[11px] text-slate-600 text-center py-4">Nenhum lead</div>}
+          </div>
+        </div>
+
+        <div className="p-5 rounded-xl bg-slate-900/40 border border-white/5">
+          <h3 className="text-sm font-medium text-white mb-4">Pagamentos recentes</h3>
+          <div className="space-y-2">
+            {pagamentos.slice(0, 5).map(p => (
+              <div key={p.id} className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.02]">
+                <div className="min-w-0">
+                  <div className="text-[13px] text-emerald-400 font-mono">R$ {Number(p.valor).toFixed(2)}</div>
+                  <div className="text-[10px] text-slate-500 truncate">{p.tipo_pagamento} · {p.description || '—'}</div>
+                </div>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                  p.status === 'succeeded' ? 'bg-emerald-500/15 text-emerald-400' :
+                  p.status === 'pending' ? 'bg-yellow-500/15 text-yellow-400' :
+                  'bg-red-500/15 text-red-400'
+                }`}>
+                  {p.status}
+                </span>
+              </div>
+            ))}
+            {pagamentos.length === 0 && <div className="text-[11px] text-slate-600 text-center py-4">Nenhum pagamento</div>}
+          </div>
+        </div>
+
+        <div className="p-5 rounded-xl bg-slate-900/40 border border-white/5">
+          <h3 className="text-sm font-medium text-white mb-4">Comissões recentes</h3>
+          <div className="space-y-2">
+            {commissions.slice(0, 5).map(c => (
+              <div key={c.id} className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.02]">
+                <div className="min-w-0">
+                  <div className="text-[13px] text-emerald-400 font-mono">R$ {Number(c.valor_comissao).toFixed(2)}</div>
+                  <div className="text-[10px] text-slate-500 truncate">{c.profiles?.nome || c.profiles?.email || '—'}</div>
+                </div>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                  c.status_pagamento === 'pago' ? 'bg-emerald-500/15 text-emerald-400' :
+                  c.status_pagamento === 'pendente' ? 'bg-yellow-500/15 text-yellow-400' :
+                  'bg-red-500/15 text-red-400'
+                }`}>
+                  {c.status_pagamento}
+                </span>
+              </div>
+            ))}
+            {commissions.length === 0 && <div className="text-[11px] text-slate-600 text-center py-4">Nenhuma comissão</div>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LeadsSection({ leads, searchTerm, setSearchTerm, leadFilter, setLeadFilter, updateLeadStatus }: any) {
+  const filtered = (leads as Lead[]).filter(l => {
+    if (leadFilter === 'pendentes') return !l.status || l.status === 'pendente';
+    if (leadFilter === 'aprovados') return l.status === 'aprovado';
+    if (leadFilter === 'recusados') return l.status === 'recusado';
+    return true;
+  }).filter(l => {
+    if (!searchTerm) return true;
+    const t = searchTerm.toLowerCase();
+    return (l.nome || '').toLowerCase().includes(t) || (l.email || '').toLowerCase().includes(t) || (l.whatsapp || '').includes(t);
+  });
+
+  const filters: { id: typeof leadFilter; label: string }[] = [
+    { id: 'todos', label: 'Todos' },
+    { id: 'pendentes', label: 'Pendentes' },
+    { id: 'aprovados', label: 'Aprovados' },
+    { id: 'recusados', label: 'Recusados' },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col md:flex-row gap-3">
+        <div className="flex gap-1.5 flex-wrap">
+          {filters.map(f => (
+            <button
+              key={f.id}
+              onClick={() => setLeadFilter(f.id)}
+              className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition ${
+                leadFilter === f.id ? 'bg-purple-500 text-white' : 'bg-white/5 text-slate-400 hover:bg-white/10'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+          <input
+            type="text"
+            placeholder="Buscar por nome, e-mail ou WhatsApp..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="w-full bg-slate-900/50 border border-white/10 rounded-lg py-1.5 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-purple-500 outline-none"
+          />
+        </div>
+      </div>
+
+      <div className="rounded-xl bg-slate-900/40 border border-white/5 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b border-white/5 text-slate-500 text-[10px] uppercase tracking-wider">
+              <tr>
+                <th className="p-3 text-left font-medium">Data</th>
+                <th className="p-3 text-left font-medium">Nome</th>
+                <th className="p-3 text-left font-medium">Contato</th>
+                <th className="p-3 text-left font-medium">Local</th>
+                <th className="p-3 text-left font-medium">Tipo</th>
+                <th className="p-3 text-left font-medium">Status</th>
+                <th className="p-3 text-right font-medium">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan={7} className="p-8 text-center text-slate-600 text-xs">Nenhum lead encontrado</td></tr>
+              ) : (
+                filtered.map(lead => (
+                  <tr key={lead.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                    <td className="p-3 text-[11px] text-slate-500 whitespace-nowrap">{new Date(lead.created_at).toLocaleDateString('pt-BR')}</td>
+                    <td className="p-3 text-white text-[13px]">{lead.nome || '—'}</td>
+                    <td className="p-3">
+                      <div className="text-[11px] text-slate-400 flex items-center gap-1"><Mail className="w-3 h-3" />{lead.email}</div>
+                      <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5"><Phone className="w-3 h-3" />{lead.whatsapp}</div>
+                    </td>
+                    <td className="p-3 text-[11px] text-slate-400 flex items-center gap-1"><MapPin className="w-3 h-3" />{lead.cidade}/{lead.estado}</td>
+                    <td className="p-3">
+                      <span className="px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 text-[10px] font-medium">{lead.tipo}</span>
+                    </td>
+                    <td className="p-3">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                        lead.status === 'aprovado' ? 'bg-emerald-500/15 text-emerald-400' :
+                        lead.status === 'recusado' ? 'bg-red-500/15 text-red-400' :
+                        'bg-yellow-500/15 text-yellow-400'
+                      }`}>
+                        {lead.status || 'pendente'}
+                      </span>
+                    </td>
+                    <td className="p-3 text-right">
+                      {(!lead.status || lead.status === 'pendente') ? (
+                        <div className="flex gap-1 justify-end">
+                          <button onClick={() => updateLeadStatus(lead.id, 'aprovado')} className="p-1.5 rounded bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25" title="Aprovar">
+                            <CheckCircle className="w-3.5 h-3.5" />
+                          </button>
+                          <button onClick={() => updateLeadStatus(lead.id, 'recusado')} className="p-1.5 rounded bg-red-500/15 text-red-400 hover:bg-red-500/25" title="Recusar">
+                            <XCircle className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function UsersSection({ users, searchTerm, setSearchTerm, userFilter, setUserFilter }: any) {
+  const filtered = (users as ProfileRow[]).filter(u => {
+    if (userFilter === 'todos') return true;
+    return u.tipo === userFilter;
+  }).filter(u => {
+    if (!searchTerm) return true;
+    const t = searchTerm.toLowerCase();
+    return (u.nome || '').toLowerCase().includes(t) || (u.email || '').toLowerCase().includes(t);
+  });
+
+  const filters: { id: typeof userFilter; label: string }[] = [
+    { id: 'todos', label: 'Todos' },
+    { id: 'consumidor', label: 'Consumidores' },
+    { id: 'gerador', label: 'Geradores' },
+    { id: 'parceiro', label: 'Embaixadores' },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col md:flex-row gap-3">
+        <div className="flex gap-1.5 flex-wrap">
+          {filters.map(f => (
+            <button
+              key={f.id}
+              onClick={() => setUserFilter(f.id)}
+              className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition ${
+                userFilter === f.id ? 'bg-purple-500 text-white' : 'bg-white/5 text-slate-400 hover:bg-white/10'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+          <input
+            type="text"
+            placeholder="Buscar usuário..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="w-full bg-slate-900/50 border border-white/10 rounded-lg py-1.5 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-purple-500 outline-none"
+          />
+        </div>
+      </div>
+
+      <div className="rounded-xl bg-slate-900/40 border border-white/5 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b border-white/5 text-slate-500 text-[10px] uppercase tracking-wider">
+              <tr>
+                <th className="p-3 text-left font-medium">Nome</th>
+                <th className="p-3 text-left font-medium">Email</th>
+                <th className="p-3 text-left font-medium">Tipo</th>
+                <th className="p-3 text-left font-medium">Role</th>
+                <th className="p-3 text-left font-medium">Local</th>
+                <th className="p-3 text-left font-medium">Cadastro</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan={6} className="p-8 text-center text-slate-600 text-xs">Nenhum usuário</td></tr>
+              ) : (
+                filtered.map(u => (
+                  <tr key={u.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                    <td className="p-3 text-white text-[13px]">{u.nome || '—'}</td>
+                    <td className="p-3 text-[11px] text-slate-400">{u.email || '—'}</td>
+                    <td className="p-3">
+                      <span className="px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 text-[10px] font-medium">{u.tipo || 'consumidor'}</span>
+                    </td>
+                    <td className="p-3">
+                      {u.role === 'admin' ? (
+                        <span className="px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 text-[10px] font-medium">admin</span>
+                      ) : (
+                        <span className="text-slate-600 text-[11px]">user</span>
+                      )}
+                    </td>
+                    <td className="p-3 text-[11px] text-slate-400">{u.cidade || '—'}/{u.estado || '—'}</td>
+                    <td className="p-3 text-[11px] text-slate-500">{new Date(u.created_at).toLocaleDateString('pt-BR')}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CommissionsSection({ commissions, searchTerm, setSearchTerm }: any) {
+  const filtered = (commissions as Commission[]).filter(c => {
+    if (!searchTerm) return true;
+    const t = searchTerm.toLowerCase();
+    return (c.profiles?.nome || '').toLowerCase().includes(t) || (c.profiles?.email || '').toLowerCase().includes(t);
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+        <input
+          type="text"
+          placeholder="Buscar por embaixador..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="w-full bg-slate-900/50 border border-white/10 rounded-lg py-1.5 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-purple-500 outline-none"
+        />
+      </div>
+
+      <div className="rounded-xl bg-slate-900/40 border border-white/5 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b border-white/5 text-slate-500 text-[10px] uppercase tracking-wider">
+              <tr>
+                <th className="p-3 text-left font-medium">Embaixador</th>
+                <th className="p-3 text-left font-medium">Valor</th>
+                <th className="p-3 text-left font-medium">%</th>
+                <th className="p-3 text-left font-medium">Tipo</th>
+                <th className="p-3 text-left font-medium">Ref</th>
+                <th className="p-3 text-left font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan={6} className="p-8 text-center text-slate-600 text-xs">Nenhuma comissão</td></tr>
+              ) : (
+                filtered.map(c => (
+                  <tr key={c.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                    <td className="p-3 text-[13px] text-white">{c.profiles?.nome || c.profiles?.email || '—'}</td>
+                    <td className="p-3 text-emerald-400 font-mono text-[13px]">R$ {Number(c.valor_comissao).toFixed(2)}</td>
+                    <td className="p-3 text-[11px] text-slate-400">{c.percentual}%</td>
+                    <td className="p-3 text-[11px] text-slate-400">{c.tipo_comissao}</td>
+                    <td className="p-3 text-[11px] text-slate-500">{String(c.mes_referencia).padStart(2, '0')}/{c.ano_referencia}</td>
+                    <td className="p-3">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                        c.status_pagamento === 'pago' ? 'bg-emerald-500/15 text-emerald-400' :
+                        c.status_pagamento === 'pendente' ? 'bg-yellow-500/15 text-yellow-400' :
+                        'bg-red-500/15 text-red-400'
+                      }`}>
+                        {c.status_pagamento}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FinanceSection({ pagamentos, assinaturas, users, tab, setTab, searchTerm, setSearchTerm }: any) {
+  const userById = new Map((users as ProfileRow[]).map(u => [u.id, u]));
+  const filteredPag = (pagamentos as Pagamento[]).filter(p => {
+    if (!searchTerm) return true;
+    const t = searchTerm.toLowerCase();
+    return (p.description || '').toLowerCase().includes(t) || (p.tipo_pagamento || '').toLowerCase().includes(t);
+  });
+  const filteredAss = (assinaturas as Assinatura[]).filter(a => {
+    if (!searchTerm) return true;
+    const t = searchTerm.toLowerCase();
+    return (a.nome_plano || '').toLowerCase().includes(t) || (a.tipo_plano || '').toLowerCase().includes(t);
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 border-b border-white/5">
+        {(['pagamentos', 'assinaturas'] as const).map(t => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-4 py-2 text-[12px] font-medium transition border-b-2 ${
+              tab === t
+                ? 'border-purple-500 text-white'
+                : 'border-transparent text-slate-500 hover:text-white'
+            }`}
+          >
+            {t === 'pagamentos' ? `Pagamentos (${pagamentos.length})` : `Assinaturas (${assinaturas.length})`}
+          </button>
+        ))}
+      </div>
+
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+        <input
+          type="text"
+          placeholder="Buscar..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="w-full bg-slate-900/50 border border-white/10 rounded-lg py-1.5 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-purple-500 outline-none"
+        />
+      </div>
+
+      {tab === 'pagamentos' ? (
+        <div className="rounded-xl bg-slate-900/40 border border-white/5 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b border-white/5 text-slate-500 text-[10px] uppercase tracking-wider">
+                <tr>
+                  <th className="p-3 text-left font-medium">Data</th>
+                  <th className="p-3 text-left font-medium">Usuário</th>
+                  <th className="p-3 text-left font-medium">Tipo</th>
+                  <th className="p-3 text-left font-medium">Valor</th>
+                  <th className="p-3 text-left font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPag.length === 0 ? (
+                  <tr><td colSpan={5} className="p-8 text-center text-slate-600 text-xs">Nenhum pagamento</td></tr>
+                ) : (
+                  filteredPag.map(p => {
+                    const u = userById.get(p.user_id);
+                    return (
+                      <tr key={p.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                        <td className="p-3 text-[11px] text-slate-500 whitespace-nowrap">{new Date(p.created_at).toLocaleDateString('pt-BR')}</td>
+                        <td className="p-3 text-[13px] text-white">{u?.nome || u?.email || '—'}</td>
+                        <td className="p-3 text-[11px] text-slate-400">{p.tipo_pagamento}</td>
+                        <td className="p-3 text-emerald-400 font-mono text-[13px]">R$ {Number(p.valor).toFixed(2)}</td>
+                        <td className="p-3">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                            p.status === 'succeeded' ? 'bg-emerald-500/15 text-emerald-400' :
+                            p.status === 'pending' ? 'bg-yellow-500/15 text-yellow-400' :
+                            'bg-red-500/15 text-red-400'
+                          }`}>
+                            {p.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-xl bg-slate-900/40 border border-white/5 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b border-white/5 text-slate-500 text-[10px] uppercase tracking-wider">
+                <tr>
+                  <th className="p-3 text-left font-medium">Plano</th>
+                  <th className="p-3 text-left font-medium">Usuário</th>
+                  <th className="p-3 text-left font-medium">Tipo</th>
+                  <th className="p-3 text-left font-medium">Valor/mês</th>
+                  <th className="p-3 text-left font-medium">Renova em</th>
+                  <th className="p-3 text-left font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAss.length === 0 ? (
+                  <tr><td colSpan={6} className="p-8 text-center text-slate-600 text-xs">Nenhuma assinatura</td></tr>
+                ) : (
+                  filteredAss.map(a => {
+                    const u = userById.get(a.user_id);
+                    return (
+                      <tr key={a.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                        <td className="p-3 text-[13px] text-white">{a.nome_plano}</td>
+                        <td className="p-3 text-[11px] text-slate-400">{u?.nome || u?.email || '—'}</td>
+                        <td className="p-3 text-[11px] text-slate-400">{a.tipo_plano}</td>
+                        <td className="p-3 text-emerald-400 font-mono text-[13px]">R$ {Number(a.valor_mensal).toFixed(2)}</td>
+                        <td className="p-3 text-[11px] text-slate-500">{new Date(a.current_period_end).toLocaleDateString('pt-BR')}</td>
+                        <td className="p-3">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                            a.status === 'active' ? 'bg-emerald-500/15 text-emerald-400' :
+                            a.status === 'past_due' ? 'bg-yellow-500/15 text-yellow-400' :
+                            'bg-red-500/15 text-red-400'
+                          }`}>
+                            {a.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MatchesSection({ matches, searchTerm, setSearchTerm }: any) {
+  const filtered = (matches as MatchProposal[]).filter(m => {
+    if (!searchTerm) return true;
+    return m.id.toString().includes(searchTerm);
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+        <input
+          type="text"
+          placeholder="Buscar por ID..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="w-full bg-slate-900/50 border border-white/10 rounded-lg py-1.5 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-purple-500 outline-none"
+        />
+      </div>
+
+      <div className="rounded-xl bg-slate-900/40 border border-white/5 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b border-white/5 text-slate-500 text-[10px] uppercase tracking-wider">
+              <tr>
+                <th className="p-3 text-left font-medium">ID</th>
+                <th className="p-3 text-left font-medium">From</th>
+                <th className="p-3 text-left font-medium">To</th>
+                <th className="p-3 text-left font-medium">kWh</th>
+                <th className="p-3 text-left font-medium">Valor</th>
+                <th className="p-3 text-left font-medium">Status</th>
+                <th className="p-3 text-left font-medium">Criado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan={7} className="p-8 text-center text-slate-600 text-xs">Nenhuma proposta</td></tr>
+              ) : (
+                filtered.map(m => (
+                  <tr key={m.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                    <td className="p-3 text-[11px] text-slate-500 font-mono">#{m.id}</td>
+                    <td className="p-3 text-[10px] text-slate-400 font-mono">{m.from_user_id.slice(0, 8)}...</td>
+                    <td className="p-3 text-[10px] text-slate-400 font-mono">{m.to_user_id.slice(0, 8)}...</td>
+                    <td className="p-3 text-[11px] text-slate-300">{m.kwh_proposto ? `${m.kwh_proposto} kWh` : '—'}</td>
+                    <td className="p-3 text-emerald-400 font-mono text-[12px]">{m.valor_proposto ? `R$ ${Number(m.valor_proposto).toFixed(2)}` : '—'}</td>
+                    <td className="p-3">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                        m.status === 'accepted' ? 'bg-emerald-500/15 text-emerald-400' :
+                        m.status === 'pending' ? 'bg-yellow-500/15 text-yellow-400' :
+                        m.status === 'rejected' ? 'bg-red-500/15 text-red-400' :
+                        'bg-slate-500/15 text-slate-400'
+                      }`}>
+                        {m.status}
+                      </span>
+                    </td>
+                    <td className="p-3 text-[11px] text-slate-500">{new Date(m.created_at).toLocaleDateString('pt-BR')}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CouponsSection({ coupons, users, searchTerm, setSearchTerm }: any) {
+  const userById = new Map((users as ProfileRow[]).map(u => [u.id, u]));
+  const filtered = (coupons as Coupon[]).filter(c => {
+    if (!searchTerm) return true;
+    const t = searchTerm.toLowerCase();
+    return c.code.toLowerCase().includes(t);
+  });
+
+  const used = coupons.filter(c => c.used_by).length;
+  const available = coupons.filter(c => !c.used_by).length;
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard icon={Ticket} label="Total" value={coupons.length} accent="purple" />
+        <StatCard icon={CheckCircle} label="Resgatados" value={used} accent="emerald" />
+        <StatCard icon={Clock} label="Disponíveis" value={available} accent="yellow" />
+      </div>
+
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+        <input
+          type="text"
+          placeholder="Buscar por código..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="w-full bg-slate-900/50 border border-white/10 rounded-lg py-1.5 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-purple-500 outline-none"
+        />
+      </div>
+
+      <div className="rounded-xl bg-slate-900/40 border border-white/5 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b border-white/5 text-slate-500 text-[10px] uppercase tracking-wider">
+              <tr>
+                <th className="p-3 text-left font-medium">Código</th>
+                <th className="p-3 text-left font-medium">Criado por</th>
+                <th className="p-3 text-left font-medium">Bônus</th>
+                <th className="p-3 text-left font-medium">Usado por</th>
+                <th className="p-3 text-left font-medium">Resgatado em</th>
+                <th className="p-3 text-left font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan={6} className="p-8 text-center text-slate-600 text-xs">Nenhum cupom</td></tr>
+              ) : (
+                filtered.map(c => {
+                  const creator = userById.get(c.created_by);
+                  const user = c.used_by ? userById.get(c.used_by) : null;
+                  return (
+                    <tr key={c.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                      <td className="p-3 text-[13px] font-mono text-white">{c.code}</td>
+                      <td className="p-3 text-[11px] text-slate-400">{creator?.nome || creator?.email?.slice(0, 12) || '—'}</td>
+                      <td className="p-3 text-[11px] text-yellow-400">+{c.bonus_coins} moedas</td>
+                      <td className="p-3 text-[11px] text-slate-400">{user?.nome || user?.email || '—'}</td>
+                      <td className="p-3 text-[11px] text-slate-500">{c.used_at ? new Date(c.used_at).toLocaleDateString('pt-BR') : '—'}</td>
+                      <td className="p-3">
+                        {c.used_by ? (
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-medium">resgatado</span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 text-[10px] font-medium">disponível</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SettingsSection({ settings, editing, setEditing, updateSetting }: any) {
+  const grouped = (settings as SystemSetting[]).reduce<Record<string, SystemSetting[]>>((acc, s) => {
+    (acc[s.category] = acc[s.category] || []).push(s);
+    return acc;
+  }, {});
+
+  const categoryLabels: Record<string, string> = {
+    general: 'Geral',
+    commissions: 'Comissões',
+    email: 'E-mail',
+    features: 'Features',
+    integrations: 'Integrações',
+  };
+
+  return (
+    <div className="space-y-6">
+      {Object.entries(grouped).map(([cat, items]) => (
+        <div key={cat} className="rounded-xl bg-slate-900/40 border border-white/5 overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-white/5 bg-white/[0.02]">
+            <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{categoryLabels[cat] || cat}</h3>
+          </div>
+          <div className="divide-y divide-white/5">
+            {items.map(s => {
+              const isEditing = editing === s.key;
+              const displayValue = typeof s.value === 'string' ? s.value : JSON.stringify(s.value);
               return (
-                <button
-                  key={tab.id}
-                  onClick={() => setSelectedTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-t-lg transition ${
-                    selectedTab === tab.id
-                      ? 'bg-purple-500/20 text-purple-300 border-b-2 border-purple-500'
-                      : 'text-slate-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {tab.name}
-                </button>
+                <div key={s.key} className="p-4 flex items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13px] text-white font-mono">{s.key}</div>
+                    {s.description && <div className="text-[11px] text-slate-500 mt-0.5">{s.description}</div>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isEditing ? (
+                      <>
+                        <input
+                          type="text"
+                          defaultValue={displayValue}
+                          autoFocus
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              const v = (e.target as HTMLInputElement).value;
+                              try {
+                                updateSetting(s.key, JSON.parse(v));
+                              } catch {
+                                updateSetting(s.key, v);
+                              }
+                            }
+                            if (e.key === 'Escape') setEditing(null);
+                          }}
+                          className="bg-slate-800 border border-purple-500/50 rounded px-2 py-1 text-[12px] text-white font-mono w-40 outline-none"
+                        />
+                        <button onClick={() => setEditing(null)} className="p-1.5 text-slate-400 hover:text-white">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <code className="text-[12px] text-emerald-400 font-mono bg-emerald-500/5 px-2 py-1 rounded border border-emerald-500/20 max-w-[200px] truncate">
+                          {displayValue}
+                        </code>
+                        {s.is_public && <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400 uppercase tracking-wider">público</span>}
+                        <button onClick={() => setEditing(s.key)} className="p-1.5 text-slate-400 hover:text-white hover:bg-white/5 rounded">
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
               );
             })}
           </div>
-
-          {/* Tab Content */}
-          {selectedTab === 'overview' && (
-            <>
-              {/* Estatísticas Principais */}
-              {estatisticas && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                  <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/30">
-                    <Users className="w-6 h-6 text-purple-400 mb-2" />
-                    <p className="text-3xl font-bold text-white">{estatisticas.total_usuarios}</p>
-                    <p className="text-xs text-slate-400">Total de Usuários</p>
-                    <div className="mt-3 text-[10px] text-purple-400/80 flex items-center gap-1">
-                      <ArrowUpRight className="w-3 h-3" /> +15% este mês
-                    </div>
-                  </div>
-
-                  <div className="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-green-600/10 border border-emerald-500/30">
-                    <CheckCircle className="w-6 h-6 text-emerald-400 mb-2" />
-                    <p className="text-3xl font-bold text-white">{estatisticas.leads_aprovados}</p>
-                    <p className="text-xs text-slate-400">Leads Aprovados</p>
-                    <div className="mt-3 text-[10px] text-emerald-400/80">
-                      {((estatisticas.leads_aprovados / estatisticas.total_leads) * 100).toFixed(1)}% taxa
-                    </div>
-                  </div>
-
-                  <div className="p-6 rounded-2xl bg-gradient-to-br from-yellow-500/20 to-amber-600/10 border border-yellow-500/30">
-                    <DollarSign className="w-6 h-6 text-yellow-400 mb-2" />
-                    <p className="text-3xl font-bold text-white">R$ {estatisticas.faturamento_mensal.toFixed(2)}</p>
-                    <p className="text-xs text-slate-400">Faturamento Mensal</p>
-                    <div className="mt-3 text-[10px] text-yellow-400/80">
-                      <ArrowUpRight className="w-3 h-3" /> +8% este mês
-                    </div>
-                  </div>
-
-                  <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-600/10 border border-blue-500/30">
-                    <Sparkles className="w-6 h-6 text-blue-400 mb-2" />
-                    <p className="text-3xl font-bold text-white">{estatisticas.total_comissoes.toFixed(2)}</p>
-                    <p className="text-xs text-slate-400">Comissões Pagas</p>
-                    <div className="mt-3 text-[10px] text-blue-400/80">
-                      {estatisticas.assinaturas_ativas} ativos
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Leads Table */}
-              <div className="mb-10">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                  <div>
-                    <h2 className="text-xl font-bold text-white mb-2">Leids Pendentes</h2>
-                    <p className="text-slate-400">Aprove ou recuse os cadastros pendentes</p>
-                  </div>
-                  <button
-                    onClick={loadLeads}
-                    className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition"
-                  >
-                    <RefreshCw className="w-4 h-4" /> Atualizar
-                  </button>
-                </div>
-
-                {/* Filters */}
-                <div className="flex flex-col md:flex-row gap-4 mb-6">
-                  <div className="flex gap-2 flex-wrap">
-                    <button
-                      onClick={() => setFilter('todos')}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                        filter === 'todos' 
-                          ? 'bg-purple-500 text-white' 
-                          : 'bg-white/5 text-slate-400 hover:bg-white/10'
-                      }`}
-                    >
-                      Todos ({stats.total})
-                    </button>
-                    <button
-                      onClick={() => setFilter('pendentes')}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                        filter === 'pendentes' 
-                          ? 'bg-yellow-500 text-slate-900' 
-                          : 'bg-white/5 text-slate-400 hover:bg-white/10'
-                      }`}
-                    >
-                      Pendentes ({stats.pendentes})
-                    </button>
-                    <button
-                      onClick={() => setFilter('aprovados')}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                        filter === 'aprovados' 
-                          ? 'bg-emerald-500 text-slate-900' 
-                          : 'bg-white/5 text-slate-400 hover:bg-white/10'
-                      }`}
-                    >
-                      Aprovados ({stats.aprovados})
-                    </button>
-                  </div>
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                    <input
-                      type="text"
-                      placeholder="Buscar por nome, e-mail, WhatsApp..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-white placeholder:text-slate-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition"
-                    />
-                  </div>
-                </div>
-
-                {/* Table */}
-                <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="border-b border-white/10 bg-white/5">
-                        <tr className="text-left text-slate-400 text-sm">
-                          <th className="p-4">Data</th>
-                          <th className="p-4">Nome</th>
-                          <th className="p-4">Contato</th>
-                          <th className="p-4">Local</th>
-                          <th className="p-4">Tipo</th>
-                          <th className="p-4">Status</th>
-                          <th className="p-4">Ações</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {loading ? (
-                          <tr>
-                            <td colSpan={7} className="p-8 text-center">
-                              <Loader2 className="w-6 h-6 animate-spin mx-auto text-purple-500" />
-                            </td>
-                          </tr>
-                        ) : filteredLeads.length === 0 ? (
-                          <tr>
-                            <td colSpan={7} className="p-8 text-center text-slate-500">
-                              Nenhum lead encontrado
-                            </td>
-                          </tr>
-                        ) : (
-                          filteredLeads.map((lead) => (
-                            <tr key={lead.id} className="border-b border-white/5 hover:bg-white/5 transition">
-                              <td className="p-4 text-slate-500 text-sm">
-                                {new Date(lead.created_at).toLocaleDateString('pt-BR')}
-                              </td>
-                              <td className="p-4 font-medium text-white">{lead.nome || '-'}</td>
-                              <td className="p-4">
-                                <div className="space-y-1">
-                                  <div className="flex items-center gap-1 text-xs text-slate-300">
-                                    <Mail className="w-3 h-3" /> {lead.email || '-'}
-                                  </div>
-                                  <div className="flex items-center gap-1 text-xs text-slate-300">
-                                    <Phone className="w-3 h-3" /> {lead.whatsapp || '-'}
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="p-4">
-                                <div className="flex items-center gap-1 text-slate-300 text-sm">
-                                  <MapPin className="w-3 h-3" /> {lead.cidade || '-'}
-                                </div>
-                              </td>
-                              <td className="p-4">
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  lead.tipo === 'gerador' 
-                                    ? 'bg-blue-500/20 text-blue-400' 
-                                    : 'bg-emerald-500/20 text-emerald-400'
-                                }`}>
-                                  {lead.tipo === 'gerador' ? '⚡ Gerador' : '💰 Consumidor'}
-                                </span>
-                              </td>
-                              <td className="p-4">
-                                {lead.status === 'aprovado' && (
-                                  <span className="px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-medium flex items-center gap-1 w-fit">
-                                    <CheckCircle className="w-3 h-3" /> Aprovado
-                                  </span>
-                                )}
-                                {lead.status === 'recusado' && (
-                                  <span className="px-2 py-1 rounded-full bg-red-500/20 text-red-400 text-xs font-medium flex items-center gap-1 w-fit">
-                                    <XCircle className="w-3 h-3" /> Recusado
-                                  </span>
-                                )}
-                                {(lead.status === 'pendente' || !lead.status) && (
-                                  <span className="px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-medium flex items-center gap-1 w-fit">
-                                    <Clock className="w-3 h-3" /> Pendente
-                                  </span>
-                                )}
-                              </td>
-                              <td className="p-4">
-                                {(lead.status === 'pendente' || !lead.status) && (
-                                  <div className="flex gap-2">
-                                    <button
-                                      onClick={() => updateStatus(lead.id, 'aprovado')}
-                                      className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition"
-                                      title="Aprovar"
-                                    >
-                                      <CheckCircle className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                      onClick={() => updateStatus(lead.id, 'recusado')}
-                                      className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition"
-                                      title="Recusar"
-                                    >
-                                      <XCircle className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                )}
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {selectedTab === 'leads' && (
-            <div className="text-center py-12">
-              <Users className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-white mb-4">Gestão de Leads</h2>
-              <p className="text-slate-400 mb-6">Gerencie todos os leads do sistema</p>
-              <button
-                onClick={loadLeads}
-                className="px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-400 transition"
-              >
-                Recarregar Leads
-              </button>
-            </div>
-          )}
-
-          {selectedTab === 'comissoes' && (
-            <div className="text-center py-12">
-              <DollarSign className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-white mb-4">Comissões</h2>
-              <p className="text-slate-400 mb-6">Monitore e gerencie as comissões dos embaixadores</p>
-              <button
-                onClick={() => window.location.href = '/comissoes'}
-                className="px-6 py-3 bg-yellow-500 text-slate-900 rounded-lg hover:bg-yellow-400 transition"
-              >
-                Ir para Comissões
-              </button>
-            </div>
-          )}
-
-          {selectedTab === 'config' && (
-            <div className="text-center py-12">
-              <Settings className="w-16 h-16 text-blue-400 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-white mb-4">Configurações</h2>
-              <p className="text-slate-400 mb-6">Configure o sistema e suas preferências</p>
-              <button className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-400 transition">
-                Acessar Configurações
-              </button>
-            </div>
-          )}
         </div>
-      </div>
+      ))}
     </div>
   );
 }
