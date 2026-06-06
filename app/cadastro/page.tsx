@@ -10,17 +10,20 @@ import {
   EyeOff,
   Zap,
   Users,
-  Crown,
   ShieldCheck,
   BadgeCheck,
   Clock,
-  Gift,
   ArrowRight,
   Home,
   Briefcase,
   Sun
 } from 'lucide-react';
 import Link from 'next/link';
+
+interface CadastroStats {
+  last24h: number;
+  totalUsers: number;
+}
 
 export default function CadastroPage() {
   const [nome, setNome] = useState('');
@@ -34,9 +37,8 @@ export default function CadastroPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showLeadMagnet, setShowLeadMagnet] = useState(false);
-
   const [acceptedLgpd, setAcceptedLgpd] = useState(false);
+  const [stats, setStats] = useState<CadastroStats | null>(null);
 
   const whatsappRegex = /^\(?\d{2}\)?\s?9?\d{4}-?\d{4}$/;
   const isValidWhatsapp = whatsappRegex.test(whatsapp.replace(/\s/g, ''));
@@ -45,26 +47,24 @@ export default function CadastroPage() {
   const router = useRouter();
   const supabase = getSupabase();
 
-  // Lead Magnet com atraso de 15s (Reciprocidade)
   useEffect(() => {
-    if (!success && !showLeadMagnet) {
-      const timer = setTimeout(() => setShowLeadMagnet(true), 15000);
-      return () => clearTimeout(timer);
-    }
-  }, [success, showLeadMagnet]);
-
-  const getDashboardRedirect = (userType: string) => {
-    switch (userType) {
-      case 'consumidor':
-        return '/dashboard/consumidor';
-      case 'gerador':
-        return '/dashboard/gerador';
-      case 'parceiro':
-        return '/dashboard/embaixador';
-      default:
-        return '/dashboard';
-    }
-  };
+    let mounted = true;
+    (async () => {
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const [last24hRes, totalRes] = await Promise.all([
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', since),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+      ]);
+      if (!mounted) return;
+      setStats({
+        last24h: last24hRes.count ?? 0,
+        totalUsers: totalRes.count ?? 0,
+      });
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,9 +116,7 @@ export default function CadastroPage() {
       }
 
       if (authData.user) {
-        await new Promise(r => setTimeout(r, 800));
         setSuccess(true);
-
         setTimeout(() => {
           router.push(`/login?cadastro=sucesso&from=${tipo}`);
         }, 2500);
@@ -131,7 +129,6 @@ export default function CadastroPage() {
     }
   };
 
-  // Estilo dinâmico baseado no tipo selecionado
   const getGradientByType = () => {
     switch (tipo) {
       case 'consumidor':
@@ -148,7 +145,7 @@ export default function CadastroPage() {
   const getBadgeByType = () => {
     switch (tipo) {
       case 'consumidor':
-        return { icon: <Home className="w-3 h-3" />, text: 'Economize até 32%', color: 'emerald' };
+        return { icon: <Home className="w-3 h-3" />, text: 'Economize na conta de luz', color: 'emerald' };
       case 'gerador':
         return { icon: <Sun className="w-3 h-3" />, text: 'Monetize sua usina', color: 'blue' };
       case 'parceiro':
@@ -159,6 +156,12 @@ export default function CadastroPage() {
   };
 
   const badge = getBadgeByType();
+  const last24hText = stats
+    ? `${stats.last24h} ${stats.last24h === 1 ? 'pessoa entrou' : 'pessoas entraram'} na rede nas últimas 24h`
+    : '';
+  const totalText = stats
+    ? `${stats.totalUsers.toLocaleString('pt-BR')} ${stats.totalUsers === 1 ? 'cadastro' : 'cadastros'} na plataforma`
+    : '';
 
   if (success) {
     return (
@@ -167,16 +170,17 @@ export default function CadastroPage() {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 rounded-full mb-6 animate-bounce">
             <CheckCircle className="w-10 h-10 text-emerald-500" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">🎉 Cadastro Realizado com Sucesso!</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">Cadastro realizado com sucesso</h1>
           <p className="text-slate-400 mb-4">Enviamos um link de confirmação para seu e-mail. Verifique sua caixa de entrada e spam.</p>
 
-          {/* Escassez Real (Lei 22): dado concreto em vez de timer fake */}
-          <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20 mb-6">
-            <p className="text-xs text-emerald-400 font-bold uppercase tracking-wider flex items-center justify-center gap-2">
-              <Clock className="w-3 h-3" /> Confirme agora
-            </p>
-            <p className="text-sm text-white mt-1">23 pessoas entraram na rede nas últimas 24h. Confirme seu e-mail para não perder a vaga.</p>
-          </div>
+          {last24hText && (
+            <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20 mb-6">
+              <p className="text-xs text-emerald-400 font-bold uppercase tracking-wider flex items-center justify-center gap-2">
+                <Clock className="w-3 h-3" /> Confirme seu e-mail
+              </p>
+              <p className="text-sm text-white mt-1">{last24hText}. Confirme seu e-mail para entrar.</p>
+            </div>
+          )}
 
           <p className="text-slate-500 text-sm flex items-center justify-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
@@ -190,51 +194,27 @@ export default function CadastroPage() {
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 flex flex-col items-center justify-center px-6 py-20 font-sans overflow-x-hidden">
 
-      {/* Efeitos de fundo dinâmicos baseados no tipo */}
-      <div className={`fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-${badge.color === 'emerald' ? 'emerald' : badge.color === 'blue' ? 'blue' : 'yellow'}-500/5 via-transparent to-transparent -z-20`} />
-      <div className={`fixed bottom-0 left-0 w-96 h-96 bg-${badge.color === 'emerald' ? 'emerald' : badge.color === 'blue' ? 'blue' : 'yellow'}-500/5 rounded-full blur-[100px] -z-10`} />
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/5 via-transparent to-transparent -z-20" />
+      <div className="fixed bottom-0 left-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-[100px] -z-10" />
       <div className="fixed top-40 right-0 w-80 h-80 bg-cyan-500/5 rounded-full blur-[100px] -z-10" />
-
-      {/* LEAD MAGNET - Isca Digital */}
-      {showLeadMagnet && !success && (
-        <div className="fixed bottom-8 right-8 z-50 max-w-sm animate-in slide-in-from-bottom-10 duration-500">
-          <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-emerald-500/30 rounded-2xl p-5 shadow-2xl backdrop-blur-xl">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0">
-                <Gift className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1">
-                <h4 className="text-sm font-bold text-white mb-1">🎁 Material Exclusivo</h4>
-                <p className="text-xs text-slate-400 mb-3">Baixe grátis: &ldquo;Guia Completo da Energia Solar&rdquo; + Calculadora de ROI</p>
-                <div className="flex gap-2">
-                  <input type="email" placeholder="Seu e-mail" className="flex-1 bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
-                  <button className="px-3 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-xl text-white text-xs font-bold transition">Baixar</button>
-                </div>
-                <button onClick={() => setShowLeadMagnet(false)} className="absolute top-2 right-2 text-slate-600 hover:text-slate-400 text-xs">✕</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="max-w-md w-full">
 
-        {/* Header com Badge Dinâmico */}
         <div className="flex items-center justify-between mb-6">
           <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-emerald-400 transition-colors text-sm font-medium group">
             <ArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform" /> Voltar
           </Link>
-          <div className={`px-3 py-1.5 rounded-full bg-gradient-to-r from-${badge.color === 'emerald' ? 'emerald' : badge.color === 'blue' ? 'blue' : 'yellow'}-500/20 to-${badge.color === 'emerald' ? 'emerald' : badge.color === 'blue' ? 'blue' : 'yellow'}-500/10 border border-${badge.color === 'emerald' ? 'emerald' : badge.color === 'blue' ? 'blue' : 'yellow'}-500/30 text-[9px] font-black text-${badge.color === 'emerald' ? 'emerald' : badge.color === 'blue' ? 'blue' : 'yellow'}-400 uppercase tracking-wider flex items-center gap-1 animate-pulse`}>
-            <Crown className="w-3 h-3" /> {badge.text}
+          <div className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[9px] font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+            {badge.icon} {badge.text}
           </div>
         </div>
 
-        {/* Escassez Real (Lei 22): dado concreto em vez de timer fake */}
-        <div className={`flex items-center justify-center gap-2 text-[10px] text-${badge.color === 'emerald' ? 'emerald' : badge.color === 'blue' ? 'blue' : 'yellow'}-400 bg-${badge.color === 'emerald' ? 'emerald' : badge.color === 'blue' ? 'blue' : 'yellow'}-500/10 rounded-full py-1.5 px-3 w-fit mx-auto mb-6`}>
-          <Gift className="w-3 h-3" /> 23 pessoas entraram na rede nas últimas 24h
-        </div>
+        {last24hText && (
+          <div className="flex items-center justify-center gap-2 text-[10px] text-emerald-400 bg-emerald-500/10 rounded-full py-1.5 px-3 w-fit mx-auto mb-6">
+            <Users className="w-3 h-3" /> {last24hText}
+          </div>
+        )}
 
-        {/* Card Principal */}
         <div className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 backdrop-blur-xl p-8 rounded-[40px] shadow-2xl relative overflow-hidden group">
 
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-emerald-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
@@ -250,17 +230,17 @@ export default function CadastroPage() {
               {tipo === 'parceiro' && <Briefcase className="text-slate-900 w-8 h-8" />}
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">Criar Conta</h1>
-            <p className="text-slate-400">Junte-se à revolução da energia solar</p>
+            <p className="text-slate-400">Junte-se à rede de energia solar</p>
           </div>
 
-          {/* Prova Social */}
-          <div className="flex items-center justify-center gap-6 text-[10px] text-slate-500 border-t border-b border-white/5 py-3 mb-6">
-            <div className="flex items-center gap-1"><Users className="w-3 h-3 text-emerald-400" /> +2.500 usuários ativos</div>
-            <div className="flex items-center gap-1"><Zap className="w-3 h-3 text-emerald-400" /> 100% gratuito</div>
-          </div>
+          {totalText && (
+            <div className="flex items-center justify-center gap-6 text-[10px] text-slate-500 border-t border-b border-white/5 py-3 mb-6">
+              <div className="flex items-center gap-1"><Users className="w-3 h-3 text-emerald-400" /> {totalText}</div>
+              <div className="flex items-center gap-1"><Zap className="w-3 h-3 text-emerald-400" /> Cadastro gratuito</div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Nome completo */}
             <div className="relative">
               <input
                 type="text"
@@ -273,7 +253,6 @@ export default function CadastroPage() {
               />
             </div>
 
-            {/* E-mail */}
             <div className="relative">
               <input
                 type="email"
@@ -286,7 +265,6 @@ export default function CadastroPage() {
               />
             </div>
 
-            {/* WhatsApp */}
             <div className="relative">
               <input
                 type="tel"
@@ -303,7 +281,6 @@ export default function CadastroPage() {
               )}
             </div>
 
-            {/* Cidade e Estado */}
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2 relative">
                 <input
@@ -330,7 +307,6 @@ export default function CadastroPage() {
               </div>
             </div>
 
-            {/* Senha */}
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -352,7 +328,6 @@ export default function CadastroPage() {
               </button>
             </div>
 
-            {/* Tipo de usuário - Seleção com estilo aprimorado */}
             <div className="space-y-2">
               <p className="text-slate-400 text-sm font-medium">Eu sou:</p>
               <div className="grid grid-cols-3 gap-2">
@@ -366,7 +341,7 @@ export default function CadastroPage() {
                       : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50 border border-white/5'
                   }`}
                 >
-                  💰 Consumidor
+                  Consumidor
                 </button>
                 <button
                   type="button"
@@ -378,7 +353,7 @@ export default function CadastroPage() {
                       : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50 border border-white/5'
                   }`}
                 >
-                  ⚡ Gerador
+                  Gerador
                 </button>
                 <button
                   type="button"
@@ -394,15 +369,13 @@ export default function CadastroPage() {
                 </button>
               </div>
 
-              {/* Descrição dinâmica do benefício */}
               <p className="text-[10px] text-slate-500 text-center">
-                {tipo === 'consumidor' && '✅ Economize até 32% na conta de luz'}
-                {tipo === 'gerador' && '✅ Monetize sua usina com demanda garantida'}
-                {tipo === 'parceiro' && '✅ Ganhe comissões recorrentes indicando energia solar'}
+                {tipo === 'consumidor' && 'Consumidores economizam na conta de luz via créditos de energia solar.'}
+                {tipo === 'gerador' && 'Geradores monetizam excedente de energia com demanda garantida.'}
+                {tipo === 'parceiro' && 'Embaixadores ganham comissões indicando energia solar.'}
               </p>
             </div>
 
-            {/* Dicas de segurança */}
             <div className="flex items-center gap-2 text-[10px] text-slate-500 justify-center">
               <ShieldCheck className="w-3 h-3 text-emerald-500" />
               <span>Dados criptografados e protegidos pela LGPD</span>
@@ -447,19 +420,18 @@ export default function CadastroPage() {
             </button>
           </form>
 
-          {/* Selos de confiança */}
           <div className="flex items-center justify-center gap-4 mt-6 pt-4 border-t border-white/5">
             <div className="flex items-center gap-1 text-[9px] text-slate-600">
               <BadgeCheck className="w-3 h-3 text-emerald-500" />
-              <span>Conta Gratuita</span>
+              <span>Conta gratuita</span>
             </div>
             <div className="flex items-center gap-1 text-[9px] text-slate-600">
               <Clock className="w-3 h-3 text-emerald-500" />
-              <span>Ativação Imediata</span>
+              <span>Ativação por e-mail</span>
             </div>
             <div className="flex items-center gap-1 text-[9px] text-slate-600">
               <ShieldCheck className="w-3 h-3 text-emerald-500" />
-              <span>Suporte 24/7</span>
+              <span>LGPD</span>
             </div>
           </div>
 
@@ -473,7 +445,6 @@ export default function CadastroPage() {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-slate-600/60 text-[10px] leading-relaxed max-w-xs mx-auto">
             Ao se cadastrar, você concorda com nossos Termos de Uso e Política de Privacidade.
