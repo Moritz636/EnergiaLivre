@@ -25,6 +25,8 @@ import {
 } from 'lucide-react';
 import { saveLead } from '@/app/actions';
 import { buildFollowUpUrl, splitCidadeEstado } from '@/lib/leads';
+import SiteHeader from '@/components/SiteHeader';
+import SiteFooter from '@/components/SiteFooter';
 
 export default function VenderPage() {
   const router = useRouter();
@@ -155,6 +157,8 @@ export default function VenderPage() {
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-500/5 via-transparent to-transparent -z-20" />
       <div className="fixed bottom-0 left-0 w-96 h-96 bg-blue-500/5 rounded-full blur-[100px] -z-10" />
       <div className="fixed top-40 right-0 w-80 h-80 bg-cyan-500/5 rounded-full blur-[100px] -z-10" />
+
+      <SiteHeader />
 
       <div className="max-w-2xl w-full">
         
@@ -510,6 +514,7 @@ export default function VenderPage() {
           to { width: 100%; }
         }
       `}</style>
+      <SiteFooter />
     </div>
   );
 }

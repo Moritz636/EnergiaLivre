@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Zap, TrendingDown, DollarSign, ArrowRight, CheckCircle2 } from 'lucide-react';
+import SiteHeader from '@/components/SiteHeader';
+import SiteFooter from '@/components/SiteFooter';
 
 export default function SimuladorPage() {
   const [gasto, setGasto] = useState(350);
@@ -10,7 +12,9 @@ export default function SimuladorPage() {
   const percentual = 32;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 py-20 px-6">
+    <div className="min-h-screen bg-[#020617] text-slate-200 flex flex-col">
+      <SiteHeader />
+      <div className="pt-24 pb-20 px-6 flex-1">
       <div className="max-w-4xl mx-auto">
         
         {/* Header */}
@@ -134,6 +138,8 @@ export default function SimuladorPage() {
           <p className="mt-1">🔍 Enquanto outros escondem o prazo, a gente te conta tudo antes de você assinar.</p>
         </div>
       </div>
+      </div>
+      <SiteFooter />
     </div>
   );
 }
