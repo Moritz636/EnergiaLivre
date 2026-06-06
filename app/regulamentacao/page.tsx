@@ -1,16 +1,15 @@
 "use client";
 import React from 'react';
 import Link from 'next/link';
-import { 
-  ShieldCheck, 
-  Lock, 
-  FileText, 
-  CheckCircle2, 
-  Scale, 
-  Globe, 
-  ArrowLeft, 
-  Zap, 
-  Users, 
+import {
+  ShieldCheck,
+  Lock,
+  FileText,
+  CheckCircle2,
+  Scale,
+  Globe,
+  Zap,
+  Users,
   Building,
   Crown,
   Flame,
@@ -18,13 +17,16 @@ import {
   BadgeCheck,
   Award,
   TrendingUp,
-  Clock
+  Clock,
 } from 'lucide-react';
+import SiteHeader from '@/components/SiteHeader';
+import SiteFooter from '@/components/SiteFooter';
 
 export default function RegulamentacaoPage() {
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 font-sans pb-20 overflow-x-hidden">
-      
+    <div className="min-h-screen bg-[#020617] text-slate-200 font-sans flex flex-col overflow-x-hidden">
+      <SiteHeader />
+
       {/* Efeitos de fundo - Autoridade Visual (Lei 6) */}
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/5 via-transparent to-transparent -z-20" />
       <div className="fixed bottom-0 left-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-[100px] -z-10" />
@@ -32,16 +34,7 @@ export default function RegulamentacaoPage() {
       <div className="fixed bottom-20 right-20 w-60 h-60 bg-blue-500/5 rounded-full blur-[80px] -z-10" />
 
       {/* --- TOP NAVIGATION --- */}
-      <div className="max-w-5xl mx-auto px-6 pt-12">
-        
-        {/* Botão Voltar com Efeito */}
-        <Link 
-          href="/" 
-          className="inline-flex items-center gap-2 text-slate-500 hover:text-emerald-400 transition-all duration-300 text-sm font-medium group mb-8"
-        >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> 
-          <span className="group-hover:tracking-wider transition-all">Voltar ao Portal</span>
-        </Link>
+      <div className="max-w-5xl mx-auto px-6 pt-8">
 
         {/* IMAGEM DE REGULAMENTAÇÃO - Com Efeito de Poder */}
         <div className="w-full overflow-hidden rounded-2xl shadow-2xl shadow-emerald-500/20 mb-12 relative group">
@@ -88,7 +81,7 @@ export default function RegulamentacaoPage() {
           {/* Badge de Vigência com Tradição como Poder (Lei 34) */}
           <div className="absolute top-4 right-4 md:top-8 md:right-8">
             <span className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-600/30 to-yellow-500/20 text-yellow-400 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider border border-yellow-500/50 backdrop-blur-sm">
-              <Clock className="w-3 h-3" /> Vigência: 2015 - ATUAL • 9+ Anos
+              <Clock className="w-3 h-3" /> Vigência: 2015 - Atual
             </span>
           </div>
 
@@ -238,20 +231,12 @@ export default function RegulamentacaoPage() {
           ))}
         </div>
 
-        {/* Dados estatísticos de confiança */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-          {[
-            { label: "Usinas Conectadas", value: "+500", icon: <Zap className="w-3 h-3" /> },
-            { label: "Consumidores Atendidos", value: "+2k", icon: <Users className="w-3 h-3" /> },
-            { label: "Economia Gerada", value: "R$ 2.4M", icon: <TrendingUp className="w-3 h-3" /> },
-            { label: "kWh Transferidos", value: "18 GWh", icon: <Globe className="w-3 h-3" /> },
-          ].map((stat, i) => (
-            <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/10 text-center">
-              <div className="flex items-center justify-center gap-1 text-emerald-400 text-[10px] mb-1">{stat.icon}</div>
-              <div className="text-white font-bold text-sm">{stat.value}</div>
-              <div className="text-[9px] text-slate-500">{stat.label}</div>
-            </div>
-          ))}
+        {/* Indicadores institucionais (apenas referências regulatórias, sem métricas de marketing) */}
+        <div className="mt-8 p-4 rounded-xl bg-white/5 border border-white/10 text-center text-xs text-slate-400">
+          <p>
+            Plataforma em conformidade com a <span className="text-emerald-400">Resolução Normativa ANEEL 687/2015</span> e a <span className="text-emerald-400">Lei 14.300/2022</span>.
+            Indicadores operacionais publicados no <Link href="/admin/dashboard" className="text-emerald-400 hover:underline">painel administrativo</Link> (acesso restrito).
+          </p>
         </div>
       </section>
 
@@ -300,6 +285,7 @@ export default function RegulamentacaoPage() {
           <span className="tracking-widest">ENERGIALIVRE • PLATAFORMA DE TRANSFERÊNCIA DE CRÉDITOS ENERGÉTICOS • RESOLUÇÃO ANEEL 687/2015</span>
         </div>
       </footer>
+      <SiteFooter />
     </div>
   );
 }

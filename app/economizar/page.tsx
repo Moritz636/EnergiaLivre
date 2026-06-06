@@ -26,6 +26,8 @@ import {
 } from 'lucide-react';
 import { saveLead } from '@/app/actions';
 import { buildFollowUpUrl, splitCidadeEstado } from '@/lib/leads';
+import SiteHeader from '@/components/SiteHeader';
+import SiteFooter from '@/components/SiteFooter';
 
 export default function EconomizarPage() {
   const router = useRouter();
@@ -147,7 +149,9 @@ export default function EconomizarPage() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 flex flex-col items-center justify-center px-6 py-20 font-sans overflow-x-hidden">
-      
+
+      <SiteHeader />
+
       {/* Efeitos de fundo - Autoridade Visual */}
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/5 via-transparent to-transparent -z-20" />
       <div className="fixed bottom-0 left-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-[100px] -z-10" />
@@ -160,7 +164,7 @@ export default function EconomizarPage() {
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Voltar ao Portal
           </a>
           <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30 text-[9px] font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-            <Flame className="w-3 h-3" /> Análise Gratuita • Vagas Limitadas
+            <Flame className="w-3 h-3" /> Análise Gratuita
           </div>
         </div>
 
@@ -483,6 +487,7 @@ export default function EconomizarPage() {
           to { width: 100%; }
         }
       `}</style>
+      <SiteFooter />
     </div>
   );
 }

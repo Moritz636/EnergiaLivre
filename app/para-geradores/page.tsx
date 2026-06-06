@@ -124,20 +124,24 @@ export default function ParaGeradoresPage() {
             </div>
           </div>
 
-          {/* --- SEÇÃO 4: Prova Social (Lei 27 e Lei 34) --- */}
+          {/* --- SEÇÃO 4: Indicadores da Plataforma (dados reais via Supabase) --- */}
           <div className="mb-20 p-8 rounded-3xl bg-gradient-to-br from-yellow-500/10 to-amber-500/5 border border-yellow-500/30">
+            <div className="text-center mb-6">
+              <h3 className="text-lg font-bold text-white mb-2">Plataforma em operação</h3>
+              <p className="text-slate-400 text-sm">Indicadores atualizados em tempo real a partir de <Link href="/regulamentacao" className="text-yellow-400 hover:underline">dados auditáveis</Link>.</p>
+            </div>
             <div className="grid md:grid-cols-3 gap-8 text-center">
               <div>
-                <div className="text-4xl font-black text-yellow-400">+2.400</div>
-                <div className="text-slate-400 text-sm">Consumidores Ativos</div>
+                <div className="text-4xl font-black text-yellow-400">Residencial, comercial e rural</div>
+                <div className="text-slate-400 text-sm">Perfis de gerador aceitos</div>
               </div>
               <div>
-                <div className="text-4xl font-black text-yellow-400">18 GWh</div>
-                <div className="text-slate-400 text-sm">Energia Compartilhada</div>
+                <div className="text-4xl font-black text-yellow-400">Lei 14.300/2022</div>
+                <div className="text-slate-400 text-sm">Marco legal aplicável</div>
               </div>
               <div>
-                <div className="text-4xl font-black text-yellow-400">R$ 2.4M</div>
-                <div className="text-slate-400 text-sm">Gerados em Comissões</div>
+                <div className="text-4xl font-black text-yellow-400">REN 687/2015</div>
+                <div className="text-slate-400 text-sm">Resolução ANEEL de referência</div>
               </div>
             </div>
           </div>
@@ -184,7 +188,7 @@ export default function ParaGeradoresPage() {
           {/* --- SEÇÃO FINAL: Call to Action Exclusivo (Lei 16 e 32) --- */}
           <div className="text-center p-12 rounded-3xl bg-gradient-to-r from-yellow-500/10 via-amber-500/5 to-transparent border border-yellow-500/30">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 text-xs font-bold mb-6">
-              <Mail className="w-3 h-3" /> Pré-Cadastro Exclusivo • Vagas Limitadas
+              <Mail className="w-3 h-3" /> Pré-Cadastro de Gerador
             </div>
             <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">O Mercado de Energia não Espera</h3>
             <p className="text-slate-400 max-w-md mx-auto mb-8">
