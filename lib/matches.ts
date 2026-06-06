@@ -24,6 +24,14 @@ export interface MatchCandidate {
   distance_km: number
   tipo: TargetTipo
   is_member_plus: boolean
+  // Novos campos de ranking
+  preco_kwh?: number | null
+  desconto_percentual?: number | null
+  pacote_kwh?: number | null
+  pacote_preco?: number | null
+  ranking_score?: number | null
+  total_avaliacoes?: number | null
+  media_avaliacoes?: number | null
 }
 
 export interface MatchProposalRecord {
@@ -55,7 +63,23 @@ export interface FindCandidatesDeps {
   fetchLocations?: (
     userId: string,
     targetTipo: TargetTipo,
-  ) => Promise<Array<{ user_id: string; lat: number; lng: number; cidade: string; estado: string; nome: string; tipo: TargetTipo; member_plus_active: boolean }>>
+  ) => Promise<Array<{
+    user_id: string
+    lat: number
+    lng: number
+    cidade: string
+    estado: string
+    nome: string
+    tipo: TargetTipo
+    member_plus_active: boolean
+    preco_kwh?: number | null
+    desconto_percentual?: number | null
+    pacote_kwh?: number | null
+    pacote_preco?: number | null
+    ranking_score?: number | null
+    total_avaliacoes?: number | null
+    media_avaliacoes?: number | null
+  }>>
 }
 
 export async function findCandidates(
@@ -70,20 +94,39 @@ export async function findCandidates(
     : async (userId: string, targetTipo: TargetTipo) => {
         const result = await (deps.supabase
           .from('user_locations')
-          .select('user_id, lat, lng, cidade, estado, profiles!inner(nome, tipo, is_active, member_plus_active)')
+          .select(`
+            user_id,
+            lat,
+            lng,
+            cidade,
+            estado,
+            profiles!inner(nome, tipo, is_active, member_plus_active),
+            geradores!left(preco_kwh, desconto_percentual, pacote_kwh, pacote_preco, ranking_score, total_avaliacoes, media_avaliacoes, status)
+          `)
           .eq('profiles.tipo', targetTipo)
           .neq('user_id', userId) as any)
         const rows = (result?.data ?? []) as Array<any>
-        return rows.map((r) => ({
-          user_id: r.user_id,
-          lat: r.lat,
-          lng: r.lng,
-          cidade: r.cidade,
-          estado: r.estado,
-          nome: (r.profiles?.nome as string) ?? 'Usuário',
-          tipo: ((r.profiles?.tipo as TargetTipo) ?? targetTipo),
-          member_plus_active: !!(r.profiles?.member_plus_active),
-        }))
+        return rows.map((r) => {
+          const g = r.geradores
+          const isGeradorAtivo = g && g.status === 'ativo'
+          return {
+            user_id: r.user_id,
+            lat: r.lat,
+            lng: r.lng,
+            cidade: r.cidade,
+            estado: r.estado,
+            nome: (r.profiles?.nome as string) ?? 'Usuário',
+            tipo: ((r.profiles?.tipo as TargetTipo) ?? targetTipo),
+            member_plus_active: !!(r.profiles?.member_plus_active),
+            preco_kwh: isGeradorAtivo ? (g.preco_kwh ?? null) : null,
+            desconto_percentual: isGeradorAtivo ? (g.desconto_percentual ?? null) : null,
+            pacote_kwh: isGeradorAtivo ? (g.pacote_kwh ?? null) : null,
+            pacote_preco: isGeradorAtivo ? (g.pacote_preco ?? null) : null,
+            ranking_score: isGeradorAtivo ? (g.ranking_score ?? null) : null,
+            total_avaliacoes: isGeradorAtivo ? (g.total_avaliacoes ?? null) : null,
+            media_avaliacoes: isGeradorAtivo ? (g.media_avaliacoes ?? null) : null,
+          }
+        })
       }
 
   const rows = await fetcher(input.userId, input.targetTipo)
@@ -100,12 +143,103 @@ export async function findCandidates(
       distance_km: calculateDistance(input.origin, { lat: r.lat, lng: r.lng }),
       tipo: r.tipo,
       is_member_plus: r.member_plus_active,
+      preco_kwh: r.preco_kwh ?? null,
+      desconto_percentual: r.desconto_percentual ?? null,
+      pacote_kwh: r.pacote_kwh ?? null,
+      pacote_preco: r.pacote_preco ?? null,
+      ranking_score: r.ranking_score ?? null,
+      total_avaliacoes: r.total_avaliacoes ?? null,
+      media_avaliacoes: r.media_avaliacoes ?? null,
     }))
     .filter((c) => c.distance_km <= radius)
-    .sort((a, b) => a.distance_km - b.distance_km)
-    .slice(0, limit)
 
-  return candidates
+  // Ordenação: geradores ranqueados por score (melhor rank primeiro), depois por distância
+  // Consumidores: por distância apenas
+  const sorted = candidates.sort((a, b) => {
+    if (a.tipo === 'gerador' && b.tipo === 'gerador') {
+      const scoreDiff = (b.ranking_score ?? 0) - (a.ranking_score ?? 0)
+      if (Math.abs(scoreDiff) > 0.001) return scoreDiff
+      return a.distance_km - b.distance_km
+    }
+    return a.distance_km - b.distance_km
+  })
+
+  return sorted.slice(0, limit)
+}
+
+// ============================================
+// RANKING DE GERADORES
+// ============================================
+
+export interface GeneratorRanking {
+  id: string
+  nome_usina: string
+  capacidade_kwp: number
+  excedente_mensal_kwh: number
+  cidade: string
+  estado: string
+  latitude: number | null
+  longitude: number | null
+  preco_kwh: number | null
+  desconto_percentual: number | null
+  pacote_kwh: number | null
+  pacote_preco: number | null
+  ranking_score: number | null
+  total_avaliacoes: number | null
+  media_avaliacoes: number | null
+  distance_km?: number
+}
+
+export interface GetRankingInput {
+  cidade?: string
+  estado?: string
+  userLat?: number
+  userLng?: number
+  radiusKm?: number
+  limit?: number
+}
+
+export interface GetRankingDeps {
+  supabase: SupabaseClient<Database>
+}
+
+export async function getGeradoresRanking(
+  input: GetRankingInput,
+  deps: GetRankingDeps,
+): Promise<GeneratorRanking[]> {
+  const limit = input.limit ?? 20
+  const radius = input.radiusKm ?? 100
+
+  let q = deps.supabase
+    .from('geradores')
+    .select('id, nome_usina, capacidade_kwp, excedente_mensal_kwh, cidade, estado, latitude, longitude, preco_kwh, desconto_percentual, pacote_kwh, pacote_preco, ranking_score, total_avaliacoes, media_avaliacoes, status')
+    .eq('status', 'ativo')
+    .order('ranking_score', { ascending: false })
+    .limit(limit)
+
+  if (input.cidade) q = q.ilike('cidade', input.cidade)
+  if (input.estado) q = q.ilike('estado', input.estado)
+
+  const { data, error } = await q
+  if (error || !data) return []
+
+  let ranked: GeneratorRanking[] = data as GeneratorRanking[]
+
+  if (input.userLat !== undefined && input.userLng !== undefined) {
+    ranked = ranked
+      .filter((g) => g.latitude != null && g.longitude != null)
+      .map((g) => ({
+        ...g,
+        distance_km: calculateDistance(
+          { lat: input.userLat!, lng: input.userLng! },
+          { lat: g.latitude!, lng: g.longitude! },
+        ),
+      }))
+      .filter((g) => (g.distance_km ?? 0) <= radius)
+      .sort((a, b) => (b.ranking_score ?? 0) - (a.ranking_score ?? 0))
+  }
+
+  return ranked
 }
 
 export interface CreateProposalInput {

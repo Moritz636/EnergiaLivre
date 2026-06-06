@@ -53,10 +53,19 @@ async function memoryRateLimit(opts: RateLimitOptions): Promise<RateLimitResult>
 
 async function upstashRateLimit(opts: RateLimitOptions): Promise<RateLimitResult> {
   // Pacotes opcionais - carregados apenas se UPSTASH_* estiver configurado
-  // @ts-ignore - pacote opcional
-  const ratelimitMod = await import('@upstash/ratelimit')
-  // @ts-ignore - pacote opcional
-  const redisMod = await import('@upstash/redis')
+  // Usamos webpackIgnore para que o Next não tente resolver no build
+  /* @ts-ignore - pacote opcional, ignorado pelo webpack */
+  const importUpstash: () => Promise<any> = (() => {
+    const fn = new Function('return import("@upstash/ratelimit")')
+    return () => fn()
+  })()
+  const importRedis: () => Promise<any> = (() => {
+    const fn = new Function('return import("@upstash/redis")')
+    return () => fn()
+  })()
+  const ratelimitMod = await importUpstash().catch(() => null)
+  const redisMod = await importRedis().catch(() => null)
+  if (!ratelimitMod || !redisMod) throw new Error('Upstash packages not installed')
   const { Ratelimit } = ratelimitMod as any
   const { Redis } = redisMod as any
   if (!Ratelimit || !Redis) throw new Error('Upstash packages not properly loaded')

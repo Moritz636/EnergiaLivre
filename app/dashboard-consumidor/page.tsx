@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/app/hooks/useAuth';
 import { getSupabase } from '@/lib/supabase/singleton';
-import { LogOut, Zap, TrendingDown, DollarSign, Calendar, Award, Crown, ArrowRight, CheckCircle2, Leaf, Home, PiggyBank, BarChart3, ShieldCheck, Sparkles, Flame, Globe, Loader2, MessageCircle, Heart, FileText } from 'lucide-react';
+import { LogOut, Zap, TrendingDown, DollarSign, Calendar, Award, Crown, ArrowRight, CheckCircle2, Leaf, Home, PiggyBank, BarChart3, ShieldCheck, Sparkles, Flame, Globe, Loader2, MessageCircle, Heart, FileText, Camera, ScanLine, MapPin, Users, Scan, Plus } from 'lucide-react';
 import { ConsentModal } from '@/components/ConsentModal';
 import { CURRENT_TERMS_VERSION } from '@/lib/commissions';
 import Link from 'next/link';
@@ -10,6 +10,7 @@ import type { Database } from '@/lib/database.types';
 
 type Consumidor = Database['public']['Tables']['consumidores']['Row']
 type Assinatura = Database['public']['Tables']['assinaturas']['Row']
+type Invoice = Database['public']['Tables']['invoice_uploads']['Row']
 
 interface Metrics {
   economiaMensal: number;
@@ -32,6 +33,8 @@ export default function DashboardConsumidorPage() {
   const [loadingMetrics, setLoadingMetrics] = useState(true);
   const [showConsent, setShowConsent] = useState(false);
   const [consentChecked, setConsentChecked] = useState(false);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loadingInvoices, setLoadingInvoices] = useState(true);
   const supabase = getSupabase();
 
   useEffect(() => {
@@ -48,14 +51,12 @@ export default function DashboardConsumidorPage() {
 
     async function loadMetrics() {
       try {
-        // 1. Buscar dados do consumidor
         const { data: consumidor } = await supabase
           .from('consumidores')
           .select('*')
           .eq('id', user.id)
           .single();
 
-        // 2. Buscar assinatura ativa
         const { data: assinatura } = await supabase
           .from('assinaturas')
           .select('*')
@@ -66,11 +67,10 @@ export default function DashboardConsumidorPage() {
         const consumidorRow = consumidor as Consumidor | null
         const assinaturaRow = assinatura as Assinatura | null
 
-        // 3. Calcular métricas
         const kwh = assinaturaRow?.kwh_mensais || 0;
         const valor = assinaturaRow?.valor_mensal || 0;
         const economiaPercent = assinaturaRow?.economia_percentual || 25;
-        const faturaAtual = kwh * 0.95; // Tarifa média
+        const faturaAtual = kwh * 0.95;
         const economia = faturaAtual * (economiaPercent / 100);
         const faturaFinal = faturaAtual - economia;
         const diasConectado = consumidorRow?.created_at
@@ -99,6 +99,27 @@ export default function DashboardConsumidorPage() {
     }
 
     loadMetrics();
+  }, [user, supabase, profile, consentChecked]);
+
+  // Carregar faturas separadamente
+  useEffect(() => {
+    if (!user) return;
+    async function loadInvoices() {
+      try {
+        const { data } = await supabase
+          .from('invoice_uploads')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(5);
+        setInvoices((data as Invoice[] | null) ?? []);
+      } catch (err) {
+        console.error('Erro ao carregar faturas:', err);
+      } finally {
+        setLoadingInvoices(false);
+      }
+    }
+    loadInvoices();
   }, [user, supabase]);
 
   if (loading || loadingMetrics) {
@@ -127,6 +148,9 @@ export default function DashboardConsumidorPage() {
     nomePlano: 'Sem plano',
     proximaFatura: null,
   };
+
+  const hasMatchEligibleInvoice = invoices.some((inv) => inv.match_eligible);
+  const totalKwh = invoices.reduce((s, inv) => s + (inv.kwh_mensal ?? 0), 0);
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 font-sans overflow-x-hidden">
@@ -200,6 +224,59 @@ export default function DashboardConsumidorPage() {
           </p>
         </div>
 
+        {/* Ações rápidas em destaque */}
+        <div className="grid md:grid-cols-2 gap-3 mb-6">
+          <Link
+            href="/dashboard/faturas/scan"
+            className="group p-4 rounded-2xl bg-gradient-to-r from-emerald-500/15 to-cyan-500/10 border border-emerald-500/30 hover:border-emerald-500/50 transition flex items-center gap-3"
+          >
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center group-hover:scale-110 transition">
+              <Camera className="w-6 h-6 text-emerald-300" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-bold text-white">Escanear fatura</p>
+              <p className="text-xs text-slate-400">Use a câmera para cadastrar pelo QR Code ou código de barras</p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-emerald-400 group-hover:translate-x-1 transition" />
+          </Link>
+
+          <Link
+            href="/recargas"
+            className="group p-4 rounded-2xl bg-gradient-to-r from-cyan-500/15 to-blue-500/10 border border-cyan-500/30 hover:border-cyan-500/50 transition flex items-center gap-3"
+          >
+            <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center group-hover:scale-110 transition">
+              <ScanLine className="w-6 h-6 text-cyan-300" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-bold text-white">Recarga de celular</p>
+              <p className="text-xs text-slate-400">Pague com PIX ou saldo da plataforma, cashback em KWATT</p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-cyan-400 group-hover:translate-x-1 transition" />
+          </Link>
+        </div>
+
+        {/* Match com geradores - destaque quando há fatura elegível */}
+        {hasMatchEligibleInvoice && (
+          <div className="mb-6 p-5 rounded-2xl bg-gradient-to-r from-pink-500/15 to-amber-500/10 border border-pink-500/30 flex items-center gap-4 flex-wrap">
+            <div className="w-12 h-12 rounded-xl bg-pink-500/20 flex items-center justify-center">
+              <Heart className="w-6 h-6 text-pink-300" />
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <h3 className="text-base font-bold text-white">Você está visível para geradores próximos!</h3>
+              <p className="text-sm text-slate-300">
+                {invoices.filter((i) => i.match_eligible).length} fatura(s) com consumo ≥ 300 kWh.
+                Geradores podem te encontrar no mapa e enviar propostas.
+              </p>
+            </div>
+            <Link
+              href="/dashboard/match"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-pink-500 to-amber-500 hover:from-pink-400 text-slate-900 rounded-xl font-bold transition shadow-lg shadow-pink-500/20"
+            >
+              <Sparkles className="w-4 h-4" /> Ver matches
+            </Link>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/5 border border-emerald-500/30">
             <div className="flex items-center gap-2 text-emerald-400 mb-2">
@@ -248,24 +325,67 @@ export default function DashboardConsumidorPage() {
 
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-emerald-400" />
-              Comparativo de Fatura
-            </h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center p-3 rounded-xl bg-red-500/5 border border-red-500/20">
-                <span className="text-slate-400 text-sm">Sem EnergiaLivre</span>
-                <span className="text-red-400 font-bold">R$ {m.faturaAtual.toLocaleString('pt-BR')}</span>
-              </div>
-              <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
-                <span className="text-slate-400 text-sm">Com EnergiaLivre</span>
-                <span className="text-emerald-400 font-bold">R$ {m.faturaComDesconto.toLocaleString('pt-BR')}</span>
-              </div>
-              <div className="flex justify-between items-center p-3 rounded-xl bg-yellow-500/5 border border-yellow-500/20">
-                <span className="text-slate-400 text-sm">Economia anual estimada</span>
-                <span className="text-yellow-400 font-bold">R$ {m.economiaAnual.toLocaleString('pt-BR')}</span>
-              </div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <FileText className="w-5 h-5 text-cyan-400" />
+                Suas Faturas
+              </h3>
+              <Link href="/dashboard/faturas" className="text-xs text-emerald-400 hover:underline">Ver todas</Link>
             </div>
+            {loadingInvoices ? (
+              <div className="flex justify-center py-6">
+                <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" />
+              </div>
+            ) : invoices.length === 0 ? (
+              <div className="text-center py-6">
+                <Scan className="w-10 h-10 text-slate-600 mx-auto mb-2" />
+                <p className="text-sm text-slate-400 mb-3">Nenhuma fatura cadastrada</p>
+                <Link
+                  href="/dashboard/faturas/scan"
+                  className="inline-flex items-center gap-1 text-xs text-emerald-400 hover:underline"
+                >
+                  <Plus className="w-3 h-3" /> Escanear primeira
+                </Link>
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                {invoices.map((inv) => (
+                  <li key={inv.id}>
+                    <Link
+                      href={`/dashboard/faturas/${inv.id}`}
+                      className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                          inv.match_eligible ? 'bg-emerald-500/20' : 'bg-white/5'
+                        }`}>
+                          <FileText className={`w-4 h-4 ${inv.match_eligible ? 'text-emerald-300' : 'text-slate-400'}`} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm text-white font-medium truncate">
+                            {inv.concessionaria || 'Fatura'}
+                          </p>
+                          <p className="text-[10px] text-slate-500">
+                            {inv.kwh_mensal ? `${inv.kwh_mensal} kWh` : '—'} ·{' '}
+                            {inv.valor_total ? `R$ ${Number(inv.valor_total).toFixed(2)}` : '—'}
+                          </p>
+                        </div>
+                      </div>
+                      {inv.match_eligible && (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] text-emerald-300 font-bold flex items-center gap-1 shrink-0">
+                          <MapPin className="w-2.5 h-2.5" /> Match
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {totalKwh > 0 && (
+              <p className="text-[10px] text-slate-500 mt-3">
+                Consumo total cadastrado: <strong className="text-white">{totalKwh.toLocaleString('pt-BR')} kWh</strong>
+              </p>
+            )}
           </div>
 
           <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
@@ -326,22 +446,24 @@ export default function DashboardConsumidorPage() {
           </p>
         </div>
 
-        <div className="p-6 rounded-2xl bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 flex items-center gap-4 flex-wrap">
-          <Crown className="w-8 h-8 text-yellow-400 shrink-0" />
-          <div className="flex-1 min-w-[200px]">
-            <h3 className="text-lg font-bold text-white">Conecte-se a geradores próximos</h3>
-            <p className="text-slate-300 text-sm">
-              Com o Member Plus, você vê no mapa quem está gerando energia limpa perto de você e propõe conexões diretas.
-            </p>
+        {!hasMatchEligibleInvoice && (
+          <div className="mt-6 p-6 rounded-2xl bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 flex items-center gap-4 flex-wrap">
+            <Crown className="w-8 h-8 text-yellow-400 shrink-0" />
+            <div className="flex-1 min-w-[200px]">
+              <h3 className="text-lg font-bold text-white">Conecte-se a geradores próximos</h3>
+              <p className="text-slate-300 text-sm">
+                Com o Member Plus, você vê no mapa quem está gerando energia limpa perto de você e propõe conexões diretas.
+              </p>
+            </div>
+            <Link
+              href="/dashboard/match"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-slate-900 rounded-xl font-bold transition shadow-lg shadow-yellow-500/20"
+            >
+              <Sparkles className="w-4 h-4" /> Abrir Match
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
-          <Link
-            href="/dashboard/match"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-slate-900 rounded-xl font-bold transition shadow-lg shadow-yellow-500/20"
-          >
-            <Sparkles className="w-4 h-4" /> Abrir Match
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
+        )}
 
       </main>
     </div>

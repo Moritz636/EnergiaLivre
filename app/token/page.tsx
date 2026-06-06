@@ -1,777 +1,744 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import {
-  Zap, ShieldCheck, ArrowRight, CheckCircle2, Clock, Flame, Crown,
+  Zap, ShieldCheck, ArrowRight, CheckCircle2, Clock, Crown,
   Users, TrendingUp, BatteryCharging, Sun, Car, Globe, Wallet,
   Gift, Star, Loader2, Menu, X, ExternalLink, BarChart3, Rocket,
-  Lock, Coins, Activity, AlertTriangle, Mail, ChevronDown, ChevronUp
+  Lock, Coins, Activity, AlertTriangle, Mail, ChevronDown, ChevronUp,
+  Smartphone, Banknote, TrendingDown, Award, Sparkles, BookOpen,
+  Repeat, Shield, FileCheck, Calendar, Copy, Check, Info, Flame
 } from 'lucide-react';
+import {
+  TOKEN_PACKAGES, TOKEN_LAUNCH_DATE, PRESALE_END_DATE, KWATT_UNIT_PRICE,
+  KWH_REFERENCE_PRICE, KWATT_TO_KWH_RATIO, TOKEN_TOTAL_SUPPLY, TOKEN_DISTRIBUTION,
+  TOKEN_USE_CASES, getFinalPrice, getTotalTokens, formatBRL, formatTokens
+} from '@/lib/tokenomics';
 
-type Package = {
-  tokens: number;
-  basePrice: number;
-  discount: number;
-  bonus: number;
-  popular: boolean;
-  description: string;
-};
+type Countdown = { days: number; hours: number; minutes: number; seconds: number }
+
+function getCountdown(target: Date): Countdown {
+  const diff = target.getTime() - Date.now()
+  if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 }
+  return {
+    days: Math.floor(diff / 86400000),
+    hours: Math.floor((diff % 86400000) / 3600000),
+    minutes: Math.floor((diff % 3600000) / 60000),
+    seconds: Math.floor((diff % 60000) / 1000),
+  }
+}
+
+const USE_CASE_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  Zap, Smartphone, TrendingUp, Gift, Shield, Globe,
+}
 
 export default function TokenPresalePage() {
-  const [selectedPackage, setSelectedPackage] = useState<number | null>(300);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [walletModalOpen, setWalletModalOpen] = useState(false);
-  const [buyModalOpen, setBuyModalOpen] = useState(false);
-  const [buyPackage, setBuyPackage] = useState<Package | null>(null);
-  const [email, setEmail] = useState('');
-  const [walletAddress, setWalletAddress] = useState('');
-  const [acceptedLgpd, setAcceptedLgpd] = useState(false);
-  const [acceptedRisk, setAcceptedRisk] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
-  const [legalExpanded, setLegalExpanded] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [buyPackage, setBuyPackage] = useState<typeof TOKEN_PACKAGES[number] | null>(null)
+  const [email, setEmail] = useState('')
+  const [walletAddress, setWalletAddress] = useState('')
+  const [acceptedLgpd, setAcceptedLgpd] = useState(false)
+  const [acceptedRisk, setAcceptedRisk] = useState(false)
+  const [submitMessage, setSubmitMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [legalExpanded, setLegalExpanded] = useState(false)
+  const [openFaq, setOpenFaq] = useState<number | null>(0)
+  const [timeToLaunch, setTimeToLaunch] = useState<Countdown>({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+  const [timeToPresaleEnd, setTimeToPresaleEnd] = useState<Countdown>({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+  const [copied, setCopied] = useState(false)
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const isValidEmail = emailRegex.test(email);
-
-  const launchDate = new Date(2027, 0, 5, 0, 0, 0);
-  const presaleEndDate = new Date(2026, 2, 15, 23, 59, 59);
-  const [timeToLaunch, setTimeToLaunch] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const [timeToPresaleEnd, setTimeToPresaleEnd] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const KWH_PRICE = 0.95;
-  const TOKEN_VALUE = KWH_PRICE * 0.30;
-
-  const packages: Package[] = [
-    { tokens: 50, basePrice: TOKEN_VALUE * 50, discount: 0, bonus: 0, popular: false, description: 'Para experimentar a rede' },
-    { tokens: 100, basePrice: TOKEN_VALUE * 100, discount: 5, bonus: 5, popular: false, description: 'Acesso inicial ao ecossistema' },
-    { tokens: 300, basePrice: TOKEN_VALUE * 300, discount: 10, bonus: 20, popular: true, description: 'Pacote mais equilibrado' },
-    { tokens: 500, basePrice: TOKEN_VALUE * 500, discount: 15, bonus: 50, popular: false, description: 'Para embaixadores e早期 adopters' },
-    { tokens: 1000, basePrice: TOKEN_VALUE * 1000, discount: 20, bonus: 150, popular: false, description: 'Volume institucional' },
-  ];
-
-  const getFinalPrice = (pkg: Package) => pkg.basePrice * (1 - pkg.discount / 100);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const referralCode = 'KWATT-LAUNCH' // pode ser dinâmico via query param
 
   useEffect(() => {
-    const updateTimers = () => {
-      const now = new Date();
-      const launchDiff = launchDate.getTime() - now.getTime();
-      setTimeToLaunch({
-        days: Math.max(0, Math.floor(launchDiff / 86400000)),
-        hours: Math.max(0, Math.floor((launchDiff % 86400000) / 3600000)),
-        minutes: Math.max(0, Math.floor((launchDiff % 3600000) / 60000)),
-        seconds: Math.max(0, Math.floor((launchDiff % 60000) / 1000)),
-      });
-      const presaleDiff = presaleEndDate.getTime() - now.getTime();
-      setTimeToPresaleEnd({
-        days: Math.max(0, Math.floor(presaleDiff / 86400000)),
-        hours: Math.max(0, Math.floor((presaleDiff % 86400000) / 3600000)),
-        minutes: Math.max(0, Math.floor((presaleDiff % 3600000) / 60000)),
-        seconds: Math.max(0, Math.floor((presaleDiff % 60000) / 1000)),
-      });
-    };
-    updateTimers();
-    intervalRef.current = setInterval(updateTimers, 1000);
+    const update = () => {
+      setTimeToLaunch(getCountdown(TOKEN_LAUNCH_DATE))
+      setTimeToPresaleEnd(getCountdown(PRESALE_END_DATE))
+    }
+    update()
+    intervalRef.current = setInterval(update, 1000)
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, []);
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
+  }, [])
 
-  const totalRaised = 1240000;
-  const totalGoal = 5000000;
-  const percentageRaised = (totalRaised / totalGoal) * 100;
-
-  const openConnectModal = () => {
-    setSubmitMessage(null);
-    setWalletAddress('');
-    setWalletModalOpen(true);
-  };
-
-  const openBuyModal = (pkg: Package) => {
-    setSubmitMessage(null);
-    setBuyPackage(pkg);
-    setBuyModalOpen(true);
-  };
-
-  const closeAllModals = () => {
-    setWalletModalOpen(false);
-    setBuyModalOpen(false);
-    setBuyPackage(null);
-    setSubmitMessage(null);
-  };
-
-  const handleConnectWallet = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitMessage(null);
-    if (!isValidEmail) {
-      setSubmitMessage({ type: 'err', text: 'E-mail inválido.' });
-      return;
+  const handleBuy = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitMessage(null)
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRe.test(email)) {
+      setSubmitMessage({ type: 'err', text: 'E-mail inválido.' })
+      return
     }
     if (!acceptedLgpd) {
-      setSubmitMessage({ type: 'err', text: 'É necessário aceitar os termos de privacidade para continuar.' });
-      return;
-    }
-    if (!walletAddress.startsWith('0x') || walletAddress.length !== 42) {
-      setSubmitMessage({ type: 'err', text: 'Endereço de carteira inválido. Use o formato 0x… (42 caracteres).' });
-      return;
-    }
-    setIsConnecting(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    setIsConnecting(false);
-    setSubmitMessage({ type: 'ok', text: `Carteira ${walletAddress.slice(0, 6)}…${walletAddress.slice(-4)} registrada. Em breve você recebe o link de listagem.` });
-  };
-
-  const handleBuyTokens = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!buyPackage) return;
-    setSubmitMessage(null);
-    if (!isValidEmail) {
-      setSubmitMessage({ type: 'err', text: 'E-mail inválido.' });
-      return;
-    }
-    if (!acceptedLgpd) {
-      setSubmitMessage({ type: 'err', text: 'É necessário aceitar a Política de Privacidade.' });
-      return;
+      setSubmitMessage({ type: 'err', text: 'É necessário aceitar os termos de privacidade.' })
+      return
     }
     if (!acceptedRisk) {
-      setSubmitMessage({ type: 'err', text: 'É necessário confirmar ciência dos riscos do token de utilidade.' });
-      return;
+      setSubmitMessage({ type: 'err', text: 'É necessário confirmar ciência dos riscos.' })
+      return
     }
-    setIsConnecting(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setIsConnecting(false);
-    setSubmitMessage({
-      type: 'ok',
-      text: `Reserva registrada para ${buyPackage.tokens} créditos. Enviamos as instruções de pagamento (PIX ou cripto) para ${email}.`,
-    });
-  };
+    setSubmitting(true)
+    try {
+      const res = await fetch('/api/token/pre-register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          walletAddress: walletAddress || undefined,
+          packageCode: buyPackage?.code,
+          referredByCode: referralCode,
+          utmSource: 'landing',
+          utmMedium: 'organic',
+          utmCampaign: 'token-presale',
+        }),
+      })
+      const body = await res.json()
+      if (!res.ok) {
+        setSubmitMessage({ type: 'err', text: body.error || 'Erro ao registrar.' })
+      } else {
+        setSubmitMessage({ type: 'ok', text: body.message || 'Pré-registro confirmado!' })
+      }
+    } catch (err: any) {
+      setSubmitMessage({ type: 'err', text: err?.message || 'Erro de rede' })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const copyReferral = async () => {
+    try {
+      const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/token?ref=${referralCode}`
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // ignore
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 overflow-x-hidden">
+    <div className="min-h-screen bg-[#020617] text-slate-200 font-sans overflow-x-hidden">
+      {/* BG Decorations */}
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent -z-20" />
+      <div className="fixed bottom-0 left-0 w-96 h-96 bg-amber-500/5 rounded-full blur-[120px] -z-10" />
+      <div className="fixed top-40 right-0 w-80 h-80 bg-emerald-500/5 rounded-full blur-[100px] -z-10" />
 
-      {/* Background Effects */}
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-500/5 via-blue-500/5 to-transparent -z-20" />
-      <div className="fixed top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] -z-10" />
-      <div className="fixed bottom-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] -z-10" />
-
-      {/* Banner Legal Permanente (CVM + LGPD) */}
-      <div className="fixed top-0 left-0 right-0 z-[60] bg-amber-500/10 border-b border-amber-500/30 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-center gap-2 text-[11px] text-amber-200">
-          <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-          <span>
-            <strong className="font-bold">$KWATT é token de utilidade</strong> — NÃO é valor mobiliário, não garante retorno financeiro e não é investimento.
-            Sujeito à regulação da Lei 14.478/2022 (Brasil).
-          </span>
-        </div>
-      </div>
-
-      {/* Navbar */}
-      <nav className="fixed top-7 left-0 right-0 z-50 bg-[#020617]/80 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      {/* Header */}
+      <nav className="border-b border-white/10 bg-[#020617]/80 backdrop-blur-xl fixed top-0 w-full z-40">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center">
-              <Zap className="w-6 h-6 text-white" />
+            <div className="w-7 h-7 bg-gradient-to-br from-amber-500 to-yellow-400 rounded-lg flex items-center justify-center">
+              <Coins className="text-slate-900 w-4 h-4" />
             </div>
-            <span className="font-bold text-xl text-white">Energia<span className="text-cyan-400">Livre</span></span>
-            <span className="ml-2 px-2 py-0.5 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-[9px] font-black text-yellow-400">$KWATT</span>
+            <span className="text-lg font-black text-white">KWATT</span>
+            <span className="hidden sm:inline text-[10px] text-slate-500 ml-1">Token de Utilidade</span>
           </Link>
-
-          <div className="hidden md:flex items-center gap-8">
-            <a href="#about" className="text-slate-400 hover:text-white transition text-sm">Sobre</a>
-            <a href="#roadmap" className="text-slate-400 hover:text-white transition text-sm">Roadmap</a>
-            <a href="#whitepaper" className="text-slate-400 hover:text-white transition text-sm">Whitepaper</a>
+          <div className="hidden md:flex items-center gap-6 text-sm">
+            <a href="#use-cases" className="text-slate-400 hover:text-white transition">Usos</a>
+            <a href="#tokenomics" className="text-slate-400 hover:text-white transition">Tokenomics</a>
+            <a href="#packages" className="text-slate-400 hover:text-white transition">Pacotes</a>
+            <a href="#roadmap" className="text-slate-400 hover:text-white transition">Roadmap</a>
+            <a href="#faq" className="text-slate-400 hover:text-white transition">FAQ</a>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href="/login" className="hidden sm:inline text-sm text-slate-300 hover:text-white px-3 py-1.5">Entrar</Link>
+            <a href="#packages" className="text-sm bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold rounded-lg px-3 py-1.5 flex items-center gap-1">
+              Reservar <ArrowRight className="w-3.5 h-3.5" />
+            </a>
             <button
-              onClick={openConnectModal}
-              className="px-5 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-bold text-white text-sm hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition flex items-center gap-2"
+              className="md:hidden p-2"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Menu"
             >
-              <Wallet className="w-4 h-4" />
-              Registrar Interesse
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
-
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label={mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
-            aria-expanded={mobileMenuOpen}
-            className="md:hidden p-2 text-slate-300"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
         </div>
-
         {mobileMenuOpen && (
-          <div className="md:hidden bg-[#020617]/95 backdrop-blur-xl border-b border-white/10 p-4 flex flex-col gap-4">
-            <a href="#about" onClick={() => setMobileMenuOpen(false)} className="text-slate-400 hover:text-white transition py-2">Sobre</a>
-            <a href="#roadmap" onClick={() => setMobileMenuOpen(false)} className="text-slate-400 hover:text-white transition py-2">Roadmap</a>
-            <a href="#whitepaper" onClick={() => setMobileMenuOpen(false)} className="text-slate-400 hover:text-white transition py-2">Whitepaper</a>
-            <button onClick={() => { setMobileMenuOpen(false); openConnectModal(); }} className="px-5 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-bold text-white">
-              Registrar Interesse
-            </button>
+          <div className="md:hidden border-t border-white/10 px-6 py-3 space-y-2">
+            <a href="#use-cases" className="block text-sm text-slate-300">Usos</a>
+            <a href="#tokenomics" className="block text-sm text-slate-300">Tokenomics</a>
+            <a href="#packages" className="block text-sm text-slate-300">Pacotes</a>
+            <a href="#roadmap" className="block text-sm text-slate-300">Roadmap</a>
+            <a href="#faq" className="block text-sm text-slate-300">FAQ</a>
           </div>
         )}
       </nav>
 
-      <main className="pt-32 pb-20">
-        <div className="max-w-7xl mx-auto px-6">
+      {/* Legal Disclaimer Banner */}
+      <div className="fixed top-16 inset-x-0 z-30 bg-amber-500/10 border-b border-amber-500/20">
+        <div className="max-w-7xl mx-auto px-6 py-2 flex items-center gap-2">
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <p className="text-[11px] text-amber-200 leading-tight">
+            <strong>Token de utilidade</strong> — Não é valor mobiliário. Não há promessa de valorização. Lei 14.478/2022.
+          </p>
+        </div>
+      </div>
 
-          {/* Hero Section */}
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[10px] font-black mb-6">
-              <Flame className="w-3 h-3" /> RESERVA ANTECIPADA • EDIÇÃO FUNDADOR
-            </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-              Créditos de Energia <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">do Futuro</span>
-            </h1>
-            <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-8">
-              Cada crédito <span className="text-cyan-400 font-bold">$KWATT</span> equivale a 30% do valor de 1 kWh —<br />
-              um benefício de uso na plataforma EnergiaLivre, não um ativo de investimento.
+      <main className="pt-32 pb-12 px-6">
+        {/* HERO */}
+        <section className="max-w-6xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-[10px] font-black text-amber-300 uppercase tracking-wider mb-6">
+            <Sparkles className="w-3 h-3" /> Pré-venda aberta até {PRESALE_END_DATE.toLocaleDateString('pt-BR')}
+          </div>
+
+          <h1 className="text-4xl md:text-6xl font-black text-white leading-[1.05] mb-4">
+            A moeda digital da<br />
+            <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent">
+              sua conta de luz
+            </span>
+          </h1>
+
+          <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto mb-8">
+            <strong className="text-white">KWATT</strong> é o token utilitário que paga sua fatura de energia,
+            recarrega seu celular, dá cashback e ainda financia a transição energética.
+            1 KWATT = 30% de 1 kWh. <span className="text-amber-400 font-bold">Use onde quiser.</span>
+          </p>
+
+          {/* Countdown */}
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mr-2">Lançamento:</div>
+            <CountdownBox value={timeToLaunch.days} label="dias" />
+            <span className="text-amber-400">:</span>
+            <CountdownBox value={timeToLaunch.hours} label="h" />
+            <span className="text-amber-400">:</span>
+            <CountdownBox value={timeToLaunch.minutes} label="min" />
+            <span className="text-amber-400">:</span>
+            <CountdownBox value={timeToLaunch.seconds} label="seg" />
+          </div>
+
+          {/* KVPs */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto mb-8">
+            <Kvp icon={<Zap className="w-4 h-4" />} label="Paga fatura" accent="emerald" />
+            <Kvp icon={<Smartphone className="w-4 h-4" />} label="Recarga celular" accent="cyan" />
+            <Kvp icon={<TrendingDown className="w-4 h-4" />} label="Até 12% cashback" accent="amber" />
+            <Kvp icon={<Gift className="w-4 h-4" />} label="Indicação KWATT" accent="pink" />
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <a href="#packages" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-900 font-black transition shadow-lg shadow-amber-500/20">
+              <Rocket className="w-4 h-4" /> Reservar pacote
+            </a>
+            <a href="#use-cases" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold transition">
+              <BookOpen className="w-4 h-4" /> Ver utilidades
+            </a>
+          </div>
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] text-slate-500">
+            <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> LGPD compliant</span>
+            <span className="flex items-center gap-1"><FileCheck className="w-3 h-3" /> KYC leve</span>
+            <span className="flex items-center gap-1"><Lock className="w-3 h-3" /> Carteira 0x (EVM)</span>
+            <span className="flex items-center gap-1"><Globe className="w-3 h-3" /> Lei 14.478/2022</span>
+          </div>
+        </section>
+
+        {/* USE CASES */}
+        <section id="use-cases" className="max-w-6xl mx-auto mt-24">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-3">
+              O que o KWATT faz por você
+            </h2>
+            <p className="text-slate-400 max-w-2xl mx-auto">
+              Utilidade real desde o dia 1. Cada KWATT tem função concreta na plataforma EnergiaLivre.
             </p>
-
-            {/* Timers */}
-            <div className="flex flex-col md:flex-row justify-center gap-8 mb-12">
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-sm">
-                <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">Liberação dos Créditos</p>
-                <div className="flex gap-4 justify-center" role="timer" aria-live="polite">
-                  <div><span className="text-3xl font-bold text-white">{timeToLaunch.days}</span><span className="text-slate-500 text-sm ml-1">d</span></div>
-                  <div><span className="text-3xl font-bold text-white">{timeToLaunch.hours}</span><span className="text-slate-500 text-sm ml-1">h</span></div>
-                  <div><span className="text-3xl font-bold text-white">{timeToLaunch.minutes}</span><span className="text-slate-500 text-sm ml-1">m</span></div>
-                  <div><span className="text-3xl font-bold text-white">{timeToLaunch.seconds}</span><span className="text-slate-500 text-sm ml-1">s</span></div>
-                </div>
-                <p className="text-[10px] text-slate-600 mt-2">5 de Janeiro de 2027</p>
-              </div>
-
-              <div className="bg-gradient-to-r from-yellow-500/10 to-amber-500/5 border border-yellow-500/30 rounded-2xl p-4 backdrop-blur-sm">
-                <p className="text-xs text-yellow-400 uppercase tracking-wider mb-2 flex items-center justify-center gap-1"><Clock className="w-3 h-3" /> Fim das Reservas</p>
-                <div className="flex gap-4 justify-center" role="timer" aria-live="polite">
-                  <div><span className="text-3xl font-bold text-yellow-400">{timeToPresaleEnd.days}</span><span className="text-slate-500 text-sm ml-1">d</span></div>
-                  <div><span className="text-3xl font-bold text-yellow-400">{timeToPresaleEnd.hours}</span><span className="text-slate-500 text-sm ml-1">h</span></div>
-                  <div><span className="text-3xl font-bold text-yellow-400">{timeToPresaleEnd.minutes}</span><span className="text-slate-500 text-sm ml-1">m</span></div>
-                  <div><span className="text-3xl font-bold text-yellow-400">{timeToPresaleEnd.seconds}</span><span className="text-slate-500 text-sm ml-1">s</span></div>
-                </div>
-                <p className="text-[10px] text-slate-600 mt-2">15 de Março de 2026</p>
-              </div>
-            </div>
-
-            <div className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 rounded-2xl border border-white/10">
-              <Coins className="w-5 h-5 text-cyan-400" />
-              <span className="text-slate-400">1 $KWATT =</span>
-              <span className="text-2xl font-bold text-cyan-400">R$ {TOKEN_VALUE.toFixed(3)}</span>
-              <span className="text-xs text-slate-500">(30% do kWh de referência: R$ {KWH_PRICE.toFixed(2)})</span>
-            </div>
           </div>
 
-          {/* Prova Social - Agora com disclaimer */}
-          <div className="mb-8 text-center">
-            <p className="text-[10px] text-slate-500 uppercase tracking-wider">Demonstrativo de adoção inicial (mockup — números serão auditados)</p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20">
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
-              <Users className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-white">+2.847</p>
-              <p className="text-xs text-slate-500">Pré-registros</p>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
-              <TrendingUp className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-white">R$ 1.24M</p>
-              <p className="text-xs text-slate-500">Reservas confirmadas</p>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
-              <BatteryCharging className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-white">+12.8M</p>
-              <p className="text-xs text-slate-500">kWh reservados</p>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
-              <Car className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-white">+500</p>
-              <p className="text-xs text-slate-500">Vagas para EV</p>
-            </div>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="max-w-2xl mx-auto mb-20">
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-slate-400">Meta de Adesão Inicial</span>
-              <span className="text-cyan-400">R$ {totalRaised.toLocaleString('pt-BR')} / R$ {totalGoal.toLocaleString('pt-BR')}</span>
-            </div>
-            <div className="h-3 bg-white/10 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all duration-500" style={{ width: `${percentageRaised}%` }} />
-            </div>
-            <p className="text-xs text-slate-500 text-center mt-2">Cap sujeito a ajustes conforme demanda real</p>
-          </div>
-
-          {/* Cards de Compra */}
-          <div className="mb-20">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Escolha seu Pacote <span className="text-cyan-400">$KWATT</span></h2>
-              <p className="text-slate-400 max-w-xl mx-auto">Quanto maior o pacote, maior o desconto e bônus. Créditos válidos por 24 meses após liberação.</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {packages.map((pkg) => {
-                const finalPrice = getFinalPrice(pkg);
-                const isSelected = selectedPackage === pkg.tokens;
-                return (
-                  <div
-                    key={pkg.tokens}
-                    role="button"
-                    tabIndex={0}
-                    aria-pressed={isSelected}
-                    aria-label={`Pacote ${pkg.tokens} créditos por R$ ${finalPrice.toFixed(2)}`}
-                    className={`relative bg-gradient-to-br from-white/5 to-white/[0.02] border rounded-2xl p-5 transition-all hover:scale-105 cursor-pointer group focus:outline-none focus:ring-2 focus:ring-cyan-500/50 ${
-                      isSelected
-                        ? 'border-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.3)]'
-                        : 'border-white/10 hover:border-cyan-500/50'
-                    }`}
-                    onClick={() => setSelectedPackage(pkg.tokens)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedPackage(pkg.tokens); } }}
-                  >
-                    {pkg.popular && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-full text-[9px] font-black text-slate-900 whitespace-nowrap">
-                        <Star className="w-3 h-3 inline mr-1 fill-current" /> MAIS RESERVADO
-                      </div>
-                    )}
-
-                    <div className="text-center mb-4">
-                      <p className="text-2xl font-bold text-white">{pkg.tokens}</p>
-                      <p className="text-xs text-slate-500">$KWATT créditos</p>
-                      <p className="text-[10px] text-slate-600 mt-1">{pkg.description}</p>
-                    </div>
-
-                    <div className="text-center mb-4">
-                      <p className="text-2xl font-bold text-cyan-400">R$ {finalPrice.toFixed(2)}</p>
-                      {pkg.discount > 0 && (
-                        <p className="text-xs text-slate-500 line-through">R$ {pkg.basePrice.toFixed(2)}</p>
-                      )}
-                    </div>
-
-                    {pkg.discount > 0 && (
-                      <div className="text-center mb-3">
-                        <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full text-[10px] font-bold">
-                          {pkg.discount}% OFF
-                        </span>
-                      </div>
-                    )}
-
-                    {pkg.bonus > 0 && (
-                      <div className="text-center mb-4">
-                        <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded-full text-[10px] font-bold flex items-center justify-center gap-1">
-                          <Gift className="w-3 h-3" /> +{pkg.bonus} bônus
-                        </span>
-                      </div>
-                    )}
-
-                    <button
-                      onClick={(e) => { e.stopPropagation(); openBuyModal(pkg); }}
-                      className="w-full py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-bold text-white text-sm hover:opacity-90 transition"
-                    >
-                      Reservar
-                    </button>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {TOKEN_USE_CASES.map((uc) => {
+              const Icon = USE_CASE_ICON_MAP[uc.icon] ?? Zap
+              return (
+                <div
+                  key={uc.title}
+                  className="p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition"
+                >
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-3 bg-${uc.color}-500/15`}>
+                    <Icon className={`w-5 h-5 text-${uc.color}-400`} />
                   </div>
-                );
-              })}
-            </div>
-
-            <div className="text-center mt-6">
-              <p className="text-[10px] text-slate-600">*Créditos resgatáveis na plataforma EnergiaLivre a partir de 5 de Janeiro de 2027. Sem garantia de valorização.</p>
-            </div>
+                  <h3 className="text-base font-bold text-white mb-1">{uc.title}</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">{uc.description}</p>
+                </div>
+              )
+            })}
           </div>
 
-          {/* POR QUE ADOTAR? (removido "investir") */}
-          <div className="mb-20" id="about">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Por que <span className="text-cyan-400">$KWATT</span>?</h2>
-              <p className="text-slate-400 max-w-2xl mx-auto">3 tendências que tornam os créditos da EnergiaLivre relevantes para usuários da plataforma</p>
+          <div className="mt-8 p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/20 text-center">
+            <p className="text-sm text-amber-100">
+              <Sparkles className="w-4 h-4 inline" /> <strong>Conversão fixa:</strong> 1 KWATT = {(KWATT_TO_KWH_RATIO * 100).toFixed(0)}% de 1 kWh (R$ {KWH_REFERENCE_PRICE.toFixed(2)}/kWh ANEEL).
+              <br />
+              <span className="text-[11px] text-amber-200/70">Preço unitário base: R$ {KWATT_UNIT_PRICE.toFixed(3)} por KWATT. Use no app para abater consumo real.</span>
+            </p>
+          </div>
+        </section>
+
+        {/* HOW IT WORKS */}
+        <section className="max-w-6xl mx-auto mt-24">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-3">
+              Como funciona
+            </h2>
+            <p className="text-slate-400">3 passos simples. Sem instalação, sem complicação.</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4">
+            {[
+              { step: '01', icon: <Coins className="w-5 h-5" />, title: 'Reserve KWATT', desc: 'Escolha um pacote e confirme seu pré-registro. Seu saldo fica travado até o lançamento.', color: 'amber' },
+              { step: '02', icon: <Rocket className="w-5 h-5" />, title: 'Receba em 05/01/2027', desc: 'Tokens são liberados na sua carteira EVM (MetaMask, Rabby, etc) no dia do lançamento.', color: 'emerald' },
+              { step: '03', icon: <Zap className="w-5 h-5" />, title: 'Use no ecossistema', desc: 'Pague fatura, faça recargas, ganhe cashback, indique amigos. Quanto mais usa, mais ganha.', color: 'cyan' },
+            ].map((s) => (
+              <div key={s.step} className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center bg-${s.color}-500/15`}>
+                    <span className={`text-${s.color}-400`}>{s.icon}</span>
+                  </div>
+                  <span className={`text-[10px] font-black text-${s.color}-400 uppercase`}>Passo {s.step}</span>
+                </div>
+                <h3 className="text-lg font-bold text-white mb-1">{s.title}</h3>
+                <p className="text-xs text-slate-400 leading-relaxed">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* TOKENOMICS */}
+        <section id="tokenomics" className="max-w-6xl mx-auto mt-24">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-3">Tokenomics</h2>
+            <p className="text-slate-400">Supply fixo de {formatTokens(TOKEN_TOTAL_SUPPLY)} KWATT. Sem emissão extra. Sem mint surpresa.</p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-6">
+            <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+              <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-amber-400" /> Distribuição
+              </h3>
+              <div className="space-y-2">
+                {TOKEN_DISTRIBUTION.map((d) => (
+                  <div key={d.label}>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-slate-300">{d.label}</span>
+                      <span className={`font-bold text-${d.color}-400`}>{d.percent.toFixed(0)}%</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full bg-gradient-to-r from-${d.color}-500 to-${d.color}-400`}
+                        style={{ width: `${d.percent}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-slate-500 mt-4">
+                * Valores de alocação preliminares. Contrato inteligente auditado antes do lançamento.
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-cyan-500/30 transition">
-                <Sun className="w-12 h-12 text-cyan-400 mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">Expansão Solar no Brasil</h3>
-                <p className="text-slate-400 text-sm mb-4">Brasil atingiu 28 GW de capacidade solar instalada em 2024. Solar é a 2ª maior matriz elétrica do país e segue em crescimento.</p>
-                <div className="flex items-center gap-2 text-[11px] text-cyan-400">
-                  <TrendingUp className="w-3 h-3" /> Crescimento contínuo da matriz
+            <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+              <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+                <Activity className="w-4 h-4 text-emerald-400" /> Mecanismos
+              </h3>
+              <MechanismRow
+                icon={<Flame className="w-4 h-4" />}
+                title="Queima deflationária"
+                desc="1% de toda transação é queimada. Quanto mais uso, menor o supply circulante."
+              />
+              <MechanismRow
+                icon={<Repeat className="w-4 h-4" />}
+                title="Staking 8-15% a.a."
+                desc="Trave tokens de 30-365 dias e receba rewards em KWATT + parte das fees."
+              />
+              <MechanismRow
+                icon={<Vote className="w-4 h-4" />}
+                title="Governança DAO"
+                desc="1 KWATT = 1 voto. Decida ajustes de fees, novos casos de uso e parcerias."
+              />
+              <MechanismRow
+                icon={<ShieldCheck className="w-4 h-4" />}
+                title="Auditoria on-chain"
+                desc="Contrato open-source, auditoria externa antes do mainnet, multisig de 5/9 para mudanças críticas."
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* PACKAGES */}
+        <section id="packages" className="max-w-6xl mx-auto mt-24">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-3">Escolha seu pacote</h2>
+            <p className="text-slate-400">Descontos progressivos + bônus de pré-venda + bônus por indicação.</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {TOKEN_PACKAGES.map((pkg) => {
+              const finalPrice = getFinalPrice(pkg)
+              const totalTokens = getTotalTokens(pkg)
+              return (
+                <div
+                  key={pkg.code}
+                  className={`relative p-5 rounded-2xl border ${
+                    pkg.popular
+                      ? 'bg-gradient-to-br from-amber-500/10 to-yellow-500/5 border-amber-500/40'
+                      : 'bg-white/5 border-white/10'
+                  }`}
+                >
+                  {pkg.popular && (
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-amber-500 text-slate-900 text-[9px] font-black uppercase">
+                      Mais popular
+                    </div>
+                  )}
+                  <h3 className="text-sm font-black text-white uppercase mb-1">{pkg.code}</h3>
+                  <p className="text-[10px] text-slate-500 mb-3">{pkg.description}</p>
+                  <div className="mb-3">
+                    <div className="text-3xl font-black text-white">
+                      {formatTokens(pkg.tokens)}
+                      <span className="text-xs text-slate-500 ml-1">KWATT</span>
+                    </div>
+                    {pkg.bonus > 0 && (
+                      <div className="text-[10px] text-emerald-400 font-bold">+ {formatTokens(pkg.bonus)} bônus</div>
+                    )}
+                  </div>
+                  <div className="mb-3 text-xs">
+                    <div className="text-slate-500 line-through">{formatBRL(pkg.basePrice)}</div>
+                    <div className="text-lg font-black text-amber-400">{formatBRL(finalPrice)}</div>
+                    {pkg.discount > 0 && (
+                      <div className="text-[10px] text-emerald-400 font-bold">-{pkg.discount}% off</div>
+                    )}
+                  </div>
+                  {pkg.referralBonus > 0 && (
+                    <div className="text-[10px] text-pink-300 mb-3 flex items-center gap-1">
+                      <Gift className="w-3 h-3" /> +{pkg.referralBonus} KWATT por indicação
+                    </div>
+                  )}
+                  <button
+                    onClick={() => setBuyPackage(pkg)}
+                    className={`w-full py-2.5 rounded-lg text-sm font-bold transition ${
+                      pkg.popular
+                        ? 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 text-slate-900'
+                        : 'bg-white/10 hover:bg-white/20 text-white'
+                    }`}
+                  >
+                    Reservar
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+
+          <p className="text-center text-[11px] text-slate-500 mt-4">
+            Total de tokens com bônus: <strong className="text-white">{formatTokens(TOKEN_PACKAGES.reduce((s, p) => s + p.tokens + p.bonus, 0))} KWATT</strong> disponíveis na pré-venda.
+          </p>
+        </section>
+
+        {/* REFERRAL */}
+        <section className="max-w-3xl mx-auto mt-16">
+          <div className="p-6 rounded-2xl bg-gradient-to-r from-pink-500/10 to-amber-500/10 border border-pink-500/20">
+            <div className="flex items-center gap-2 mb-2">
+              <Gift className="w-5 h-5 text-pink-400" />
+              <h3 className="text-lg font-bold text-white">Programa de indicação KWATT</h3>
+            </div>
+            <p className="text-sm text-slate-300 mb-4">
+              Indique amigos e ganhe tokens extras a cada cadastro confirmado. Limite de 50 indicados/semana, sem teto de ganhos totais.
+            </p>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                value={`https://energialivre.dev.br/token?ref=${referralCode}`}
+                className="flex-1 px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs text-white font-mono"
+              />
+              <button
+                onClick={copyReferral}
+                className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1"
+              >
+                {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                {copied ? 'Copiado' : 'Copiar'}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* ROADMAP */}
+        <section id="roadmap" className="max-w-4xl mx-auto mt-24">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-3">Roadmap</h2>
+            <p className="text-slate-400">Construção contínua, marcos públicos, sem promessas vagas.</p>
+          </div>
+
+          <div className="space-y-3">
+            {[
+              { date: 'Q2 2026', label: 'Pré-venda + auditoria', status: 'active', desc: 'Captação pública, smart contract auditado por empresa independente' },
+              { date: 'Q3 2026', label: 'Listagem pré-venda', status: 'done', desc: 'DEX listing com liquidez travada, KYC opcional para lifts' },
+              { date: 'Q4 2026', label: 'Staking v1', status: 'done', desc: 'Pools de 30/90/180/365 dias com rewards 8-15% a.a.' },
+              { date: '05/01/2027', label: 'Lançamento oficial + airdrop', status: 'next', desc: 'Tokens liberados para carteiras de pré-registro. Mainnet público.' },
+              { date: 'Q1 2027', label: 'Pagamento de faturas on-chain', status: 'next', desc: 'Smart contract integrado com a plataforma EnergiaLivre' },
+              { date: 'Q2 2027', label: 'Recargas de celular via token', status: 'next', desc: 'Integração com provedor + cashback em KWATT' },
+            ].map((step, i) => (
+              <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                  step.status === 'active' ? 'bg-amber-500/20 text-amber-400' :
+                  step.status === 'done' ? 'bg-emerald-500/20 text-emerald-400' :
+                  'bg-white/5 text-slate-500'
+                }`}>
+                  {step.status === 'active' ? <Activity className="w-4 h-4" /> :
+                   step.status === 'done' ? <CheckCircle2 className="w-4 h-4" /> :
+                   <Clock className="w-4 h-4" />}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                    <span className="text-sm font-bold text-white">{step.label}</span>
+                    <span className="text-[10px] text-slate-500 font-mono">{step.date}</span>
+                  </div>
+                  <p className="text-xs text-slate-400">{step.desc}</p>
                 </div>
               </div>
+            ))}
+          </div>
+        </section>
 
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-cyan-500/30 transition">
-                <Car className="w-12 h-12 text-cyan-400 mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">Mobilidade Elétrica</h3>
-                <p className="text-slate-400 text-sm mb-4">Frota de EVs em forte crescimento. Cada veículo elétrico consome ~3.500 kWh/ano — 1.050 $KWATT/ano em economia potencial via plataforma.</p>
-                <div className="flex items-center gap-2 text-[11px] text-cyan-400">
-                  <BatteryCharging className="w-3 h-3" /> Demanda crescente por carga
-                </div>
-              </div>
-
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-cyan-500/30 transition">
-                <Globe className="w-12 h-12 text-cyan-400 mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">Custo da Energia Solar</h3>
-                <p className="text-slate-400 text-sm mb-4">O custo do kWh solar caiu ~89% na última década. Créditos $KWATT dão acesso a essa economia dentro da plataforma.</p>
-                <div className="flex items-center gap-2 text-[11px] text-cyan-400">
-                  <Activity className="w-3 h-3" /> Benefício de uso, não promessa de retorno
-                </div>
-              </div>
-            </div>
+        {/* FAQ */}
+        <section id="faq" className="max-w-3xl mx-auto mt-24">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-3">Perguntas frequentes</h2>
           </div>
 
-          {/* COMPARATIVO */}
-          <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-2xl p-8 mb-20">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Reservar agora vs entrar depois</h2>
-              <p className="text-slate-400">Quem reserva primeiro garante desconto fundador e bônus</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-white/5 rounded-xl p-6 text-center">
-                <p className="text-cyan-400 font-bold mb-2">✅ RESERVANDO AGORA</p>
-                <p className="text-3xl font-bold text-white mb-2">Até 20% OFF</p>
-                <p className="text-sm text-slate-400 mb-4">Em pacotes acima de 100 créditos</p>
-                <p className="text-sm text-white">+ Bônus de até 150 créditos</p>
-                <p className="text-sm text-white">Etiqueta de Fundador</p>
-              </div>
-              <div className="bg-white/5 rounded-xl p-6 text-center opacity-60">
-                <p className="text-slate-400 font-bold mb-2">⏰ DEPOIS DO LANÇAMENTO</p>
-                <p className="text-3xl font-bold text-white mb-2">Preço cheio</p>
-                <p className="text-sm text-slate-400 mb-4">Sem desconto fundador</p>
-                <p className="text-sm text-slate-400">Sem bônus</p>
-                <p className="text-sm text-slate-400">Disponibilidade imediata</p>
-              </div>
-            </div>
-          </div>
-
-          {/* COMO FUNCIONA */}
-          <div className="mb-20">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Como funciona?</h2>
-              <p className="text-slate-400">4 passos para reservar seus $KWATT</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {[
-                { n: 1, title: 'Registre-se', desc: 'E-mail e aceite os termos de uso' },
-                { n: 2, title: 'Escolha o Pacote', desc: 'De 50 a 1.000+ créditos' },
-                { n: 3, title: 'Pague com Pix ou Cripto', desc: 'Instruções enviadas por e-mail' },
-                { n: 4, title: 'Receba em Jan/27', desc: 'Créditos válidos por 24 meses' },
-              ].map((s) => (
-                <div key={s.n} className="text-center">
-                  <div className="w-12 h-12 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-3 text-cyan-400 font-bold text-xl">{s.n}</div>
-                  <p className="font-bold text-white mb-1">{s.title}</p>
-                  <p className="text-xs text-slate-500">{s.desc}</p>
+          <div className="space-y-2">
+            {[
+              { q: 'O KWATT é um valor mobiliário?', a: 'Não. O KWATT é um token de utilidade emitido nos termos da Lei 14.478/2022. Ele dá acesso a funcionalidades da plataforma EnergiaLivre (pagamento de faturas, recargas, cashback) e não representa participação societária, direito a dividendos ou qualquer expectativa de retorno financeiro.' },
+              { q: 'Quando recebo meus tokens?', a: 'Os tokens são liberados na sua carteira EVM no dia 05/01/2027. Você pode usar imediatamente para pagar faturas, fazer recargas e acumular cashback dentro da plataforma EnergiaLivre.' },
+              { q: 'Posso vender depois?', a: 'Sim. Após o lançamento, haverá liquidez em DEX (pools automatizadas). A possibilidade de venda, no entanto, depende das condições de mercado. Não garantimos preço mínimo nem demanda garantida.' },
+              { q: 'Como funciona o pagamento de fatura?', a: 'Cada 1 KWATT = 30% de 1 kWh (equivalente a R$ 0,285). Você converte KWATT em saldo na plataforma e usa para abater do consumo real. O desconto é aplicado na fatura emitida pela concessionária parceira.' },
+              { q: 'Preciso de KYC?', a: 'Para participar da pré-venda, basta e-mail válido. Para lifts acima de R$ 5.000 e para usar a exchange descentralizada, solicitaremos KYC leve (CPF + selfie) conforme exigido pelo Banco Central.' },
+              { q: 'E se eu me arrepender?', a: 'Conforme CDC, você tem 7 dias para solicitar reembolso integral. Basta abrir ticket em suporte@energialivre.dev.br com o e-mail da compra.' },
+            ].map((item, i) => (
+              <button
+                key={i}
+                onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                className="w-full text-left p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-bold text-white">{item.q}</span>
+                  {openFaq === i ? <ChevronUp className="w-4 h-4 text-slate-400 shrink-0" /> : <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />}
                 </div>
-              ))}
-            </div>
+                {openFaq === i && (
+                  <p className="text-xs text-slate-400 mt-2 leading-relaxed">{item.a}</p>
+                )}
+              </button>
+            ))}
           </div>
+        </section>
 
-          {/* ONDE SERÁ USADO (substitui "Onde Será Vendido") */}
-          <div className="mb-20">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Onde o <span className="text-cyan-400">$KWATT</span> é aceito?</h2>
-              <p className="text-slate-400">Créditos resgatáveis dentro do ecossistema EnergiaLivre</p>
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-4">
-              {[
-                'Plataforma EnergiaLivre (consumidores)',
-                'Marketplace de créditos de carbono',
-                'Programa de embaixadores (comissão)',
-                'Recarga de VE na rede parceira',
-                'Desconto em faturas de energia',
-              ].map((use, idx) => (
-                <div key={idx} className="px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm font-medium">
-                  {use}
-                </div>
-              ))}
-            </div>
-            <p className="text-[10px] text-slate-600 text-center mt-6">* Lista de用例 em construção. Exchanges de cripto não estão no roadmap oficial do projeto.</p>
-          </div>
-
-          {/* ROADMAP */}
-          <div className="mb-20" id="roadmap">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Roadmap <span className="text-cyan-400">$KWATT</span></h2>
-              <p className="text-slate-400">Marcos sujeitos a alterações conforme evolução do projeto</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {[
-                { date: 'Mar 2026', title: 'Fim das Reservas', desc: 'Encerra pré-registro fundador' },
-                { date: 'Jul 2026', title: 'Integração Usinas', desc: 'Tokenização de usinas solares parceiras' },
-                { date: 'Dez 2026', title: 'Auditoria & Whitepaper', desc: 'Publicação do whitepaper técnico e auditoria' },
-                { date: 'Jan 2027', title: 'Liberação dos Créditos', desc: 'Créditos resgatáveis na plataforma' },
-              ].map((item, idx) => (
-                <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-4 relative">
-                  <div className="text-cyan-400 text-xs font-bold mb-1">{item.date}</div>
-                  <div className="font-bold text-white text-sm mb-1">{item.title}</div>
-                  <div className="text-xs text-slate-500">{item.desc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* AVISO LEGAL EXPANSÍVEL (CVM + LGPD) */}
-          <div className="mb-20 bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+        {/* LEGAL DISCLAIMER (collapsible) */}
+        <section className="max-w-4xl mx-auto mt-16">
+          <div className="rounded-2xl bg-amber-500/5 border border-amber-500/20 overflow-hidden">
             <button
               onClick={() => setLegalExpanded(!legalExpanded)}
-              className="w-full flex items-center justify-between text-left"
-              aria-expanded={legalExpanded}
+              className="w-full px-5 py-3 flex items-center justify-between text-left"
             >
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-amber-400" />
-                <span className="font-bold text-white text-sm">Aviso Legal Completo (CVM / Lei 14.478/2022)</span>
+                <Shield className="w-4 h-4 text-amber-400" />
+                <span className="text-sm font-bold text-amber-100">Disclaimers legais e de risco</span>
               </div>
-              {legalExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+              {legalExpanded ? <ChevronUp className="w-4 h-4 text-amber-400" /> : <ChevronDown className="w-4 h-4 text-amber-400" />}
             </button>
-
             {legalExpanded && (
-              <div className="mt-4 text-[12px] text-slate-400 space-y-3 leading-relaxed">
+              <div className="px-5 pb-5 space-y-3 text-[11px] text-amber-100/80 leading-relaxed">
                 <p>
-                  <strong className="text-white">1. Natureza do $KWATT.</strong> O $KWATT é um <em>token de utilidade</em> (utility token) emitido pela EnergiaLivre, que dá direito a desconto em tarifas e acesso a serviços dentro da plataforma. <strong>Não é um valor mobiliário</strong>, não representa participação societária, não confere direito a dividendos, lucros ou qualquer forma de retorno financeiro.
+                  <strong>1. Natureza do token.</strong> KWATT é token de utilidade emitido nos termos da Lei 14.478/2022.
+                  NÃO é valor mobiliário, NÃO é investimento, NÃO confere direitos de participação, voto em assembleia
+                  societária ou distribuição de lucros. Sua função é exclusivamente utilitária dentro do ecossistema
+                  EnergiaLivre.
                 </p>
                 <p>
-                  <strong className="text-white">2. Não é investimento.</strong> A reserva de $KWATT NÃO constitui oferta pública de valores mobiliários, NÃO é recomendada pela CVM e NÃO gera expectativa de rentabilidade. O valor de revenda (se houver) depende exclusivamente de mercado secundário, que NÃO é garantido pela emissora.
+                  <strong>2. Sem promessa de valorização.</strong> O valor de mercado do token após o lançamento depende
+                  exclusivamente de oferta e demanda. NÃO garantimos preço mínimo, rentabilidade, valorização ou
+                  qualquer forma de retorno financeiro.
                 </p>
                 <p>
-                  <strong className="text-white">3. Riscos.</strong> Tokens de utilidade estão sujeitos a: (i) volatilidade de mercado, (ii) risco regulatório (Lei 14.478/2022, normas do Banco Central do Brasil e da CVM), (iii) risco de execução do projeto, (iv) possibilidade de perda integral do valor pago.
+                  <strong>3. Riscos.</strong> Tokens digitais envolvem riscos tecnológicos (bugs em smart contract),
+                  regulatórios (mudanças na legislação), de mercado (volatilidade) e de liquidez (dificuldade de venda).
+                  Invista apenas o que você está disposto a perder.
                 </p>
                 <p>
-                  <strong className="text-white">4. Reembolso.</strong> Caso o projeto não atinja os marcos mínimos até Dez/2026, os valores pagos na reserva serão reembolsados integralmente, descontadas apenas taxas de rede/PIX efetivamente incorridas.
+                  <strong>4. Direito de arrependimento.</strong> Conforme CDC art. 49, você pode cancelar a compra em
+                  até 7 dias corridos a partir do pagamento, com reembolso integral do valor pago.
                 </p>
                 <p>
-                  <strong className="text-white">5. LGPD.</strong> Os dados fornecidos serão tratados conforme nossa <Link href="/termos" className="text-cyan-400 hover:underline">Política de Privacidade</Link>, com base no art. 7º, V da Lei 13.709/2018 (execução de contrato).
+                  <strong>5. Compliance.</strong> A oferta cumpre as diretrizes da CVM, ANBIMA e Banco Central para
+                  tokens de utilidade. Auditores independentes revisarão o smart contract antes do lançamento. KYC será
+                  exigido para lifts &gt; R$ 5.000.
                 </p>
                 <p>
-                  <strong className="text-white">6. Documentos.</strong> Leia o <a href="#whitepaper" className="text-cyan-400 hover:underline">Whitepaper</a> e os <Link href="/termos" className="text-cyan-400 hover:underline">Termos de Uso</Link> antes de reservar.
+                  <strong>6. Jurisdição.</strong> Esta oferta é válida para residentes no Brasil. Outras jurisdições
+                  podem ter restrições adicionais.
                 </p>
               </div>
             )}
           </div>
-
-          {/* CTA FINAL */}
-          <div className="text-center">
-            <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-2xl p-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">Garanta seu acesso fundador à economia solar</h2>
-              <p className="text-slate-400 mb-6 max-w-xl mx-auto">Pré-registros com até 20% de desconto e bônus exclusivos. Sem garantia de valorização.</p>
-              <button
-                onClick={() => selectedPackage && openBuyModal(packages.find((p) => p.tokens === selectedPackage) || packages[2])}
-                className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl font-bold text-white text-lg hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] transition flex items-center gap-2 mx-auto"
-              >
-                <Rocket className="w-5 h-5" />
-                Reservar pacote {selectedPackage || 300}
-              </button>
-              <p className="text-[10px] text-slate-600 mt-4">*Créditos resgatáveis na plataforma EnergiaLivre a partir de 5 de Janeiro de 2027. Token de utilidade — não é investimento.</p>
-            </div>
-          </div>
-
-        </div>
+        </section>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-white/10 py-8 mt-10">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-          <div className="flex flex-wrap justify-center gap-6 mb-4 text-xs text-slate-500">
-            <a href="#whitepaper" className="hover:text-cyan-400 transition">Whitepaper</a>
-            <Link href="/termos" className="hover:text-cyan-400 transition">Termos de Uso</Link>
-            <Link href="/termos" className="hover:text-cyan-400 transition">Política de Privacidade</Link>
-            <a href="https://wa.me/5584987858668" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition">Contato</a>
+      <footer className="border-t border-white/10 mt-12">
+        <div className="max-w-7xl mx-auto px-6 py-6 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-500">
+          <div className="flex items-center gap-2">
+            <Coins className="w-3.5 h-3.5 text-amber-400" />
+            <span>© 2026 EnergiaLivre · KWATT Token · Lei 14.478/2022</span>
           </div>
-          <p className="text-[10px] text-slate-600">© 2026 EnergiaLivre — Tokenizando o futuro da energia solar no Brasil</p>
-          <p className="text-[9px] text-slate-700 mt-2 max-w-2xl mx-auto">
-            Disclaimer: $KWATT é token de utilidade, NÃO configurando valor mobiliário nem investimento financeiro, conforme Lei 14.478/2022 e regulamentação da CVM aplicável. Reservas sujeitas a risco de perda integral.
-          </p>
+          <div className="flex items-center gap-4">
+            <Link href="/regulamentacao" className="hover:text-white">Regulamentação</Link>
+            <Link href="/termos" className="hover:text-white">Termos</Link>
+            <a href="mailto:suporte@energialivre.dev.br" className="hover:text-white flex items-center gap-1">
+              <Mail className="w-3 h-3" /> Suporte
+            </a>
+          </div>
         </div>
       </footer>
 
-      {/* MODAL: Registrar Carteira */}
-      {walletModalOpen && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-6"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="wallet-modal-title"
-          onClick={closeAllModals}
-        >
-          <div
-            className="bg-slate-900 border border-white/10 rounded-2xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2">
-                <Wallet className="w-5 h-5 text-cyan-400" />
-                <h2 id="wallet-modal-title" className="text-xl font-bold text-white">Registrar Interesse</h2>
-              </div>
-              <button onClick={closeAllModals} aria-label="Fechar" className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
+      {/* Buy Modal */}
+      {buyPackage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-slate-900 rounded-2xl border border-white/10 w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-white">Reservar pacote {buyPackage.code.toUpperCase()}</h2>
+              <button onClick={() => setBuyPackage(null)} className="p-1.5 rounded-lg hover:bg-white/10">
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-sm text-slate-400 mb-4">
-              Receba por e-mail o whitepaper e o link para reservar créditos $KWATT quando o portal abrir.
-            </p>
+            <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+              <p className="text-[10px] text-amber-300 font-bold uppercase">Você está reservando</p>
+              <p className="text-2xl font-black text-white">{formatTokens(buyPackage.tokens + buyPackage.bonus)} <span className="text-sm text-slate-500">KWATT</span></p>
+              <p className="text-sm text-amber-200 mt-1">
+                {formatBRL(getFinalPrice(buyPackage))} <span className="text-[10px] text-slate-500 line-through ml-1">{formatBRL(buyPackage.basePrice)}</span>
+              </p>
+            </div>
 
-            <form onSubmit={handleConnectWallet} className="space-y-3">
+            <form onSubmit={handleBuy} className="space-y-3">
               <div>
-                <label htmlFor="wallet-email" className="text-xs text-slate-500">E-mail</label>
+                <label className="block text-xs text-slate-300 mb-1">E-mail</label>
                 <input
-                  id="wallet-email"
                   type="email"
-                  placeholder="voce@empresa.com.br"
-                  aria-label="E-mail para receber novidades"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full bg-slate-800 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 outline-none"
+                  placeholder="seu@email.com"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-white/10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50"
                 />
               </div>
               <div>
-                <label htmlFor="wallet-addr" className="text-xs text-slate-500">Carteira (opcional, formato 0x…)</label>
+                <label className="block text-xs text-slate-300 mb-1">
+                  Carteira EVM <span className="text-slate-500">(opcional — pode adicionar depois)</span>
+                </label>
                 <input
-                  id="wallet-addr"
                   type="text"
-                  placeholder="0x…"
-                  aria-label="Endereço de carteira Ethereum"
                   value={walletAddress}
                   onChange={(e) => setWalletAddress(e.target.value)}
-                  className="w-full bg-slate-800 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 outline-none font-mono text-sm"
+                  placeholder="0x…"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-white/10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 font-mono"
                 />
               </div>
 
-              <label className="flex items-start gap-2 text-[11px] text-slate-400 cursor-pointer pt-2">
+              <label className="flex items-start gap-2 text-[11px] text-slate-300 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={acceptedLgpd}
                   onChange={(e) => setAcceptedLgpd(e.target.checked)}
-                  required
-                  className="mt-0.5 w-3.5 h-3.5 accent-cyan-500"
+                  className="mt-0.5"
                 />
                 <span>
-                  Concordo com a <Link href="/termos" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">Política de Privacidade</Link>.
+                  Aceito a <Link href="/termos" className="text-amber-400 hover:underline">Política de Privacidade</Link> e autorizo o uso do meu e-mail para comunicações sobre o KWATT.
                 </span>
               </label>
-
-              {submitMessage && (
-                <div
-                  className={`p-3 rounded-xl text-[12px] ${submitMessage.type === 'ok' ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300' : 'bg-red-500/10 border border-red-500/30 text-red-300'}`}
-                  role="alert"
-                >
-                  {submitMessage.text}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={isConnecting}
-                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-bold text-white flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {isConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-                Registrar
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: Reservar Pacote */}
-      {buyModalOpen && buyPackage && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-6"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="buy-modal-title"
-          onClick={closeAllModals}
-        >
-          <div
-            className="bg-slate-900 border border-white/10 rounded-2xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2">
-                <Rocket className="w-5 h-5 text-cyan-400" />
-                <h2 id="buy-modal-title" className="text-xl font-bold text-white">Reservar {buyPackage.tokens} créditos</h2>
-              </div>
-              <button onClick={closeAllModals} aria-label="Fechar" className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="bg-white/5 rounded-xl p-4 mb-4 text-center">
-              <p className="text-2xl font-bold text-cyan-400">R$ {getFinalPrice(buyPackage).toFixed(2)}</p>
-              {buyPackage.discount > 0 && (
-                <p className="text-xs text-slate-500 line-through">R$ {buyPackage.basePrice.toFixed(2)}</p>
-              )}
-              <p className="text-[10px] text-slate-500 mt-1">{buyPackage.tokens} créditos + {buyPackage.bonus} bônus</p>
-            </div>
-
-            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200 mb-4">
-              <p className="font-bold mb-1">⚠️ Token de utilidade, não investimento.</p>
-              <p>Créditos resgatáveis na plataforma a partir de Jan/2027, válidos por 24 meses. Sem garantia de valorização ou revenda.</p>
-            </div>
-
-            <form onSubmit={handleBuyTokens} className="space-y-3">
-              <div>
-                <label htmlFor="buy-email" className="text-xs text-slate-500">E-mail (instruções de pagamento)</label>
-                <input
-                  id="buy-email"
-                  type="email"
-                  placeholder="voce@empresa.com.br"
-                  aria-label="E-mail para receber instruções de pagamento"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full bg-slate-800 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 outline-none"
-                />
-              </div>
-
-              <label className="flex items-start gap-2 text-[11px] text-slate-400 cursor-pointer pt-1">
-                <input
-                  type="checkbox"
-                  checked={acceptedLgpd}
-                  onChange={(e) => setAcceptedLgpd(e.target.checked)}
-                  required
-                  className="mt-0.5 w-3.5 h-3.5 accent-cyan-500"
-                />
-                <span>
-                  Li e aceito a <Link href="/termos" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">Política de Privacidade</Link>.
-                </span>
-              </label>
-
-              <label className="flex items-start gap-2 text-[11px] text-slate-400 cursor-pointer">
+              <label className="flex items-start gap-2 text-[11px] text-slate-300 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={acceptedRisk}
                   onChange={(e) => setAcceptedRisk(e.target.checked)}
-                  required
-                  className="mt-0.5 w-3.5 h-3.5 accent-cyan-500"
+                  className="mt-0.5"
                 />
                 <span>
-                  Estou ciente de que $KWATT é <strong>token de utilidade</strong>, NÃO investimento, e estou sujeito aos riscos descritos no aviso legal.
+                  Estou ciente dos <button type="button" onClick={() => setLegalExpanded(true)} className="text-amber-400 hover:underline">riscos</button> e que KWATT é token de utilidade, sem promessa de valorização.
                 </span>
               </label>
 
               {submitMessage && (
-                <div
-                  className={`p-3 rounded-xl text-[12px] ${submitMessage.type === 'ok' ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300' : 'bg-red-500/10 border border-red-500/30 text-red-300'}`}
-                  role="alert"
-                >
+                <div className={`p-3 rounded-lg text-xs ${
+                  submitMessage.type === 'ok'
+                    ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-200'
+                    : 'bg-red-500/10 border border-red-500/30 text-red-200'
+                }`}>
                   {submitMessage.text}
                 </div>
               )}
 
               <button
                 type="submit"
-                disabled={isConnecting}
-                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-bold text-white flex items-center justify-center gap-2 disabled:opacity-50"
+                disabled={submitting || !acceptedLgpd || !acceptedRisk}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 text-slate-900 font-black transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {isConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
-                Confirmar Reserva
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
+                {submitting ? 'Reservando...' : `Reservar por ${formatBRL(getFinalPrice(buyPackage))}`}
               </button>
             </form>
           </div>
         </div>
       )}
-
     </div>
-  );
+  )
+}
+
+// ============================================
+// HELPER COMPONENTS
+// ============================================
+
+function CountdownBox({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="min-w-[56px] px-2 py-1.5 rounded-lg bg-slate-900/80 border border-white/10 text-center">
+      <div className="text-lg font-black text-white leading-none tabular-nums">{value.toString().padStart(2, '0')}</div>
+      <div className="text-[9px] text-slate-500 uppercase tracking-wider mt-0.5">{label}</div>
+    </div>
+  )
+}
+
+function Kvp({ icon, label, accent }: { icon: React.ReactNode; label: string; accent: string }) {
+  return (
+    <div className={`p-3 rounded-xl bg-${accent}-500/10 border border-${accent}-500/20 flex items-center gap-2`}>
+      <span className={`text-${accent}-400`}>{icon}</span>
+      <span className="text-xs font-bold text-white">{label}</span>
+    </div>
+  )
+}
+
+function MechanismRow({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
+  return (
+    <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-900/50">
+      <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center text-amber-400 shrink-0">
+        {icon}
+      </div>
+      <div>
+        <h4 className="text-sm font-bold text-white">{title}</h4>
+        <p className="text-[11px] text-slate-400 leading-relaxed">{desc}</p>
+      </div>
+    </div>
+  )
+}
+
+// Inline vote icon (substitui import ausente)
+function Vote(props: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={props.className}
+    >
+      <path d="m9 12 2 2 4-4" />
+      <path d="M5 7c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v12H5V7Z" />
+      <path d="M22 19H2" />
+    </svg>
+  )
 }

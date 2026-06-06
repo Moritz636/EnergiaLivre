@@ -128,6 +128,13 @@ export default function DashboardMatchPage() {
         lng: c.lng,
         tipo: c.tipo,
         isMemberPlus: !!c.is_member_plus,
+        precoKwh: c.preco_kwh ?? null,
+        descontoPercentual: c.desconto_percentual ?? null,
+        pacoteKwh: c.pacote_kwh ?? null,
+        pacotePreco: c.pacote_preco ?? null,
+        rankingScore: c.ranking_score ?? null,
+        totalAvaliacoes: c.total_avaliacoes ?? null,
+        mediaAvaliacoes: c.media_avaliacoes ?? null,
       }))
       setCandidates(list)
     } catch (err: any) {

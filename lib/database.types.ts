@@ -152,6 +152,13 @@ export interface Database {
           data_aprovacao: string | null
           lucro_total: number
           kwh_vendidos_total: number
+          preco_kwh: number | null
+          desconto_percentual: number | null
+          pacote_kwh: number | null
+          pacote_preco: number | null
+          ranking_score: number | null
+          total_avaliacoes: number | null
+          media_avaliacoes: number | null
           created_at: string
           updated_at: string
         }
@@ -170,6 +177,13 @@ export interface Database {
           data_aprovacao?: string | null
           lucro_total?: number
           kwh_vendidos_total?: number
+          preco_kwh?: number | null
+          desconto_percentual?: number | null
+          pacote_kwh?: number | null
+          pacote_preco?: number | null
+          ranking_score?: number | null
+          total_avaliacoes?: number | null
+          media_avaliacoes?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -188,6 +202,13 @@ export interface Database {
           data_aprovacao?: string | null
           lucro_total?: number
           kwh_vendidos_total?: number
+          preco_kwh?: number | null
+          desconto_percentual?: number | null
+          pacote_kwh?: number | null
+          pacote_preco?: number | null
+          ranking_score?: number | null
+          total_avaliacoes?: number | null
+          media_avaliacoes?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -542,6 +563,257 @@ export interface Database {
           message?: string | null
           expires_at?: string
           responded_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      invoice_uploads: {
+        Row: {
+          id: string
+          user_id: string
+          uploaded_by_role: 'consumidor' | 'embaixador'
+          cliente_nome: string | null
+          cliente_whatsapp: string | null
+          file_url: string
+          file_name: string
+          file_type: string | null
+          file_size: number | null
+          status: 'pending' | 'analyzing' | 'analyzed' | 'matching' | 'matched' | 'failed'
+          estado: string | null
+          concessionaria: string | null
+          valor_total: number | null
+          kwh_mensal: number | null
+          vencimento: string | null
+          raw_extraction: Json | null
+          error_message: string | null
+          match_count: number
+          latitude: number | null
+          longitude: number | null
+          endereco: string | null
+          barcode_payload: string | null
+          barcode_type: 'linha_digitavel' | 'qrcode' | 'itf' | 'code128' | 'other' | null
+          match_eligible: boolean
+          match_eligible_at: string | null
+          source: 'upload' | 'scan' | 'manual'
+          created_at: string
+          updated_at: string
+          analyzed_at: string | null
+          matched_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          uploaded_by_role: 'consumidor' | 'embaixador'
+          cliente_nome?: string | null
+          cliente_whatsapp?: string | null
+          file_url: string
+          file_name: string
+          file_type?: string | null
+          file_size?: number | null
+          status?: 'pending' | 'analyzing' | 'analyzed' | 'matching' | 'matched' | 'failed'
+          estado?: string | null
+          concessionaria?: string | null
+          valor_total?: number | null
+          kwh_mensal?: number | null
+          vencimento?: string | null
+          raw_extraction?: Json | null
+          error_message?: string | null
+          match_count?: number
+          latitude?: number | null
+          longitude?: number | null
+          endereco?: string | null
+          barcode_payload?: string | null
+          barcode_type?: 'linha_digitavel' | 'qrcode' | 'itf' | 'code128' | 'other' | null
+          match_eligible?: boolean
+          match_eligible_at?: string | null
+          source?: 'upload' | 'scan' | 'manual'
+          created_at?: string
+          updated_at?: string
+          analyzed_at?: string | null
+          matched_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          uploaded_by_role?: 'consumidor' | 'embaixador'
+          cliente_nome?: string | null
+          cliente_whatsapp?: string | null
+          file_url?: string
+          file_name?: string
+          file_type?: string | null
+          file_size?: number | null
+          status?: 'pending' | 'analyzing' | 'analyzed' | 'matching' | 'matched' | 'failed'
+          estado?: string | null
+          concessionaria?: string | null
+          valor_total?: number | null
+          kwh_mensal?: number | null
+          vencimento?: string | null
+          raw_extraction?: Json | null
+          error_message?: string | null
+          match_count?: number
+          latitude?: number | null
+          longitude?: number | null
+          endereco?: string | null
+          barcode_payload?: string | null
+          barcode_type?: 'linha_digitavel' | 'qrcode' | 'itf' | 'code128' | 'other' | null
+          match_eligible?: boolean
+          match_eligible_at?: string | null
+          source?: 'upload' | 'scan' | 'manual'
+          created_at?: string
+          updated_at?: string
+          analyzed_at?: string | null
+          matched_at?: string | null
+        }
+      }
+      token_pre_registrations: {
+        Row: {
+          id: string
+          email: string
+          wallet_address: string | null
+          package_code: string | null
+          package_tokens: number | null
+          utm_source: string | null
+          utm_medium: string | null
+          utm_campaign: string | null
+          referred_by_code: string | null
+          status: 'pending' | 'confirmed' | 'rejected' | 'launched'
+          ip_address: string | null
+          user_agent: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          email: string
+          wallet_address?: string | null
+          package_code?: string | null
+          package_tokens?: number | null
+          utm_source?: string | null
+          utm_medium?: string | null
+          utm_campaign?: string | null
+          referred_by_code?: string | null
+          status?: 'pending' | 'confirmed' | 'rejected' | 'launched'
+          ip_address?: string | null
+          user_agent?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          wallet_address?: string | null
+          package_code?: string | null
+          package_tokens?: number | null
+          utm_source?: string | null
+          utm_medium?: string | null
+          utm_campaign?: string | null
+          referred_by_code?: string | null
+          status?: 'pending' | 'confirmed' | 'rejected' | 'launched'
+          ip_address?: string | null
+          user_agent?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      pix_payments: {
+        Row: {
+          id: string
+          user_id: string
+          amount: number
+          description: string | null
+          purpose: 'coin_purchase' | 'plan_subscription' | 'token_presale' | 'invoice_payment' | 'celular_recharge' | 'other'
+          status: 'pending' | 'paid' | 'expired' | 'cancelled' | 'refunded' | 'failed'
+          txid: string | null
+          qr_code: string | null
+          qr_code_image: string | null
+          pix_copy_paste: string | null
+          expires_at: string
+          paid_at: string | null
+          provider: string | null
+          provider_payload: Json | null
+          metadata: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          amount: number
+          description?: string | null
+          purpose: 'coin_purchase' | 'plan_subscription' | 'token_presale' | 'invoice_payment' | 'celular_recharge' | 'other'
+          status?: 'pending' | 'paid' | 'expired' | 'cancelled' | 'refunded' | 'failed'
+          txid?: string | null
+          qr_code?: string | null
+          qr_code_image?: string | null
+          pix_copy_paste?: string | null
+          expires_at: string
+          paid_at?: string | null
+          provider?: string | null
+          provider_payload?: Json | null
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          amount?: number
+          description?: string | null
+          purpose?: 'coin_purchase' | 'plan_subscription' | 'token_presale' | 'invoice_payment' | 'celular_recharge' | 'other'
+          status?: 'pending' | 'paid' | 'expired' | 'cancelled' | 'refunded' | 'failed'
+          txid?: string | null
+          qr_code?: string | null
+          qr_code_image?: string | null
+          pix_copy_paste?: string | null
+          expires_at?: string
+          paid_at?: string | null
+          provider?: string | null
+          provider_payload?: Json | null
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      celular_recargas: {
+        Row: {
+          id: string
+          user_id: string
+          numero: string
+          operadora: string | null
+          valor: number
+          pix_payment_id: string | null
+          status: 'pending' | 'paid' | 'processing' | 'completed' | 'failed' | 'refunded'
+          provider: string | null
+          provider_payload: Json | null
+          completed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          numero: string
+          operadora?: string | null
+          valor: number
+          pix_payment_id?: string | null
+          status?: 'pending' | 'paid' | 'processing' | 'completed' | 'failed' | 'refunded'
+          provider?: string | null
+          provider_payload?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          numero?: string
+          operadora?: string | null
+          valor?: number
+          pix_payment_id?: string | null
+          status?: 'pending' | 'paid' | 'processing' | 'completed' | 'failed' | 'refunded'
+          provider?: string | null
+          provider_payload?: Json | null
+          completed_at?: string | null
           created_at?: string
           updated_at?: string
         }
