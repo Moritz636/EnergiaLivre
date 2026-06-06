@@ -96,6 +96,41 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/', request.url))
       }
     }
+
+    // Chat interno: exclusivo do programa de embaixadores (tipo=parceiro)
+    // ou role=admin. Bloqueia consumidores/geradores.
+    if (pathname.startsWith('/dashboard/chat')) {
+      const role = await getUserRole(supabase, user.id)
+      if (role !== 'admin') {
+        // Confere o tipo (parceiro). Cache também guarda em 60s.
+        const cached = roleCache.get(`tipo:${user.id}`)
+        let tipo: string | null = null
+        if (cached && cached.expires > Date.now()) {
+          tipo = cached.role
+        } else {
+          const { data } = await supabase
+            .from('profiles')
+            .select('tipo')
+            .eq('id', user.id)
+            .single()
+          tipo = (data as any)?.tipo ?? null
+          roleCache.set(`tipo:${user.id}`, {
+            role: tipo ?? 'user',
+            expires: Date.now() + ROLE_CACHE_TTL,
+          })
+        }
+        if (tipo !== 'parceiro') {
+          return NextResponse.redirect(
+            new URL(
+              tipo === 'gerador'
+                ? '/dashboard-gerador'
+                : '/dashboard-consumidor',
+              request.url,
+            ),
+          )
+        }
+      }
+    }
   }
 
   return response

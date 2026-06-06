@@ -126,16 +126,28 @@ export default function PropostasPage() {
     }
   }
 
+  // ============================================================
+  // CHAT INTERNO → apenas para embaixadores (tipo=parceiro).
+  // Consumidores/geradores caem no WhatsApp institucional.
+  // ============================================================
   const handleOpenChat = async (matchId: number) => {
     setOpeningChatId(matchId)
     setError('')
     try {
-      const res = await fetch(`/api/chat/or-with-match/${matchId}`)
-      const body = await res.json()
-      if (!res.ok) throw new Error(body.error || 'Erro ao abrir chat')
-      router.push(`/dashboard/chat/${body.conversationId}`)
+      if (profile?.tipo === 'parceiro') {
+        const res = await fetch(`/api/chat/or-with-match/${matchId}`)
+        const body = await res.json()
+        if (!res.ok) throw new Error(body.error || 'Erro ao abrir chat')
+        router.push(`/dashboard/chat/${body.conversationId}`)
+        return
+      }
+      // Demais perfis: atendimento via WhatsApp oficial
+      const msg = encodeURIComponent(
+        'Olá! Vim pelo EnergiaLivre e gostaria de falar sobre uma proposta aceita.',
+      )
+      window.open(`https://wa.me/5584987858668?text=${msg}`, '_blank', 'noopener')
     } catch (err: any) {
-      setError(err?.message || 'Erro ao abrir chat')
+      setError(err?.message || 'Erro ao abrir conversa')
     } finally {
       setOpeningChatId(null)
     }

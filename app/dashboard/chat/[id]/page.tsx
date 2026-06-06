@@ -8,6 +8,12 @@ import ChatWindow from '@/components/Chat/ChatWindow'
 import CreateGroupModal from '@/components/Chat/CreateGroupModal'
 import { Loader2 } from 'lucide-react'
 
+// ============================================================
+// CHAT — conversa individual (exclusivo Embaixador)
+// Mesma regra do /dashboard/chat: só abre para tipo=parceiro
+// (ou role=admin). Consumidores/geradores são redirecionados.
+// ============================================================
+
 interface PageProps {
   params: Promise<{ id: string }>
 }
@@ -18,18 +24,36 @@ export default function ChatConversationPage({ params }: PageProps) {
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [showCreateGroup, setShowCreateGroup] = useState(false)
   const [showList, setShowList] = useState(true)
+  const [accessChecked, setAccessChecked] = useState(false)
 
   useEffect(() => {
     params.then((p) => setConversationId(p.id))
   }, [params])
 
+  // Auth → /login
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/login?from=' + (profile?.tipo ?? 'consumidor'))
+      router.push('/login?from=parceiro')
     }
-  }, [user, loading, profile, router])
+  }, [user, loading, router])
 
-  if (loading || !user || !conversationId) {
+  // Role check → redireciona quem não é embaixador
+  useEffect(() => {
+    if (loading || !user || !profile) return
+    const isEmbaixador =
+      profile.tipo === 'parceiro' || (profile as any).role === 'admin'
+    if (!isEmbaixador) {
+      const target =
+        profile.tipo === 'gerador'
+          ? '/dashboard-gerador'
+          : '/dashboard-consumidor'
+      router.replace(target)
+      return
+    }
+    setAccessChecked(true)
+  }, [loading, user, profile, router])
+
+  if (loading || !user || !conversationId || !accessChecked) {
     return (
       <div className="min-h-screen bg-[#020617] flex items-center justify-center">
         <Loader2 className="w-6 h-6 text-emerald-500 animate-spin" />

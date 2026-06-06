@@ -180,13 +180,16 @@ export default function DashboardGeradorPage() {
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">Faturas</span>
             </Link>
-            <Link
-              href="/dashboard/chat"
+            <a
+              href={`https://wa.me/5584987858668?text=${encodeURIComponent('Olá! Sou gerador parceiro e preciso de suporte.')}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-3 py-2 text-sm text-slate-300 hover:text-emerald-400 transition"
+              title="Suporte via WhatsApp"
             >
               <MessageCircle className="w-4 h-4" />
-              <span className="hidden sm:inline">Chat</span>
-            </Link>
+              <span className="hidden sm:inline">Suporte</span>
+            </a>
             <button
               onClick={logout}
               className="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-white transition"
