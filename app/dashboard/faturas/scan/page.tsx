@@ -119,20 +119,16 @@ export default function ScanInvoicePage() {
                 <p className="text-xs text-slate-300 font-bold mb-2 flex items-center gap-1.5">
                   <MapPin className="w-3.5 h-3.5" /> Localização (opcional)
                 </p>
-                <p className="text-[11px] text-slate-400 mb-2">
+                <p className="text-[11px] text-slate-400 mb-3">
                   Adicione sua localização para que geradores próximos vejam sua fatura no mapa.
                 </p>
                 <LocationCapture
                   supabase={supabase}
                   userId={user.id}
-                  onSaved={(lat, lng) => setLocation({ lat, lng })}
-                />
-                <input
-                  type="text"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Endereço (opcional)"
-                  className="mt-2 w-full px-3 py-2 rounded-lg bg-slate-900 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50"
+                  onSaved={(lat, lng, place) => {
+                    setLocation({ lat, lng })
+                    if (place?.formattedAddress) setAddress(place.formattedAddress)
+                  }}
                 />
               </div>
             )}

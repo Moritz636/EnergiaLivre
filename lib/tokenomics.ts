@@ -13,7 +13,7 @@ export const KWATT_SYMBOL = 'KWATT'
 export const KWATT_DECIMALS = 18 // Padrão ERC-20/BEP-20
 
 export const TOKEN_LAUNCH_DATE = new Date(2027, 0, 5, 0, 0, 0) // 05/01/2027
-export const PRESALE_END_DATE = new Date(2026, 2, 15, 23, 59, 59) // 15/03/2026
+export const PRESALE_END_DATE = new Date(2026, 8, 9, 23, 59, 59) // 09/09/2026
 
 export const TOKEN_TOTAL_SUPPLY = 1_000_000_000 // 1 bilhão
 export const PRESALE_ALLOCATION = 0.20 // 20% (200M tokens)

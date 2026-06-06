@@ -131,6 +131,8 @@ export async function saveUserLocation(
   estado?: string,
   accuracyMeters?: number,
   source: 'browser' | 'geocoded' | 'manual' = 'manual',
+  endereco?: string,
+  cep?: string,
 ): Promise<{ success: boolean; message?: string }> {
   if (!isValidCoordinate(lat, lng)) {
     return { success: false, message: 'Coordenadas inválidas' }
@@ -142,6 +144,8 @@ export async function saveUserLocation(
     longitude: lng,
     cidade: cidade?.trim() ?? null,
     estado: estado?.trim().toUpperCase() ?? null,
+    endereco: endereco?.trim() ?? null,
+    cep: cep?.replace(/\D/g, '') || null,
     accuracy_meters: accuracyMeters ?? null,
     source,
     updated_at: new Date().toISOString(),

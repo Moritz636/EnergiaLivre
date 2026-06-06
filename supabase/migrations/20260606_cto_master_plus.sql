@@ -55,6 +55,18 @@ CREATE INDEX IF NOT EXISTS idx_geradores_status_ativo
     ON geradores(status)
     WHERE status = 'ativo';
 
+-- 2.5) USER_LOCATIONS - endereco + cep (Google Places Autocomplete)
+ALTER TABLE user_locations
+    ADD COLUMN IF NOT EXISTS endereco TEXT,
+    ADD COLUMN IF NOT EXISTS cep TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_user_locations_cep
+    ON user_locations(cep)
+    WHERE cep IS NOT NULL;
+
+COMMENT ON COLUMN user_locations.endereco IS 'Endereco formatado (rua, numero, bairro) retornado por Google Places / Nominatim';
+COMMENT ON COLUMN user_locations.cep IS 'CEP (codigo postal) extraido do endereco';
+
 -- 3) TABELA: token_pre_registrations (landing /token)
 CREATE TABLE IF NOT EXISTS token_pre_registrations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

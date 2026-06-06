@@ -498,6 +498,8 @@ export interface Database {
           lng: number
           cidade: string
           estado: string
+          endereco: string | null
+          cep: string | null
           accuracy_meters: number | null
           source: 'browser' | 'geocoded' | 'manual'
           updated_at: string
@@ -509,6 +511,8 @@ export interface Database {
           lng: number
           cidade: string
           estado: string
+          endereco?: string | null
+          cep?: string | null
           accuracy_meters?: number | null
           source?: 'browser' | 'geocoded' | 'manual'
           updated_at?: string
@@ -520,6 +524,8 @@ export interface Database {
           lng?: number
           cidade?: string
           estado?: string
+          endereco?: string | null
+          cep?: string | null
           accuracy_meters?: number | null
           source?: 'browser' | 'geocoded' | 'manual'
           updated_at?: string

@@ -1,12 +1,26 @@
 'use client';
 import { useState } from 'react';
-import { Loader2, MapPin, AlertCircle, CheckCircle2, Search } from 'lucide-react';
-import { getCurrentPosition, geocodeCidadeUF, isValidCoordinate } from '@/lib/geolocation';
+import { Loader2, MapPin, AlertCircle, CheckCircle2 } from 'lucide-react';
+import {
+  getCurrentPosition,
+  isValidCoordinate,
+  saveUserLocation,
+} from '@/lib/geolocation';
+import AddressAutocomplete from '@/components/AddressAutocomplete';
+import type { PlaceResult } from '@/lib/google-places';
 
 type LocationState =
   | { kind: 'idle' }
   | { kind: 'loading' }
-  | { kind: 'success'; lat: number; lng: number; source: 'gps' | 'geocode'; cidade?: string; estado?: string }
+  | {
+      kind: 'success'
+      lat: number
+      lng: number
+      source: 'gps' | 'geocode'
+      cidade?: string
+      estado?: string
+      endereco?: string
+    }
   | { kind: 'error'; message: string };
 
 type SupabaseLike = {
@@ -16,95 +30,98 @@ type SupabaseLike = {
 type Props = {
   supabase: SupabaseLike
   userId: string
-  onSaved?: (lat: number, lng: number) => void
+  onSaved?: (lat: number, lng: number, place?: PlaceResult) => void
+  /** Mantidos para compatibilidade (ignorados — AddressAutocomplete cuida) */
   initialCidade?: string
   initialEstado?: string
+  /** Esconder GPS button (útil em fluxos que só querem texto) */
+  hideGpsButton?: boolean
+  /** Label customizado do campo de endereço */
+  addressLabel?: string
 }
 
-export default function LocationCapture({ supabase, userId, onSaved, initialCidade = '', initialEstado = '' }: Props) {
-  const [state, setState] = useState<LocationState>({ kind: 'idle' });
-  const [cidade, setCidade] = useState(initialCidade);
-  const [estado, setEstado] = useState(initialEstado);
-  const [saving, setSaving] = useState(false);
+export default function LocationCapture({
+  supabase,
+  userId,
+  onSaved,
+  initialCidade: _initialCidade = '',
+  initialEstado: _initialEstado = '',
+  hideGpsButton = false,
+  addressLabel = 'Endereço completo',
+}: Props) {
+  const [state, setState] = useState<LocationState>({ kind: 'idle' })
+  const [saving, setSaving] = useState(false)
+  const [selectedPlace, setSelectedPlace] = useState<PlaceResult | null>(null)
 
   const captureGPS = async () => {
-    setState({ kind: 'loading' });
+    setState({ kind: 'loading' })
     try {
-      const pos = await getCurrentPosition({ timeoutMs: 10_000 });
-      const { lat, lng } = pos;
-      if (!isValidCoordinate(lat, lng)) {
-        setState({ kind: 'error', message: 'Coordenada inválida retornada pelo navegador.' });
-        return;
+      const pos = await getCurrentPosition({ timeoutMs: 10_000 })
+      if (!isValidCoordinate(pos.lat, pos.lng)) {
+        setState({ kind: 'error', message: 'Coordenada inválida retornada pelo navegador.' })
+        return
       }
-      await persist(lat, lng, 'gps');
+      await persist(pos.lat, pos.lng, 'browser')
     } catch (err: any) {
       setState({
         kind: 'error',
         message: err?.message || 'Não foi possível obter sua localização. Tente a busca manual.',
-      });
+      })
     }
-  };
+  }
 
-  const searchManual = async () => {
-    if (!cidade.trim() || !estado.trim()) {
-      setState({ kind: 'error', message: 'Preencha cidade e estado.' });
-      return;
+  const handleAddressSelect = (place: PlaceResult) => {
+    setSelectedPlace(place)
+    if (place.lat == null || place.lng == null) {
+      setState({ kind: 'error', message: 'Endereço sem coordenadas. Tente outro.' })
+      return
     }
-    setState({ kind: 'loading' });
-    try {
-      const result = await geocodeCidadeUF(cidade, estado);
-      if (!result) {
-        setState({
-          kind: 'error',
-          message: `Não encontramos "${cidade}, ${estado}". Tente outra grafia.`,
-        });
-        return;
-      }
-      await persist(result.lat, result.lng, 'geocode', result.cidade, result.estado);
-    } catch (err: any) {
-      setState({
-        kind: 'error',
-        message: err?.message || 'Erro ao buscar coordenadas.',
-      });
+    if (!isValidCoordinate(place.lat, place.lng)) {
+      setState({ kind: 'error', message: 'Coordenada inválida retornada pelo serviço de mapas.' })
+      return
     }
-  };
+    void persist(place.lat, place.lng, 'geocoded', place)
+  }
 
   const persist = async (
     lat: number,
     lng: number,
-    source: 'gps' | 'geocode',
-    cidadeRes?: string,
-    estadoRes?: string
+    source: 'browser' | 'geocoded',
+    place?: PlaceResult,
   ) => {
-    setSaving(true);
+    setSaving(true)
     try {
-      const cidadeFinal = cidadeRes || cidade;
-      const estadoFinal = estadoRes || estado;
+      const cidade = place?.components?.city
+      const estado = place?.components?.stateCode
+      const endereco = place?.formattedAddress
+      const cep = place?.components?.postalCode
 
-      const sb: any = supabase
-      await sb.from('user_locations').upsert(
-        {
-          user_id: userId,
-          latitude: lat,
-          longitude: lng,
-          cidade: cidadeFinal,
-          estado: estadoFinal,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'user_id' }
-      );
+      const result = await saveUserLocation(
+        supabase,
+        userId,
+        lat,
+        lng,
+        cidade,
+        estado,
+        undefined,
+        source,
+        endereco,
+        cep,
+      )
 
-      setState({ kind: 'success', lat, lng, source, cidade: cidadeFinal, estado: estadoFinal });
-      onSaved?.(lat, lng);
+      if (!result.success) {
+        setState({ kind: 'error', message: result.message || 'Erro ao salvar localização.' })
+        return
+      }
+
+      setState({ kind: 'success', lat, lng, source: source === 'browser' ? 'gps' : 'geocode', cidade, estado, endereco })
+      onSaved?.(lat, lng, place)
     } catch (err: any) {
-      setState({
-        kind: 'error',
-        message: err?.message || 'Erro ao salvar localização.',
-      });
+      setState({ kind: 'error', message: err?.message || 'Erro ao salvar localização.' })
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
+  }
 
   return (
     <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
@@ -119,14 +136,20 @@ export default function LocationCapture({ supabase, userId, onSaved, initialCida
             <CheckCircle2 className="w-5 h-5 text-emerald-400" />
             <p className="text-emerald-300 text-sm font-bold">Localização salva</p>
           </div>
-          <p className="text-slate-300 text-xs">
+          {state.endereco && (
+            <p className="text-white text-sm">{state.endereco}</p>
+          )}
+          <p className="text-slate-400 text-xs mt-0.5">
             {state.cidade && state.estado ? `${state.cidade}, ${state.estado} • ` : ''}
             {state.lat.toFixed(4)}, {state.lng.toFixed(4)}
             {' • '}
-            {state.source === 'gps' ? 'GPS' : 'busca manual'}
+            {state.source === 'gps' ? 'GPS' : 'endereço selecionado'}
           </p>
           <button
-            onClick={() => setState({ kind: 'idle' })}
+            onClick={() => {
+              setState({ kind: 'idle' })
+              setSelectedPlace(null)
+            }}
             className="mt-2 text-xs text-emerald-400 hover:text-emerald-300 underline"
           >
             Atualizar
@@ -134,51 +157,28 @@ export default function LocationCapture({ supabase, userId, onSaved, initialCida
         </div>
       ) : (
         <>
-          <button
-            onClick={captureGPS}
+          <AddressAutocomplete
+            label={addressLabel}
+            placeholder="Digite seu endereço, cidade ou CEP..."
+            showGpsButton={!hideGpsButton}
+            onGpsClick={captureGPS}
+            onSelect={handleAddressSelect}
             disabled={state.kind === 'loading' || saving}
-            className="w-full mb-3 py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold transition flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {state.kind === 'loading' ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <>
-                <MapPin className="w-5 h-5" /> Usar minha localização atual
-              </>
-            )}
-          </button>
+          />
 
-          <div className="flex items-center gap-3 my-3">
-            <div className="flex-1 h-px bg-white/10" />
-            <span className="text-xs text-slate-500">ou</span>
-            <div className="flex-1 h-px bg-white/10" />
-          </div>
+          {saving && (
+            <div className="mt-3 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center gap-2 text-xs text-blue-300">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              Salvando localização...
+            </div>
+          )}
 
-          <div className="flex gap-2 mb-2">
-            <input
-              type="text"
-              placeholder="Cidade"
-              value={cidade}
-              onChange={(e) => setCidade(e.target.value)}
-              className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-emerald-500/50"
-            />
-            <input
-              type="text"
-              placeholder="UF"
-              maxLength={2}
-              value={estado}
-              onChange={(e) => setEstado(e.target.value.toUpperCase())}
-              className="w-16 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-emerald-500/50 text-center uppercase"
-            />
-            <button
-              onClick={searchManual}
-              disabled={state.kind === 'loading' || saving}
-              className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition disabled:opacity-50"
-              aria-label="Buscar"
-            >
-              <Search className="w-4 h-4" />
-            </button>
-          </div>
+          {state.kind === 'loading' && !saving && (
+            <div className="mt-3 p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-2 text-xs text-emerald-300">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              Obtendo coordenadas...
+            </div>
+          )}
         </>
       )}
 
@@ -189,5 +189,5 @@ export default function LocationCapture({ supabase, userId, onSaved, initialCida
         </div>
       )}
     </div>
-  );
+  )
 }
