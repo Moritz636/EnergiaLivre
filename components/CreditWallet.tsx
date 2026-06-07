@@ -5,7 +5,7 @@
 // ============================================================
 
 import { useState } from 'react'
-import { Wallet, Plus, ArrowDownRight, ArrowUpRight, Loader2 } from 'lucide-react'
+import { Wallet, Plus, ArrowDownRight, ArrowUpRight, Loader2, Clock } from 'lucide-react'
 import { useCredits } from './useCredits'
 import { PaymentInstructions } from './PaymentInstructions'
 
@@ -41,16 +41,35 @@ function formatDateTime(iso: string): string {
 }
 
 export function CreditWallet({ userId, variant = 'default' }: CreditWalletProps) {
-  const { balance, loading, error, transactions } = useCredits(userId)
+  const { balance, loading, error, transactions, refresh } = useCredits(userId)
   const [paying, setPaying] = useState(false)
   const [payAmount, setPayAmount] = useState<number | null>(null)
   const [requested, setRequested] = useState(false)
+  const [payError, setPayError] = useState<string | null>(null)
 
   const handleConfirmPay = async () => {
     if (!payAmount) return
-    setPayAmount(null)
-    setRequested(true)
-    setTimeout(() => setRequested(false), 5000)
+    setPayError(null)
+    setPaying(true)
+    try {
+      const res = await fetch('/api/user/credits/purchase-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: payAmount }),
+      })
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string }
+        throw new Error(body.error ?? 'Falha ao registrar solicitação')
+      }
+      setPayAmount(null)
+      setRequested(true)
+      setTimeout(() => setRequested(false), 6000)
+      await refresh()
+    } catch (err: any) {
+      setPayError(err?.message ?? 'Erro ao processar')
+    } finally {
+      setPaying(false)
+    }
   }
 
   if (variant === 'compact') {
@@ -129,7 +148,12 @@ export function CreditWallet({ userId, variant = 'default' }: CreditWalletProps)
 
           {requested && (
             <p className="mt-3 text-center text-[10px] text-emerald-300">
-              Solicitação enviada! Aguarde a confirmação do admin.
+              ✓ Solicitação registrada! Aguarde a confirmação do admin (até 24h).
+            </p>
+          )}
+          {payError && (
+            <p className="mt-3 text-center text-[10px] text-red-400">
+              {payError}
             </p>
           )}
         </div>
@@ -146,22 +170,34 @@ export function CreditWallet({ userId, variant = 'default' }: CreditWalletProps)
                   positive: t.amount > 0,
                 }
                 const positive = t.amount > 0
+                const pending = t.status === 'pending'
                 return (
                   <li key={t.id} className="px-5 py-2.5 flex items-center gap-3">
                     <div
                       className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        positive ? 'bg-emerald-500/15' : 'bg-red-500/15'
+                        pending
+                          ? 'bg-yellow-500/15'
+                          : positive
+                            ? 'bg-emerald-500/15'
+                            : 'bg-red-500/15'
                       }`}
                     >
-                      {positive ? (
+                      {pending ? (
+                        <Clock className="w-3.5 h-3.5 text-yellow-400" />
+                      ) : positive ? (
                         <ArrowDownRight className="w-3.5 h-3.5 text-emerald-400" />
                       ) : (
                         <ArrowUpRight className="w-3.5 h-3.5 text-red-400" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-white font-medium truncate">
+                      <p className="text-xs text-white font-medium truncate flex items-center gap-1.5">
                         {meta.label}
+                        {pending && (
+                          <span className="text-[9px] uppercase tracking-wider text-yellow-300 font-bold">
+                            · aguardando
+                          </span>
+                        )}
                       </p>
                       {t.description && (
                         <p className="text-[10px] text-slate-500 truncate">
@@ -174,7 +210,11 @@ export function CreditWallet({ userId, variant = 'default' }: CreditWalletProps)
                     </div>
                     <span
                       className={`font-black text-sm ${
-                        positive ? 'text-emerald-400' : 'text-red-400'
+                        pending
+                          ? 'text-yellow-400'
+                          : positive
+                            ? 'text-emerald-400'
+                            : 'text-red-400'
                       }`}
                     >
                       {positive ? '+' : ''}R$ {formatBRL(Math.abs(t.amount))}

@@ -7,6 +7,7 @@
 
 import { useEffect } from 'react'
 import { X, Copy, Check, Smartphone, ArrowRight } from 'lucide-react'
+import { PIX_KEY, PIX_KEY_RAW, PIX_RECEIVER } from '@/lib/credits-shared'
 
 interface PaymentInstructionsProps {
   open: boolean
@@ -15,10 +16,6 @@ interface PaymentInstructionsProps {
   onConfirm: () => void | Promise<void>
   confirming?: boolean
 }
-
-const PIX_KEY = '84 98758-6668'
-const PIX_KEY_RAW = '5584987858668'
-const RECEIVER_NAME = 'Energia Livre'
 
 export function PaymentInstructions({
   open,
@@ -102,7 +99,7 @@ export function PaymentInstructions({
               <CopyButton value={PIX_KEY_RAW} />
             </Row>
             <Row label="Favorecido">
-              <span className="text-white text-sm font-medium">{RECEIVER_NAME}</span>
+              <span className="text-white text-sm font-medium">{PIX_RECEIVER}</span>
             </Row>
             <Row label="Tipo">
               <span className="text-white text-sm">Chave aleatória (WhatsApp)</span>

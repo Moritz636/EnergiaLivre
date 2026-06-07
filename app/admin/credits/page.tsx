@@ -27,9 +27,11 @@ export default function AdminCreditsPage() {
 
   const [balances, setBalances] = useState<UserBalanceRow[]>([])
   const [transactions, setTransactions] = useState<TransactionRow[]>([])
+  const [pendingCount, setPendingCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [filter, setFilter] = useState<'all' | 'pending'>('all')
   const [modalOpen, setModalOpen] = useState(false)
   const [modalAction, setModalAction] = useState<ActionType>('credit')
   const [modalTarget, setModalTarget] = useState<{
@@ -41,7 +43,7 @@ export default function AdminCreditsPage() {
     setLoading(true)
     setError(null)
     try {
-      const [{ data: balanceData, error: bErr }, { data: txData, error: tErr }] =
+      const [{ data: balanceData, error: bErr }, { data: txData, error: tErr }, { count: pendCount }] =
         await Promise.all([
           supabase
             .from('user_credits')
@@ -59,6 +61,10 @@ export default function AdminCreditsPage() {
             )
             .order('created_at', { ascending: false })
             .limit(80),
+          supabase
+            .from('credit_transactions')
+            .select('id', { count: 'exact', head: true })
+            .eq('status', 'pending'),
         ])
 
       if (bErr) throw bErr
@@ -66,6 +72,7 @@ export default function AdminCreditsPage() {
 
       setBalances((balanceData as unknown as UserBalanceRow[]) ?? [])
       setTransactions((txData as unknown as TransactionRow[]) ?? [])
+      setPendingCount(pendCount ?? 0)
     } catch (err: any) {
       setError(err?.message ?? 'Erro ao carregar dados')
     } finally {
@@ -96,6 +103,7 @@ export default function AdminCreditsPage() {
       totalBalance,
       totalTransactions: transactions.length,
       lastActivityAt,
+      pendingRequests: pendingCount,
     }
   })()
 
@@ -174,7 +182,12 @@ export default function AdminCreditsPage() {
             />
           </div>
           <div>
-            <TransactionsFeed transactions={transactions} loading={loading} />
+            <TransactionsFeed
+              transactions={transactions}
+              loading={loading}
+              filter={filter}
+              onFilterChange={setFilter}
+            />
           </div>
         </div>
       </main>

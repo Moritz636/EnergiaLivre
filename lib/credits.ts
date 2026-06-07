@@ -1,9 +1,22 @@
 // ============================================================
 // lib/credits — Helpers puros server-side para sistema de
 // créditos (Fase 1 — manual via admin).
+// Constantes compartilhadas: ver ./credits-shared
 // ============================================================
 
 import { createClient } from '@/lib/supabase/server'
+
+export {
+  CREDIT_TYPES,
+  CREDIT_STATUSES,
+  PIX_KEY,
+  PIX_KEY_RAW,
+  PIX_RECEIVER,
+  MAX_PURCHASE_AMOUNT,
+  isValidAmount,
+} from './credits-shared'
+
+export type { CreditType, CreditStatus } from './credits-shared'
 
 /** Confirma se o user atual é admin (role='admin'). */
 export async function requireAdmin() {

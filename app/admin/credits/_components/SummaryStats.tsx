@@ -13,6 +13,7 @@ export interface Summary {
   totalBalance: number
   totalTransactions: number
   lastActivityAt: string | null
+  pendingRequests: number
 }
 
 interface SummaryStatsProps {
@@ -36,10 +37,11 @@ export function SummaryStats({ summary }: SummaryStatsProps) {
         highlight
       />
       <StatCard
-        tone="yellow"
+        tone={summary.pendingRequests > 0 ? 'yellow' : 'neutral'}
         icon={<Activity className="w-4 h-4" />}
-        label="Transações (total)"
-        value={String(summary.totalTransactions)}
+        label="Solicitações pendentes"
+        value={String(summary.pendingRequests)}
+        pulse={summary.pendingRequests > 0}
       />
       <StatCard
         tone="neutral"
@@ -68,15 +70,22 @@ interface StatCardProps {
   tone?: Tone
   highlight?: boolean
   small?: boolean
+  pulse?: boolean
 }
 
-function StatCard({ icon, label, value, tone = 'neutral', highlight, small }: StatCardProps) {
+function StatCard({ icon, label, value, tone = 'neutral', highlight, small, pulse }: StatCardProps) {
   return (
     <div
-      className={`p-4 rounded-2xl bg-white/5 border ${TONE_CLASSES[tone]} ${
+      className={`relative p-4 rounded-2xl bg-white/5 border ${TONE_CLASSES[tone]} ${
         highlight ? 'shadow-lg shadow-cyan-500/10' : ''
       }`}
     >
+      {pulse && (
+        <span className="absolute top-2 right-2 flex h-2 w-2" aria-hidden>
+          <span className="absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75 animate-ping" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-400" />
+        </span>
+      )}
       <div className="flex items-center gap-1.5 mb-1.5">
         {icon}
         <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>

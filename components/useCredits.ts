@@ -6,15 +6,17 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { getSupabase } from '@/lib/supabase/singleton'
+import type { CreditStatus, CreditType } from '@/lib/credits-shared'
 
 export interface CreditTransaction {
   id: string
   amount: number
-  type: string
-  status: string
+  type: CreditType | string
+  status: CreditStatus | string
   description: string | null
   created_at: string
   external_reference: string | null
+  payment_proof_url: string | null
 }
 
 interface UseCreditsReturn {
@@ -78,7 +80,8 @@ export function useCredits(userId: string | null | undefined): UseCreditsReturn 
     refresh()
   }, [refresh])
 
-  // Realtime: escuta mudanças na própria user_credits (atualização do saldo)
+  // Realtime: escuta mudanças na própria user_credits (UPDATE + INSERT) e novos
+  // credit_transactions do próprio usuário (INSERT).
   useEffect(() => {
     if (!userId) return
     const channel = supabase
@@ -91,11 +94,26 @@ export function useCredits(userId: string | null | undefined): UseCreditsReturn 
           if (typeof next === 'number') setBalance(Number(next))
         }
       )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'user_credits', filter: `user_id=eq.${userId}` },
+        (payload: { new: { balance?: number } }) => {
+          const next = payload.new?.balance
+          if (typeof next === 'number') setBalance(Number(next))
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'credit_transactions', filter: `user_id=eq.${userId}` },
+        () => {
+          refresh()
+        }
+      )
       .subscribe()
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [userId, supabase])
+  }, [userId, supabase, refresh])
 
   return { balance, loading, error, transactions, refresh, transfer }
 }

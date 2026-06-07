@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAdminAuth } from '@/app/hooks/useAuth';
 import { getSupabase } from '@/lib/supabase/singleton';
+import Link from 'next/link';
 import {
   LayoutDashboard,
   Users,
@@ -29,6 +30,7 @@ import {
   Calendar,
   TrendingUp,
   X,
+  Coins,
 } from 'lucide-react';
 
 type Section =
@@ -339,6 +341,17 @@ export default function AdminDashboardPage() {
               </button>
             );
           })}
+
+          <div className="pt-2 mt-2 border-t border-white/5">
+            <Link
+              href="/admin/credits"
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 border border-transparent transition"
+            >
+              <Coins className="w-4 h-4" />
+              <span className="flex-1 text-left">Painel de Créditos</span>
+              <ArrowUpRight className="w-3 h-3" />
+            </Link>
+          </div>
         </nav>
 
         <div className="p-3 border-t border-white/5">
