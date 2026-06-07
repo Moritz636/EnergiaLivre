@@ -26,6 +26,7 @@ import { PlanCard, type PlanData } from './_components/PlanCard'
 import { MotivationBlock } from './_components/MotivationBlock'
 import { MemberPlusCta } from './_components/MemberPlusCta'
 import { LoadingState } from './_components/LoadingState'
+import { CreditWallet } from '@/components/CreditWallet'
 
 type Assinatura = Database['public']['Tables']['assinaturas']['Row']
 
@@ -196,9 +197,14 @@ export default function DashboardConsumidorPage() {
 
         <MetricsGrid metrics={state.metrics} />
 
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <InvoicesList invoices={invoices} loading={loadingInvoices} />
-          <PlanCard plan={state.plan} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2 grid md:grid-cols-2 gap-6">
+            <InvoicesList invoices={invoices} loading={loadingInvoices} />
+            <PlanCard plan={state.plan} />
+          </div>
+          <div>
+            <CreditWallet userId={user.id} />
+          </div>
         </div>
 
         <MotivationBlock

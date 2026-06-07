@@ -27,6 +27,7 @@ import { CommissionsList } from './_components/CommissionsList'
 import { LeadsList } from './_components/LeadsList'
 import { FooterMeta } from './_components/FooterMeta'
 import { LoadingState } from './_components/LoadingState'
+import { CreditWallet } from '@/components/CreditWallet'
 
 type LeadRow = Database['public']['Tables']['leads']['Row']
 type ComissaoRow = Database['public']['Tables']['comissoes']['Row']
@@ -188,9 +189,14 @@ export default function DashboardEmbaixadorPage() {
 
         <GoalProgress indicadosMes={m.indicadosMes} meta={META_MENSAL} />
 
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <ReferralCard referralLink={referralLink} />
-          <CommissionsList comissoes={recentComissoes} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2 grid md:grid-cols-2 gap-6">
+            <ReferralCard referralLink={referralLink} />
+            <CommissionsList comissoes={recentComissoes} />
+          </div>
+          <div>
+            <CreditWallet userId={user.id} />
+          </div>
         </div>
 
         <LeadsList leads={recentLeads} />

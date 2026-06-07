@@ -5,6 +5,7 @@ import { getSupabase } from '@/lib/supabase/singleton';
 import { LogOut, Zap, TrendingUp, DollarSign, Sun, Building2, MapPin, Users, Loader2, Sparkles, ArrowRight, ShieldCheck, Award, Crown, Calendar, BarChart3, MessageCircle, Heart, FileText } from 'lucide-react';
 import { ConsentModal } from '@/components/ConsentModal';
 import { CURRENT_TERMS_VERSION } from '@/lib/commissions';
+import { CreditWallet } from '@/components/CreditWallet';
 import Link from 'next/link';
 import type { Database } from '@/lib/database.types';
 
@@ -269,7 +270,7 @@ export default function DashboardGeradorPage() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <Building2 className="w-5 h-5 text-blue-400" />
@@ -327,6 +328,10 @@ export default function DashboardGeradorPage() {
                 ))}
               </ul>
             )}
+          </div>
+
+          <div className="lg:row-span-2">
+            <CreditWallet userId={user.id} />
           </div>
         </div>
 
