@@ -11,6 +11,8 @@ const publicRoutes = [
   '/cadastro-embaixador',
   '/cadastro-gerador',
   '/completar-perfil/gerador',
+  '/location',
+  '/match',
   '/simulador',
   '/economizar',
   '/vender',
