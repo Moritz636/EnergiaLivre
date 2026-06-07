@@ -26,8 +26,8 @@ const TYPE_LABELS: Record<string, { label: string; color: string }> = {
   admin_credit: { label: 'Admin +', color: 'text-emerald-400 bg-emerald-500/10' },
   admin_debit: { label: 'Admin -', color: 'text-red-400 bg-red-500/10' },
   payment: { label: 'Pagamento', color: 'text-slate-300 bg-slate-500/10' },
-  transfer_in: { label: 'Transf. in', color: 'text-cyan-400 bg-cyan-500/10' },
-  transfer_out: { label: 'Transf. out', color: 'text-orange-400 bg-orange-500/10' },
+  transfer_in: { label: 'Transf. entrada', color: 'text-cyan-400 bg-cyan-500/10' },
+  transfer_out: { label: 'Transf. saída', color: 'text-orange-400 bg-orange-500/10' },
   bonus: { label: 'Bônus', color: 'text-purple-400 bg-purple-500/10' },
   cashback: { label: 'Cashback', color: 'text-pink-400 bg-pink-500/10' },
 }

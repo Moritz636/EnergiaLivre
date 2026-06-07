@@ -102,7 +102,7 @@ export function PaymentInstructions({
               <span className="text-white text-sm font-medium">{PIX_RECEIVER}</span>
             </Row>
             <Row label="Tipo">
-              <span className="text-white text-sm">Chave aleatória (WhatsApp)</span>
+              <span className="text-white text-sm">Celular</span>
             </Row>
           </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAdminAuth } from '@/app/hooks/useAuth';
 import { getSupabase } from '@/lib/supabase/singleton';
 import Link from 'next/link';
@@ -166,6 +167,7 @@ const SECTION_LABELS: Record<Section, string> = {
 
 export default function AdminDashboardPage() {
   const { user, loading, isAdmin, logout } = useAdminAuth();
+  const router = useRouter();
   const [section, setSection] = useState<Section>('overview');
 
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -282,6 +284,12 @@ export default function AdminDashboardPage() {
       loadAll();
     }
   };
+
+  useEffect(() => {
+    if (!loading && user && !isAdmin) {
+      router.push('/dashboard-consumidor');
+    }
+  }, [loading, user, isAdmin, router]);
 
   if (loading || !isAdmin) {
     return (

@@ -10,6 +10,7 @@
 // ============================================================
 
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/app/hooks/useAuth'
 import { getSupabase } from '@/lib/supabase/singleton'
 import { ConsentModal } from '@/components/ConsentModal'
@@ -43,6 +44,7 @@ const EMPTY_METRICS: Metrics = {
 }
 
 export default function DashboardEmbaixadorPage() {
+  const router = useRouter()
   const { user, profile, loading, logout } = useAuth()
   const [metrics, setMetrics] = useState<Metrics | null>(null)
   const [recentLeads, setRecentLeads] = useState<LeadItem[]>([])
@@ -151,7 +153,10 @@ export default function DashboardEmbaixadorPage() {
   }, [user, supabase])
 
   if (loading || loadingMetrics) return <LoadingState />
-  if (!user) return null
+  if (!user) {
+    router.push('/login?from=parceiro')
+    return null
+  }
 
   const m: Metrics = metrics ?? EMPTY_METRICS
   const createdAt = (profile as any)?.created_at ?? null

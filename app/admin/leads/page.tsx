@@ -1,13 +1,14 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { getSupabase } from '@/lib/supabase/singleton';
+import { useAdminAuth } from '@/app/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  CheckCircle, 
-  XCircle, 
-  Eye, 
-  RefreshCw, 
+import {
+  CheckCircle,
+  XCircle,
+  Eye,
+  RefreshCw,
   Loader2,
   Mail,
   Phone,
@@ -17,9 +18,6 @@ import {
   Filter,
   ArrowLeft
 } from 'lucide-react';
-
-// E-mails autorizados como admin
-const ADMIN_EMAILS = ['energialivreofc@gmail.com', 'fiscaltecnico.qualidade@gmail.com'];
 
 interface Lead {
   id: number;
@@ -35,7 +33,7 @@ interface Lead {
 }
 
 export default function AdminLeadsPage() {
-  const [user, setUser] = useState<any>(null);
+  const { user, loading: authLoading, isAdmin } = useAdminAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pendentes');
@@ -44,25 +42,18 @@ export default function AdminLeadsPage() {
   const supabase = getSupabase();
 
   useEffect(() => {
-    const checkAdmin = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-      
-      if (!ADMIN_EMAILS.includes(user.email || '')) {
-        router.push('/dashboard');
-        return;
-      }
-      
-      setUser(user);
-      carregarLeads();
-    };
-    
-    checkAdmin();
-  }, []);
+    if (authLoading) return
+    if (!user) {
+      router.push('/login')
+      return
+    }
+    if (!isAdmin) {
+      router.push('/dashboard-consumidor')
+      return
+    }
+    carregarLeads()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading, isAdmin])
 
   const carregarLeads = async () => {
     setLoading(true);
@@ -109,7 +100,13 @@ export default function AdminLeadsPage() {
     }
   };
 
-  if (!user) return null;
+  if (authLoading || !user || !isAdmin) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <Loader2 className="w-6 h-6 text-emerald-500 animate-spin" />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 p-8">
