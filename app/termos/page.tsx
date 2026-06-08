@@ -183,8 +183,8 @@ export default function TermosPage() {
                 Finalidades: (i) execução do serviço de match; (ii) processamento de pagamentos via Stripe;
                 (iii) emissão de cupons e comissões; (iv) cumprimento de obrigações legais/regulatórias (ANEEL, Receita Federal).
                 Direitos do titular (art. 18 LGPD): acesso, correção, anonimização, portabilidade, eliminação —
-                exercer via <a href="mailto:fiscaltecnico.qualidade@gmail.com" className="text-emerald-400 hover:underline">
-                fiscaltecnico.qualidade@gmail.com</a>.
+                exercer via <a href="mailto:contato@energialivre.dev.br" className="text-emerald-400 hover:underline">
+                contato@energialivre.dev.br</a>.
               </p>
             </div>
           </div>
@@ -265,7 +265,7 @@ export default function TermosPage() {
                 <li><strong>Foro:</strong> Comarca de Natal/RN, Brasil (Lei 10.406/2002, art. 78);</li>
                 <li><strong>Mediação prévia:</strong> tentativa obrigatória de resolução via ouvidoria antes de qualquer ação judicial;</li>
                 <li><strong>Aceite eletrônico:</strong> o clique em &ldquo;Aceitar&rdquo; tem validade jurídica conforme MP 2.200-2/2001 (ICP-Brasil compatível);</li>
-                <li><strong>Alterações:</strong> mudanças materiais serão comunicadas com 30 dias de antecedência; versões anteriores ficam acessíveis em <code className="text-emerald-300">/termos?v=antiga</code>;</li>
+                <li><strong>Alterações:</strong> mudanças materiais serão comunicadas com 30 dias de antecedência;</li>
                 <li><strong>Cancelamento:</strong> usuário pode cancelar a qualquer momento, com efeito imediato; comissões pendentes são honradas em até 30 dias.</li>
               </ul>
             </div>
@@ -278,7 +278,10 @@ export default function TermosPage() {
             <span className="font-mono">{CURRENT_TERMS_HASH}</span>
           </p>
           <p className="text-slate-500 text-sm mt-2">
-            Dúvidas? <a href="mailto:fiscaltecnico.qualidade@gmail.com" className="text-emerald-400 hover:underline">fiscaltecnico.qualidade@gmail.com</a>
+            Dúvidas?{' '}
+            <a href="mailto:contato@energialivre.dev.br" className="text-emerald-400 hover:underline">contato@energialivre.dev.br</a>
+            {' '}·{' '}
+            <a href="https://wa.me/5584987858668" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">WhatsApp</a>
           </p>
           <Link
             href="/login"
