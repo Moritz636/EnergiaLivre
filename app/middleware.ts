@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/lib/database.types'
+import { rateLimit, getClientIp, RATE_LIMIT_PRESETS } from '@/lib/ratelimit'
+import { validateCsrf } from '@/lib/csrf'
 
 const publicRoutes = [
   '/',
@@ -51,7 +53,53 @@ async function getUserRole(supabase: any, userId: string): Promise<string> {
 }
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // ── API routes: rate limiting ──
+  if (pathname.startsWith('/api/')) {
+    let preset: { limit: number; window: number } = RATE_LIMIT_PRESETS.api
+    if (pathname.startsWith('/api/stripe/webhook')) {
+      preset = RATE_LIMIT_PRESETS.webhook as { limit: number; window: number }
+    } else if (pathname.startsWith('/api/auth/')) {
+      preset = RATE_LIMIT_PRESETS.auth as { limit: number; window: number }
+    }
+
+    const identifier = getClientIp(request.headers)
+    const result = await rateLimit({ identifier, ...preset })
+    const limitHeaders = {
+      'X-RateLimit-Limit': String(result.limit),
+      'X-RateLimit-Remaining': String(result.remaining),
+      'X-RateLimit-Reset': String(result.reset),
+    }
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Muitas requisicoes. Tente novamente em alguns segundos.' },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(result.reset), ...limitHeaders },
+        },
+      )
+    }
+
+    const response = NextResponse.next({ request })
+    Object.entries(limitHeaders).forEach(([k, v]) => response.headers.set(k, v))
+    return response
+  }
+
+  // ── Non-API routes: CSRF + auth ──
   let response = NextResponse.next({ request })
+
+  // CSRF validation for mutating methods (API routes handle their own)
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
+    const { valid, reason } = validateCsrf(request)
+    if (!valid) {
+      return NextResponse.json(
+        { error: reason || 'CSRF validation failed' },
+        { status: 403 },
+      )
+    }
+  }
 
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -74,7 +122,6 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { pathname } = request.nextUrl
   const isPublicRoute = publicRoutes.some(route => {
     if (route.includes('(.*)')) {
       const regex = new RegExp(route.replace('(.*)', '.*'))

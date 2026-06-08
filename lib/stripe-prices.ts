@@ -11,17 +11,17 @@
 
 export const STRIPE_PRICE_IDS = {
   // Planos de Consumidor (cliente final)
-  CONSUMIDOR_BASICO: 'price_consumidor_basico', // TODO: Stripe price_id
-  CONSUMIDOR_FAMILIAR: 'price_consumidor_familiar', // TODO: Stripe price_id
-  CONSUMIDOR_PREMIUM: 'price_consumidor_premium', // TODO: Stripe price_id
+  CONSUMIDOR_BASICO: 'price_1TftesHl0ValDO6z3qtVsrSN',
+  CONSUMIDOR_FAMILIAR: 'price_1TftesHl0ValDO6z7NLMk30s',
+  CONSUMIDOR_PREMIUM: 'price_1TftetHl0ValDO6zsFqfKLAF',
 
   // Planos de Gerador (quem vende excedente)
-  GERADOR_STARTER: 'price_gerador_starter', // TODO: Stripe price_id
-  GERADOR_PRO: 'price_gerador_pro', // TODO: Stripe price_id
-  GERADOR_PREMIUM: 'price_gerador_premium', // TODO: Stripe price_id
+  GERADOR_STARTER: 'price_1TftetHl0ValDO6zttlbrhs3',
+  GERADOR_PRO: 'price_1TfteuHl0ValDO6za6QUxeFN',
+  GERADOR_PREMIUM: 'price_1TfteuHl0ValDO6zBvxPHM8F',
 
   // Member Plus (acesso ao match)
-  MEMBER_PLUS: 'price_member_plus', // TODO: Stripe price_id
+  MEMBER_PLUS: 'price_1TfterHl0ValDO6zlKATGAsX',
 } as const
 
 export type StripePriceId = (typeof STRIPE_PRICE_IDS)[keyof typeof STRIPE_PRICE_IDS]
