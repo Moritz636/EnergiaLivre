@@ -2,7 +2,6 @@
 
 import Image from 'next/image'
 import { Users } from 'lucide-react'
-
 interface Persona {
   nome: string
   cidade: string
@@ -44,7 +43,15 @@ const PERSONAS: Persona[] = [
 
 export function PersonasGrid() {
   return (
-    <section className="py-20 px-6 border-t border-white/5">
+    <section className="relative py-20 px-6 border-t border-white/5">
+      <div className="absolute inset-0 -z-10" aria-hidden>
+        <Image
+          src="/images/embaixador-pratica.webp"
+          alt=""
+          fill
+          className="object-cover opacity-[0.04]"
+        />
+      </div>
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center gap-2 mb-3 text-xs text-emerald-300 uppercase tracking-widest font-bold">
           <Users className="w-3.5 h-3.5" /> Parceiros

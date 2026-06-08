@@ -12,7 +12,7 @@ export function Hero({ whatsappGroupUrl }: HeroProps) {
     <section className="relative pt-32 pb-20 px-6 overflow-hidden">
       <div className="absolute inset-0 -z-20" aria-hidden>
         <Image
-          src="/images/hero-parceiros.webp"
+          src="/images/embaixador-hero.webp"
           alt=""
           fill
           className="object-cover opacity-20"

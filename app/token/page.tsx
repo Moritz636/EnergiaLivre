@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   Zap, ShieldCheck, ArrowRight, CheckCircle2, Clock, Crown,
@@ -201,7 +202,16 @@ export default function TokenPresalePage() {
 
       <main className="pt-32 pb-12 px-6">
         {/* HERO */}
-        <section className="max-w-6xl mx-auto text-center">
+        <section className="max-w-6xl mx-auto text-center relative">
+          <div className="absolute inset-0 -z-10" aria-hidden>
+            <Image
+              src="/images/token-futuro.webp"
+              alt=""
+              fill
+              className="object-cover opacity-[0.08]"
+              priority
+            />
+          </div>
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-[10px] font-black text-amber-300 uppercase tracking-wider mb-6">
             <Sparkles className="w-3 h-3" /> Pré-venda aberta até {PRESALE_END_DATE.toLocaleDateString('pt-BR')}
           </div>

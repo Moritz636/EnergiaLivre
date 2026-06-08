@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { getSupabase } from '@/lib/supabase/singleton';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock, Loader2, Eye, EyeOff, Zap, ArrowRight, Sparkles, Sun, Wallet, Home, Briefcase } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 
 const FROM_ROLE_MAP: Record<string, string> = {
@@ -167,7 +168,25 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 relative">
+      <div className="fixed inset-0 -z-20" aria-hidden>
+        <Image
+          src="/images/login-security.webp"
+          alt=""
+          fill
+          className="object-cover opacity-[0.05]"
+          priority
+        />
+      </div>
+      <div className="fixed inset-0 -z-20" aria-hidden>
+        <Image
+          src="/images/login-security.webp"
+          alt=""
+          fill
+          className="object-cover opacity-[0.05]"
+          priority
+        />
+      </div>
       <div className="max-w-md w-full bg-white/5 border border-white/10 rounded-3xl p-8">
         <Link href="/" className="flex items-center gap-2 justify-center mb-6 group">
           <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-400 rounded-xl flex items-center justify-center group-hover:scale-105 transition">

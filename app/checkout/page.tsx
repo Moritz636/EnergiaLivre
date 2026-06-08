@@ -15,6 +15,7 @@ import {
   TrendingUp,
   Clock
 } from 'lucide-react';
+import Image from 'next/image';
 import { STRIPE_PAYMENT_LINKS } from '@/lib/stripe-prices';
 
 const planos = [
@@ -201,6 +202,23 @@ export default function CheckoutPage() {
                 <p className="text-xl font-bold text-emerald-400">R$ 238,00</p>
                 <p className="text-xs text-emerald-400">↓ Economia de R$ 112,00</p>
               </div>
+            </div>
+          </div>
+
+          {/* Trust image: atendente */}
+          <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/10 mb-8 max-w-md mx-auto">
+            <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0">
+              <Image
+                src="/images/atendente-checkout.webp"
+                alt="Atendente EnergiaLivre"
+                width={56}
+                height={56}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-white">Suporte técnico disponível</p>
+              <p className="text-[10px] text-slate-500">Tire dúvidas sobre planos e consumo</p>
             </div>
           </div>
 

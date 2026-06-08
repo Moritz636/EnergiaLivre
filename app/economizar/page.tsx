@@ -24,6 +24,7 @@ import {
   Award,
   TrendingUp
 } from 'lucide-react';
+import Image from 'next/image';
 import { saveLead } from '@/app/actions';
 import { buildFollowUpUrl, splitCidadeEstado } from '@/lib/leads';
 import SiteHeader from '@/components/SiteHeader';
@@ -149,6 +150,17 @@ export default function EconomizarPage() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 flex flex-col items-center justify-center px-6 py-20 font-sans overflow-x-hidden">
+
+      {/* Background image */}
+      <div className="fixed inset-0 -z-30" aria-hidden>
+        <Image
+          src="/images/familia-economia.webp"
+          alt=""
+          fill
+          className="object-cover opacity-[0.06]"
+          priority
+        />
+      </div>
 
       <SiteHeader />
 

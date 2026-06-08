@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   ArrowRight, Zap, ShieldCheck, Crown, ChevronDown, Mail, Wallet, Award,
@@ -83,6 +84,15 @@ export default function HomePage() {
       </nav>
 
       <section className="relative pt-40 pb-24 px-6 text-center">
+        <div className="absolute inset-0 -z-20" aria-hidden>
+          <Image
+            src="/images/hero-home.webp"
+            alt=""
+            fill
+            className="object-cover opacity-[0.08]"
+            priority
+          />
+        </div>
         <div className="max-w-5xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-black mb-8 uppercase tracking-wider">
             <Crown className="w-3.5 h-3.5" /> Marketplace de Energia Solar · Lei 14.300/2022
@@ -137,6 +147,14 @@ export default function HomePage() {
       </section>
 
       <section id="como-funciona" className="relative py-24 px-6 border-t border-white/5">
+        <div className="absolute inset-0 -z-20" aria-hidden>
+          <Image
+            src="/images/escritorio-equipe.webp"
+            alt=""
+            fill
+            className="object-cover opacity-[0.06]"
+          />
+        </div>
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black mb-4 uppercase tracking-wider">
