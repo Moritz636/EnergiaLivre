@@ -1,19 +1,20 @@
 // ============================================================
 // POST /api/match/checkout-public
-// Cria sessao Stripe para liberar acesso ao /match por 30 dias.
-// Se o usuario NAO estiver autenticado, gera um session_id
-// que sera vinculado ao user no webhook via metadata.email.
+// Cria PaymentIntent Stripe com Pix (one-time R$ 9,99).
+// Retorna client_secret + next_action.pix para frontend
+// exibir QR Code. Webhook payment_intent.succeeded ativa
+// member_plus (30d) + credita transacao.
 // ============================================================
 
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
-import { STRIPE_PRICE_IDS, STRIPE_PAYMENT_LINKS } from '@/lib/stripe-prices'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY
+const AMOUNT_CENTS = 999 // R$ 9,99
 
 export async function POST(req: Request) {
   try {
@@ -29,58 +30,52 @@ export async function POST(req: Request) {
     const targetEmail = user?.email || email
     if (!targetEmail) {
       return NextResponse.json(
-        { error: 'E-mail obrigatorio para checkout' },
+        { error: 'E-mail obrigatorio para pagamento' },
         { status: 400 }
       )
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-    const successUrl = `${siteUrl}/match?session_id={CHECKOUT_SESSION_ID}&unlocked=1`
-    const cancelUrl = `${siteUrl}/match?canceled=1`
-
-    // Caminho 1: Stripe API direta (cria sessao dinamica)
-    if (stripeSecret) {
-      try {
-        const stripe = new Stripe(stripeSecret, { apiVersion: '2024-06-20' })
-        const session = await stripe.checkout.sessions.create({
-          payment_method_types: ['card'],
-          line_items: [{ price: STRIPE_PRICE_IDS.MEMBER_PLUS, quantity: 1 }],
-          mode: 'subscription',
-          success_url: successUrl,
-          cancel_url: cancelUrl,
-          customer_email: targetEmail,
-          metadata: {
-            userId: user?.id ?? '',
-            userEmail: targetEmail,
-            usinaId: body.usinaId ?? '',
-            planoTipo: 'member_plus',
-            planoCodigo: 'match_viewer_30d',
-            planoNome: 'Match Viewer 30 dias',
-            source: 'public_match_funnel',
-          },
-        })
-        return NextResponse.json({
-          ok: true,
-          url: session.url,
-          sessionId: session.id,
-          source: 'stripe_api',
-        })
-      } catch (stripeErr: any) {
-        console.error('[checkout-public] stripe api falhou, usando payment link:', stripeErr.message)
-        // Cai no fallback abaixo
-      }
+    if (!stripeSecret) {
+      return NextResponse.json(
+        { error: 'Stripe nao configurado' },
+        { status: 500 }
+      )
     }
 
-    // Caminho 2: Payment Link (compra direta)
-    const baseLink = STRIPE_PAYMENT_LINKS.MEMBER_PLUS
+    const stripe = new Stripe(stripeSecret, { apiVersion: '2024-06-20' })
+
+    // Cria PaymentIntent com Pix
+    const pi = await stripe.paymentIntents.create({
+      amount: AMOUNT_CENTS,
+      currency: 'brl',
+      payment_method_types: ['pix'],
+      receipt_email: targetEmail,
+      metadata: {
+        userId: user?.id ?? '',
+        userEmail: targetEmail,
+        usinaId: body.usinaId ?? '',
+        planoTipo: 'member_plus',
+        planoCodigo: 'match_viewer_30d',
+        planoNome: 'Match Viewer 30 dias',
+        source: 'public_match_funnel',
+      },
+    })
+
+    // Retorna client_secret + dados do Pix para o frontend
+    const pix = (pi.next_action as any)?.pix
     return NextResponse.json({
       ok: true,
-      url: baseLink,
-      sessionId: null,
-      source: 'payment_link',
-      notice: 'Usando Payment Link — checkout redireciona direto ao Stripe.',
+      clientSecret: pi.client_secret,
+      paymentIntentId: pi.id,
+      pix: pix ? {
+        qrCode: pix.qr_code,
+        qrCodeBase64: pix.qr_code_base64,
+        expiresAt: pix.expires_at,
+      } : null,
+      source: 'payment_intent_pix',
     })
   } catch (err: any) {
+    console.error('[checkout-public] erro:', err)
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }

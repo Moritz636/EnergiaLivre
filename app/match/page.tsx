@@ -185,7 +185,7 @@ function MatchPage() {
       ? { lat: preview.consumer.lat, lng: preview.consumer.lng, cidade: preview.consumer.cidade, estado: preview.consumer.estado }
       : null
 
-  const handleCheckout = async (params: { email: string; usinaId?: string }): Promise<string> => {
+  const handleCheckout = async (params: { email: string; usinaId?: string }) => {
     const res = await fetch('/api/match/checkout-public', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -195,8 +195,17 @@ function MatchPage() {
       const j = (await res.json().catch(() => ({}))) as { error?: string }
       throw new Error(j.error ?? 'Falha no checkout')
     }
-    const json = (await res.json()) as { url: string }
-    return json.url
+    const json = await res.json()
+    return {
+      clientSecret: json.clientSecret,
+      paymentIntentId: json.paymentIntentId,
+      pix: json.pix,
+    }
+  }
+
+  const handlePaymentComplete = () => {
+    setAccess({ active: true, loading: false, daysRemaining: 30 })
+    setSuccessMsg('Pagamento confirmado! Acesso liberado por 30 dias.')
   }
 
   return (
@@ -302,7 +311,11 @@ function MatchPage() {
 
             <aside className="space-y-4">
               {showBlurred ? (
-                <AccessGateCard onCheckout={handleCheckout} selectedUsinaId={selectedUsinaId ?? undefined} />
+                <AccessGateCard
+                  onCheckout={handleCheckout}
+                  selectedUsinaId={selectedUsinaId ?? undefined}
+                  onPaymentComplete={handlePaymentComplete}
+                />
               ) : hasAccess ? (
                 <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30">
                   <div className="flex items-center gap-2 mb-2">

@@ -1,19 +1,19 @@
 'use client'
 
-// ============================================================
-// AccessGateCard — CTA persuasivo R$ 9,99 para liberar
-// acesso ao /match completo. Usado em /match quando o
-// usuario NAO tem member_plus.
-// ============================================================
-
-import { useState } from 'react'
-import { Lock, Zap, Shield, Clock, Sparkles, Check, Loader2 } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Lock, Zap, Shield, Clock, Sparkles, Check, Loader2, QrCode } from 'lucide-react'
 import { useAuth } from '@/app/hooks/useAuth'
+import { PixQRCode } from './PixQRCode'
 
 interface AccessGateCardProps {
   email?: string
-  onCheckout: (params: { email: string; usinaId?: string }) => Promise<string>
+  onCheckout: (params: { email: string; usinaId?: string }) => Promise<{
+    clientSecret: string
+    paymentIntentId: string
+    pix: { qrCode: string | null; qrCodeBase64: string | null; expiresAt: string | null } | null
+  }>
   selectedUsinaId?: string
+  onPaymentComplete: () => void
 }
 
 const BENEFITS = [
@@ -24,11 +24,43 @@ const BENEFITS = [
   'Acesso por 30 dias — cancele quando quiser',
 ]
 
-export function AccessGateCard({ email, onCheckout, selectedUsinaId }: AccessGateCardProps) {
+type State = 'idle' | 'loading' | 'pix' | 'polling' | 'error'
+
+export function AccessGateCard({ email, onCheckout, selectedUsinaId, onPaymentComplete }: AccessGateCardProps) {
   const { user } = useAuth()
-  const [loading, setLoading] = useState(false)
+  const [state, setState] = useState<State>('idle')
   const [error, setError] = useState('')
   const [localEmail, setLocalEmail] = useState(email ?? user?.email ?? '')
+  const [pixData, setPixData] = useState<{
+    clientSecret: string
+    paymentIntentId: string
+    pix: { qrCode: string | null; qrCodeBase64: string | null; expiresAt: string | null } | null
+  } | null>(null)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current)
+    }
+  }, [])
+
+  const startPolling = (piId: string) => {
+    setState('polling')
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/stripe/payment-intent-status?pi=${piId}`)
+        const json = await res.json()
+        if (json.status === 'succeeded') {
+          if (pollRef.current) clearInterval(pollRef.current)
+          setState('idle')
+          setPixData(null)
+          onPaymentComplete()
+        }
+      } catch {
+        // keep polling
+      }
+    }, 3000)
+  }
 
   const handleCheckout = async () => {
     setError('')
@@ -37,15 +69,34 @@ export function AccessGateCard({ email, onCheckout, selectedUsinaId }: AccessGat
       setError('Informe seu e-mail para continuar')
       return
     }
-    setLoading(true)
+    setState('loading')
     try {
-      const url = await onCheckout({ email: targetEmail, usinaId: selectedUsinaId })
-      if (url) window.location.href = url
+      const result = await onCheckout({ email: targetEmail, usinaId: selectedUsinaId })
+      if (result.pix) {
+        setPixData(result)
+        setState('pix')
+        startPolling(result.paymentIntentId)
+      } else {
+        setError('Forma de pagamento indisponivel')
+        setState('error')
+      }
     } catch (err: any) {
-      setError(err?.message ?? 'Erro ao iniciar checkout')
-    } finally {
-      setLoading(false)
+      setError(err?.message ?? 'Erro ao iniciar pagamento')
+      setState('error')
     }
+  }
+
+  if (state === 'pix' && pixData?.pix) {
+    return (
+      <PixQRCode
+        qrCodeBase64={pixData.pix.qrCodeBase64}
+        qrCode={pixData.pix.qrCode}
+        expiresAt={pixData.pix.expiresAt}
+        paymentIntentId={pixData.paymentIntentId}
+        clientSecret={pixData.clientSecret}
+        onPaymentComplete={onPaymentComplete}
+      />
+    )
   }
 
   return (
@@ -120,22 +171,23 @@ export function AccessGateCard({ email, onCheckout, selectedUsinaId }: AccessGat
 
         <button
           onClick={handleCheckout}
-          disabled={loading}
+          disabled={state === 'loading' || state === 'polling'}
           className="mt-5 w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-black text-base transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30"
         >
-          {loading ? (
+          {state === 'loading' || state === 'polling' ? (
             <>
-              <Loader2 className="w-5 h-5 animate-spin" /> Redirecionando...
+              <Loader2 className="w-5 h-5 animate-spin" />{' '}
+              {state === 'polling' ? 'Aguardando pagamento...' : 'Gerando QR Code...'}
             </>
           ) : (
             <>
-              <Zap className="w-5 h-5" /> Desbloquear Match Completo
+              <QrCode className="w-5 h-5" /> Pagar com Pix — R$ 9,99
             </>
           )}
         </button>
 
         <p className="mt-3 text-center text-[10px] text-slate-500">
-          Pagamento processado por Stripe. Cancele a qualquer momento.
+          Pagamento processado por Stripe via Pix. Cancele a qualquer momento.
         </p>
       </div>
     </div>
