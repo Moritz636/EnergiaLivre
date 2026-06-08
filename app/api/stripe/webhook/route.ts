@@ -313,6 +313,42 @@ export async function POST(request: NextRequest) {
         const usinaId = pi.metadata?.usinaId;
         const source = pi.metadata?.source;
 
+        const purpose = pi.metadata?.purpose;
+
+        // Wallet top-up via PIX
+        if (purpose === 'wallet_topup' && userId) {
+          const amount = pi.amount / 100;
+          const desc = pi.metadata?.description || `Recarga de carteira — R$ ${amount.toFixed(2)}`;
+
+          const { error: creditErr } = await supabase.rpc('credit_wallet', {
+            p_user_id: userId,
+            p_amount: amount,
+            p_type: 'deposit',
+            p_reason: desc,
+            p_coin_package_id: null,
+            p_stripe_session_id: null,
+            p_stripe_payment_intent_id: pi.id,
+            p_metadata: { purpose: 'wallet_topup', payment_intent_id: pi.id },
+          });
+
+          await supabase.from('pagamentos').insert({
+            user_id: userId,
+            tipo_pagamento: 'pix_wallet',
+            valor: amount,
+            status: 'succeeded',
+            stripe_payment_intent: pi.id,
+            description: desc,
+            processed_at: new Date().toISOString(),
+          });
+
+          if (creditErr) {
+            console.error('[webhook] credit_wallet (topup) falhou:', creditErr);
+          } else {
+            console.log(`[webhook] wallet creditado via PIX: user=${userId} amount=${amount} pi=${pi.id}`);
+          }
+          break;
+        }
+
         // Só processa pagamentos do funil publico /match (member_plus)
         if (planoTipo === 'member_plus' && source === 'public_match_funnel') {
           const targetUserId = userId || (await (async () => {

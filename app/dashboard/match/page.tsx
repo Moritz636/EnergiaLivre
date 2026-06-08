@@ -1,11 +1,5 @@
 'use client'
 
-// ============================================================
-// /dashboard/match — Match geolocalizado premium
-// (Member Plus only). Orquestra filtros, mapa, lista de
-// cards e integração com LocationCapture.
-// ============================================================
-
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase/singleton'
@@ -196,6 +190,7 @@ export default function DashboardMatchPage() {
         lng: myLocation.lng,
         label: 'Você',
         color: 'blue',
+        pulse: true,
         popupHtml: '<strong>📍 Você está aqui</strong>',
       })
     }
@@ -226,6 +221,25 @@ export default function DashboardMatchPage() {
     return 10
   }, [radiusKm])
 
+  // Derive stats
+  const stats = useMemo(() => {
+    const distances = candidates
+      .map(c => c.distanciaKm)
+      .filter((d): d is number => d != null)
+    const savings = candidates
+      .map(c => c.descontoPercentual)
+      .filter((d): d is number => d != null)
+    return {
+      total: candidates.length,
+      avgDistance: distances.length > 0
+        ? distances.reduce((a, b) => a + b, 0) / distances.length
+        : null,
+      avgSavings: savings.length > 0
+        ? savings.reduce((a, b) => a + b, 0) / savings.length
+        : null,
+    }
+  }, [candidates])
+
   // ============================================================
   // Render
   // ============================================================
@@ -246,16 +260,67 @@ export default function DashboardMatchPage() {
   const hasCandidatesWithCoords = candidates.some((c) => c.lat != null)
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 p-6">
-      <div className="max-w-6xl mx-auto pt-6">
+    <div className="h-screen bg-[#020617] text-slate-200 flex flex-col overflow-hidden">
+      {/* === HEADER === */}
+      <div className="shrink-0 px-6 pt-6 pb-0">
         <Header
           daysRemaining={daysRemaining}
           view={view}
           onViewChange={setView}
+          totalCandidates={stats.total}
+          avgDistance={stats.avgDistance}
+          avgSavings={stats.avgSavings}
         />
+      </div>
 
-        <div className="grid lg:grid-cols-[280px,1fr] gap-6">
-          <aside className="space-y-4">
+      {/* === Toasts === */}
+      <div className="shrink-0 px-6">
+        {error && (
+          <ToastBanner message={error} variant="error" onDismiss={() => setError('')} />
+        )}
+        {success && (
+          <ToastBanner
+            message={success}
+            variant="success"
+            autoDismissMs={SUCCESS_AUTO_DISMISS_MS}
+            onDismiss={() => setSuccess('')}
+          />
+        )}
+      </div>
+
+      {/* === MAIN SPLIT LAYOUT === */}
+      <div className="flex-1 flex gap-4 px-6 pb-6 min-h-0">
+        {/* Left: Map (65%) */}
+        {view === 'map' ? (
+          <div className="flex-1 min-w-0">
+            <MapView
+              myLocation={myLocation}
+              hasCandidatesWithCoords={hasCandidatesWithCoords}
+              candidatesCount={stats.total}
+              mapCenter={mapCenter}
+              mapZoom={mapZoom}
+              mapMarkers={mapMarkers}
+              radiusKm={radiusKm}
+            />
+          </div>
+        ) : (
+          <div className="flex-1 min-w-0">
+            <MapView
+              myLocation={myLocation}
+              hasCandidatesWithCoords={hasCandidatesWithCoords}
+              candidatesCount={stats.total}
+              mapCenter={mapCenter}
+              mapZoom={mapZoom}
+              mapMarkers={mapMarkers}
+              radiusKm={radiusKm}
+            />
+          </div>
+        )}
+
+        {/* Right: Sidebar (35%) */}
+        <div className="w-[360px] shrink-0 flex flex-col gap-3 min-h-0">
+          {/* Filters + Location + Refresh */}
+          <div className="shrink-0 space-y-3">
             <FiltersPanel
               matchMode={matchMode}
               onMatchModeChange={setMatchMode}
@@ -280,47 +345,26 @@ export default function DashboardMatchPage() {
             />
 
             <RefreshButton onClick={loadCandidates} loading={loadingCandidates} />
-          </aside>
+          </div>
 
-          <main>
-            {error && (
-              <ToastBanner message={error} variant="error" onDismiss={() => setError('')} />
-            )}
-            {success && (
-              <ToastBanner
-                message={success}
-                variant="success"
-                autoDismissMs={SUCCESS_AUTO_DISMISS_MS}
-                onDismiss={() => setSuccess('')}
-              />
-            )}
-
-            {view === 'map' ? (
-              <MapView
-                myLocation={myLocation}
-                hasCandidatesWithCoords={hasCandidatesWithCoords}
-                candidatesCount={candidates.length}
-                mapCenter={mapCenter}
-                mapZoom={mapZoom}
-                mapMarkers={mapMarkers}
-              />
-            ) : (
-              <CandidatesList
-                candidates={candidates}
-                loading={loadingCandidates}
-                proposingId={proposingId}
-                onPropose={handlePropose}
-                onSkip={handleSkip}
-              />
-            )}
-
-            {candidates.length > 0 && (
-              <p className="text-center text-xs text-slate-500 mt-4">
-                {candidates.length} {plural(candidates.length, 'candidato')} pronto
-                {candidates.length === 1 ? '' : 's'} para proposta
-              </p>
-            )}
-          </main>
+          {/* Candidates mini-cards (scrollable) */}
+          <div className="flex-1 min-h-0 overflow-hidden rounded-2xl bg-white/[0.01] border border-white/5">
+            <div className="px-3 pt-3 pb-1 flex items-center justify-between">
+              <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">
+                Candidatos ({candidates.length})
+              </span>
+              <span className="text-[10px] text-slate-600">
+                {matchMode === 'radius' ? `${radiusKm} km` : matchMode === 'state' ? myEstado || 'BR' : distribuidoraFilter || '—'}
+              </span>
+            </div>
+            <CandidatesList
+              candidates={candidates}
+              loading={loadingCandidates}
+              proposingId={proposingId}
+              onPropose={handlePropose}
+              onSkip={handleSkip}
+            />
+          </div>
         </div>
       </div>
     </div>

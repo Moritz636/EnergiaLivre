@@ -15,7 +15,7 @@ export function Hero({ whatsappGroupUrl }: HeroProps) {
           src="/images/embaixador-hero.webp"
           alt=""
           fill
-          className="object-cover opacity-25"
+            className="object-cover opacity-50"
           priority
         />
       </div>

@@ -49,7 +49,7 @@ export function PersonasGrid() {
           src="/images/embaixador-pratica.webp"
           alt=""
           fill
-          className="object-cover opacity-[0.15]"
+          className="object-cover opacity-35"
         />
       </div>
       <div className="max-w-5xl mx-auto">

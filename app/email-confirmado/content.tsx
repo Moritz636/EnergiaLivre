@@ -101,7 +101,7 @@ export default function EmailConfirmadoContent() {
           src="/images/hero-parceiros.webp"
           alt=""
           fill
-          className="object-cover opacity-10"
+          className="object-cover opacity-35"
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-slate-950/70 to-slate-950/90" />

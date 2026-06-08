@@ -173,7 +173,7 @@ export default function VenderPage() {
           src="/images/gerador-tecnico.webp"
           alt=""
           fill
-          className="object-cover opacity-[0.15]"
+          className="object-cover opacity-40"
           priority
         />
       </div>

@@ -6,8 +6,17 @@ export type MapMarker = {
   lat: number
   lng: number
   label: string
-  color?: 'emerald' | 'yellow' | 'blue'
+  color?: 'emerald' | 'yellow' | 'blue' | 'purple' | 'red'
   popupHtml?: string
+  pulse?: boolean
+}
+
+export type MapCircle = {
+  center: [number, number]
+  radiusMeters: number
+  color?: string
+  fillColor?: string
+  fillOpacity?: number
 }
 
 type Props = {
@@ -17,18 +26,26 @@ type Props = {
   height?: string
   className?: string
   onMarkerClick?: (id: string) => void
+  circle?: MapCircle | null
+  showAttribution?: boolean
 }
 
-const COLOR_MAP: Record<NonNullable<MapMarker['color']>, string> = {
+const COLOR_MAP: Record<string, string> = {
   emerald: '#10b981',
   yellow: '#eab308',
   blue: '#3b82f6',
+  purple: '#8b5cf6',
+  red: '#ef4444',
 }
 
-export default function MatchMap({ center, zoom = 11, markers, height = '420px', className = '', onMarkerClick }: Props) {
+export default function MatchMap({
+  center, zoom = 11, markers, height = '420px',
+  className = '', onMarkerClick, circle, showAttribution = true,
+}: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<any>(null)
   const layerRef = useRef<any>(null)
+  const circleRef = useRef<any>(null)
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -37,14 +54,10 @@ export default function MatchMap({ center, zoom = 11, markers, height = '420px',
 
     ;(async () => {
       const L = (await import('leaflet')).default
-      // CSS do Leaflet é importado em 'app/globals.css' via @import
-      // Mantemos o import dinâmico para garantir inclusão no bundle do client
       try {
         // @ts-expect-error - CSS sem tipos TS
         await import('leaflet/dist/leaflet.css')
-      } catch {
-        // ignore se não estiver no TS scope
-      }
+      } catch { /* ignore */ }
 
       if (disposed || !containerEl) return
 
@@ -53,7 +66,7 @@ export default function MatchMap({ center, zoom = 11, markers, height = '420px',
           center,
           zoom,
           zoomControl: true,
-          attributionControl: true,
+          attributionControl: showAttribution,
         })
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -71,14 +84,36 @@ export default function MatchMap({ center, zoom = 11, markers, height = '420px',
       if (!map || !layer) return
 
       map.setView(center, zoom)
-      layer.clearLayers()
 
+      // Update circle
+      if (circleRef.current) {
+        map.removeLayer(circleRef.current)
+        circleRef.current = null
+      }
+      if (circle) {
+        circleRef.current = L.circle(circle.center, {
+          radius: circle.radiusMeters,
+          color: circle.color || '#10b981',
+          fillColor: circle.fillColor || '#10b981',
+          fillOpacity: circle.fillOpacity ?? 0.08,
+          weight: 2,
+          opacity: 0.4,
+          dashArray: '8 6',
+        }).addTo(map)
+        const bounds = circleRef.current.getBounds()
+        if (bounds.isValid()) map.fitBounds(bounds, { padding: [40, 40] })
+      }
+
+      // Update markers
+      layer.clearLayers()
       for (const m of markers) {
         const icon = L.divIcon({
           className: 'match-marker',
-          html: `<div style="width:14px;height:14px;border-radius:9999px;background:${COLOR_MAP[m.color || 'emerald']};border:3px solid #020617;box-shadow:0 0 0 2px ${COLOR_MAP[m.color || 'emerald']}55;"></div>`,
-          iconSize: [14, 14],
-          iconAnchor: [7, 7],
+          html: m.pulse
+            ? `<div style="position:relative;width:16px;height:16px;"><div style="position:absolute;inset:-4px;border-radius:9999px;background:${COLOR_MAP[m.color || 'emerald']}44;animation:marker-pulse 2s infinite;"></div><div style="width:16px;height:16px;border-radius:9999px;background:${COLOR_MAP[m.color || 'emerald']};border:3px solid #020617;box-shadow:0 0 0 2px ${COLOR_MAP[m.color || 'emerald']}55;"></div></div>`
+            : `<div style="width:16px;height:16px;border-radius:9999px;background:${COLOR_MAP[m.color || 'emerald']};border:3px solid #020617;box-shadow:0 0 0 2px ${COLOR_MAP[m.color || 'emerald']}55;"></div>`,
+          iconSize: [16, 16],
+          iconAnchor: [8, 8],
         })
         const marker = L.marker([m.lat, m.lng], { icon }).addTo(layer)
         const popupHtml = m.popupHtml || `<strong>${m.label}</strong>`
@@ -89,10 +124,8 @@ export default function MatchMap({ center, zoom = 11, markers, height = '420px',
       }
     })()
 
-    return () => {
-      disposed = true
-    }
-  }, [center, zoom, markers, onMarkerClick])
+    return () => { disposed = true }
+  }, [center, zoom, markers, onMarkerClick, circle, showAttribution])
 
   useEffect(() => {
     const containerEl = containerRef.current
@@ -101,12 +134,9 @@ export default function MatchMap({ center, zoom = 11, markers, height = '420px',
         mapRef.current?.remove()
         mapRef.current = null
         layerRef.current = null
-        if (containerEl) {
-          delete containerEl.dataset.initialized
-        }
-      } catch {
-        // ignore
-      }
+        circleRef.current = null
+        if (containerEl) delete containerEl.dataset.initialized
+      } catch {}
     }
   }, [])
 

@@ -1,21 +1,12 @@
-// ============================================
-// PIX - ABSTRAÇÃO DE PROVEDOR (MOCK IMPLEMENTATION)
-// ============================================
-// Esta é uma abstração plugável. Em produção, substituir
-// o provedor 'mock' por uma integração real (OpenPix, Mercado Pago,
-// Pagar.me, Gerencianet, etc).
-//
-// O mock gera txid, qr code e copia-cola no padrão BR Code
-// para que o frontend funcione end-to-end durante o desenvolvimento.
-// ============================================
-
 import crypto from 'crypto'
+import Stripe from 'stripe'
 
 export type PixPurpose =
   | 'coin_purchase'
   | 'plan_subscription'
   | 'token_presale'
   | 'invoice_payment'
+  | 'wallet_topup'
   | 'other'
 
 export interface CreatePixInput {
@@ -45,13 +36,73 @@ export interface PixProvider {
   getPaymentStatus(txid: string): Promise<'pending' | 'paid' | 'expired' | 'cancelled' | 'refunded' | 'failed'>
 }
 
-// ============================================
-// MOCK PROVIDER
-// ============================================
+function mapStripeStatus(s: Stripe.PaymentIntent.Status): CreatedPixPayment['status'] {
+  switch (s) {
+    case 'succeeded': return 'paid'
+    case 'processing': return 'pending'
+    case 'requires_payment_method': return 'pending'
+    case 'requires_action': return 'pending'
+    case 'requires_confirmation': return 'pending'
+    case 'requires_capture': return 'pending'
+    case 'canceled': return 'cancelled'
+    default: return 'pending'
+  }
+}
+
+class StripePixProvider implements PixProvider {
+  readonly name = 'stripe'
+  private stripe: Stripe
+  private initialized = false
+
+  constructor() {
+    const key = process.env.STRIPE_SECRET_KEY
+    if (!key) throw new Error('STRIPE_SECRET_KEY não configurada')
+    this.stripe = new Stripe(key, { apiVersion: '2024-06-20' })
+    this.initialized = true
+  }
+
+  async createPayment(input: CreatePixInput): Promise<CreatedPixPayment> {
+    const amountCents = Math.round(input.amount * 100)
+    if (amountCents < 1) throw new Error('Valor mínimo: R$ 0,01')
+
+    const pi = await this.stripe.paymentIntents.create({
+      amount: amountCents,
+      currency: 'brl',
+      payment_method_types: ['pix'],
+      metadata: {
+        userId: input.userId,
+        purpose: input.purpose,
+        description: input.description?.slice(0, 200) ?? '',
+        ...(input.metadata as Record<string, string> ?? {}),
+      },
+    })
+
+    const pix = (pi.next_action as any)?.pix
+    const expiresAt = new Date((pi.created + (input.expiresInMinutes ?? 30) * 60) * 1000)
+
+    return {
+      id: pi.id,
+      txid: pi.id,
+      amount: input.amount,
+      status: mapStripeStatus(pi.status),
+      qrCode: pix?.qr_code ?? '',
+      qrCodeImage: pix?.qr_code_base64 ?? '',
+      pixCopyPaste: pix?.qr_code ?? '',
+      expiresAt: expiresAt.toISOString(),
+      createdAt: new Date(pi.created * 1000).toISOString(),
+      provider: this.name,
+    }
+  }
+
+  async getPaymentStatus(txid: string): Promise<CreatedPixPayment['status']> {
+    const pi = await this.stripe.paymentIntents.retrieve(txid)
+    return mapStripeStatus(pi.status)
+  }
+}
 
 const MERCHANT_NAME = 'ENERGIALIVRE'
 const MERCHANT_CITY = 'SAO PAULO'
-const PIX_KEY = 'pix@energialivre.dev.br'
+const PIX_KEY_FALLBACK = 'pix@energialivre.dev.br'
 
 class MockPixProvider implements PixProvider {
   readonly name = 'mock'
@@ -62,11 +113,10 @@ class MockPixProvider implements PixProvider {
     const expiresInMin = input.expiresInMinutes ?? 30
     const expiresAt = new Date(Date.now() + expiresInMin * 60_000)
 
-    // BR Code (EMV) TLV-encoded
     const brCode = buildBrCode({
       txid,
       amount: input.amount,
-      pixKey: PIX_KEY,
+      pixKey: PIX_KEY_FALLBACK,
       merchant: MERCHANT_NAME,
       city: MERCHANT_CITY,
     })
@@ -77,7 +127,7 @@ class MockPixProvider implements PixProvider {
       amount: input.amount,
       status: 'pending',
       qrCode: brCode,
-      qrCodeImage: '', // preenchido pelo cliente (qrcode.react) se quiser
+      qrCodeImage: '',
       pixCopyPaste: brCode,
       expiresAt: expiresAt.toISOString(),
       createdAt: new Date().toISOString(),
@@ -85,15 +135,10 @@ class MockPixProvider implements PixProvider {
     }
   }
 
-  async getPaymentStatus(_txid: string): Promise<'pending' | 'paid' | 'expired' | 'cancelled' | 'refunded' | 'failed'> {
-    // No mock, o pagamento é confirmado via webhook simulado
+  async getPaymentStatus(_txid: string): Promise<CreatedPixPayment['status']> {
     return 'pending'
   }
 }
-
-// ============================================
-// BR Code Builder (EMV TLV)
-// ============================================
 
 function tlv(id: string, value: string): string {
   const len = value.length.toString().padStart(2, '0')
@@ -107,22 +152,21 @@ function buildBrCode(opts: {
   merchant: string
   city: string
 }): string {
-  // GUI (Merchant Account Information) - ID 26
   const gui = tlv('00', 'br.gov.bcb.pix')
   const key = tlv('01', opts.pixKey)
   const merchantAccount = tlv('26', gui + key)
 
   const parts = [
-    tlv('00', '01'), // Payload Format Indicator
-    tlv('01', '11'), // Point of Initiation Method (11 = static, 12 = dynamic; usamos 12)
+    tlv('00', '01'),
+    tlv('01', '12'),
     merchantAccount,
-    tlv('52', '0000'), // Merchant Category Code
-    tlv('53', '986'), // BRL
-    tlv('54', opts.amount.toFixed(2)), // Transaction Amount
-    tlv('58', 'BR'), // Country Code
+    tlv('52', '0000'),
+    tlv('53', '986'),
+    tlv('54', opts.amount.toFixed(2)),
+    tlv('58', 'BR'),
     tlv('59', opts.merchant.slice(0, 25)),
     tlv('60', opts.city.slice(0, 15)),
-    tlv('62', tlv('05', opts.txid)), // Additional Data Field (txid)
+    tlv('62', tlv('05', opts.txid)),
   ]
 
   const withoutCrc = parts.join('') + '6304'
@@ -131,45 +175,34 @@ function buildBrCode(opts: {
 }
 
 function crc16ccitt(payload: string): number {
-  // CRC-16/CCITT-FALSE (polinômio 0x1021, init 0xFFFF)
   let crc = 0xFFFF
   for (let i = 0; i < payload.length; i++) {
     crc ^= payload.charCodeAt(i) << 8
     for (let j = 0; j < 8; j++) {
-      if (crc & 0x8000) {
-        crc = ((crc << 1) ^ 0x1021) & 0xFFFF
-      } else {
-        crc = (crc << 1) & 0xFFFF
-      }
+      if (crc & 0x8000) crc = ((crc << 1) ^ 0x1021) & 0xFFFF
+      else crc = (crc << 1) & 0xFFFF
     }
   }
   return crc
 }
 
-// ============================================
-// FACTORY
-// ============================================
-
 let _instance: PixProvider | null = null
 
 export function getPixProvider(): PixProvider {
   if (_instance) return _instance
-  // Para trocar de provedor: detectar env var e instanciar classe real
-  if (process.env.OPENPIX_APP_ID && process.env.OPENPIX_API_URL) {
-    // import('pix/openpix').then(...) — implementação futura
-    // Por enquanto, fallback para mock
+  if (process.env.STRIPE_SECRET_KEY) {
+    try {
+      _instance = new StripePixProvider()
+      return _instance
+    } catch {
+      console.warn('[pix] StripePixProvider falhou, usando mock')
+    }
   }
   _instance = new MockPixProvider()
   return _instance
 }
 
-// ============================================
-// HELPERS
-// ============================================
-
 function generateTxid(): string {
-  // Txid BR Code: 26-35 caracteres alfanuméricos, sem espaços
-  // Geramos 32 chars hex
   return crypto.randomBytes(16).toString('hex').toUpperCase()
 }
 

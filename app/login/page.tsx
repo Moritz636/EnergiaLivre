@@ -174,16 +174,7 @@ export default function LoginPage() {
           src="/images/login-security.webp"
           alt=""
           fill
-          className="object-cover opacity-[0.12]"
-          priority
-        />
-      </div>
-      <div className="fixed inset-0 -z-20" aria-hidden>
-        <Image
-          src="/images/login-security.webp"
-          alt=""
-          fill
-          className="object-cover opacity-[0.12]"
+          className="object-cover opacity-40"
           priority
         />
       </div>

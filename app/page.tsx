@@ -89,7 +89,7 @@ export default function HomePage() {
             src="/images/hero-home.webp"
             alt=""
             fill
-            className="object-cover opacity-20"
+            className="object-cover opacity-40"
             priority
           />
         </div>
@@ -144,6 +144,33 @@ export default function HomePage() {
             </div>
           ))}
         </div>
+
+        {/* Role login — minimalista ISO 9001 */}
+        <div className="mt-16 max-w-2xl mx-auto">
+          <div className="grid grid-cols-3 gap-3">
+            <Link href="/login?from=consumidor" className="group p-4 rounded-2xl bg-white/[0.015] border border-white/[0.06] hover:border-emerald-500/30 hover:bg-white/[0.03] transition text-center">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition">
+                <Wallet className="w-5 h-5" />
+              </div>
+              <p className="text-xs font-bold text-white group-hover:text-emerald-300 transition">Consumidor</p>
+              <p className="text-[9px] text-slate-600 mt-0.5">Economizar</p>
+            </Link>
+            <Link href="/login?from=gerador" className="group p-4 rounded-2xl bg-white/[0.015] border border-white/[0.06] hover:border-blue-500/30 hover:bg-white/[0.03] transition text-center">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition">
+                <Sun className="w-5 h-5" />
+              </div>
+              <p className="text-xs font-bold text-white group-hover:text-blue-300 transition">Gerador</p>
+              <p className="text-[9px] text-slate-600 mt-0.5">Monetizar</p>
+            </Link>
+            <Link href="/login?from=parceiro" className="group p-4 rounded-2xl bg-white/[0.015] border border-white/[0.06] hover:border-yellow-500/30 hover:bg-white/[0.03] transition text-center">
+              <div className="w-10 h-10 rounded-xl bg-yellow-500/10 text-yellow-400 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition">
+                <Award className="w-5 h-5" />
+              </div>
+              <p className="text-xs font-bold text-white group-hover:text-yellow-300 transition">Parceiro</p>
+              <p className="text-[9px] text-slate-600 mt-0.5">Indicar</p>
+            </Link>
+          </div>
+        </div>
       </section>
 
       <section id="como-funciona" className="relative py-24 px-6 border-t border-white/5">
@@ -152,7 +179,7 @@ export default function HomePage() {
             src="/images/escritorio-equipe.webp"
             alt=""
             fill
-            className="object-cover opacity-[0.15]"
+            className="object-cover opacity-35"
           />
         </div>
         <div className="max-w-6xl mx-auto">

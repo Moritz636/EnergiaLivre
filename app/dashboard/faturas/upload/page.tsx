@@ -36,8 +36,8 @@ export default function FaturasUploadPage() {
           >
             <ArrowLeft className="w-5 h-5 text-slate-300" />
           </Link>
-          <div className="w-9 h-9 rounded-lg bg-cyan-500/20 flex items-center justify-center">
-            <FileText className="text-cyan-400 w-4 h-4" />
+          <div className="w-9 h-9 rounded-lg bg-green-500/20 flex items-center justify-center">
+            <FileText className="text-green-400 w-4 h-4" />
           </div>
           <span className="text-xl font-black text-white">NOVA FATURA</span>
         </div>
@@ -46,7 +46,7 @@ export default function FaturasUploadPage() {
       <main className="pt-20 pb-8 px-4 md:px-6 max-w-2xl mx-auto">
         <h1 className="text-2xl font-black text-white mb-1">Enviar fatura</h1>
         <p className="text-sm text-slate-400 mb-6">
-          Tire foto nítida ou anexe o PDF. Após enviar, revise os dados e dispare o match com geradores do seu estado.
+          Preencha os dados da sua conta de energia. Nossa equipe técnica vai analisar e enviar uma proposta personalizada pelo WhatsApp em até 24h úteis.
         </p>
         <InvoiceUpload />
       </main>
