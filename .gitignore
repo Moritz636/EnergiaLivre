@@ -42,3 +42,6 @@ next-env.d.ts
 
 # scripts
 scripts/dns-check.log
+
+# Windows shortcuts
+*.lnk

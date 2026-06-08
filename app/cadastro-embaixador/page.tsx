@@ -139,7 +139,7 @@ export default function CadastroEmbaixadorPage() {
             cidade,
             estado,
           },
-          emailRedirectTo: `${window.location.origin}/login?cadastro=sucesso&from=parceiro`,
+          emailRedirectTo: `${window.location.origin}/email-confirmado?from=parceiro`,
         },
       });
 

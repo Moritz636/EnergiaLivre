@@ -39,3 +39,12 @@ painéis solares ao fundo, pôr do sol dourado, sensação de energia e comunida
 fotografia comercial de alta qualidade, cores quentes. Texto vazio, sem pessoas olhando 
 diretamente para a câmera. Proporção 16:9.
 ```
+
+## Prompt 5: Background Email Confirmado — Futuro Digital + Energia (1920x1080px)
+```
+Crie uma imagem abstrata 16:9 representando o futuro digital da energia: circuitos elétricos 
+azul-esverdeados brilhando em um fundo escuro, linhas de dados fluindo como energia, 
+partículas de luz dourada, sensação de tecnologia blockchain e poder limpo. Nenhum texto. 
+Estilo conceitual futurista, dark mode, cores cyan/emerald/dourado. Proporção 16:9, 
+1920x1080px.
+```

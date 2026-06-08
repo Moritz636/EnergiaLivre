@@ -101,7 +101,7 @@ export default function CadastroPage() {
             cidade,
             estado,
           },
-          emailRedirectTo: `${window.location.origin}/login?cadastro=sucesso&from=${tipo}`,
+          emailRedirectTo: `${window.location.origin}/email-confirmado?from=${tipo}`,
         },
       });
 

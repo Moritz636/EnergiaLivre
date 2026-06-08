@@ -34,7 +34,10 @@ export default function CadastroGeradorPage() {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
-        options: { data: { nome: formData.nome, tipo: 'gerador' } }
+        options: {
+        data: { nome: formData.nome, tipo: 'gerador' },
+        emailRedirectTo: `${window.location.origin}/email-confirmado?from=gerador`,
+      }
       });
 
       if (authError) throw new Error(authError.message);

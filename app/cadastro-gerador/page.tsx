@@ -81,7 +81,7 @@ export default function CadastroGeradorPage() {
             excedente_mensal_kwh: parseFloat(formData.excedente) || 0,
             concessionaria: formData.concessionaria,
           },
-          emailRedirectTo: `${window.location.origin}/login?cadastro=sucesso&from=gerador`,
+          emailRedirectTo: `${window.location.origin}/email-confirmado?from=gerador`,
         }
       });
 
