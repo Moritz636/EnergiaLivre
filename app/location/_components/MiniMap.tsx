@@ -23,7 +23,7 @@ interface MiniMapProps {
   label?: string
 }
 
-export function MiniMap({ lat, lng, label = 'Sua localizacao' }: MiniMapProps) {
+export function MiniMap({ lat, lng, label = 'Sua localização' }: MiniMapProps) {
   return (
     <div className="rounded-2xl overflow-hidden border border-white/10">
       <MatchMap

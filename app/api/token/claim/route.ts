@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
         total_claimable: totalClaimable,
         can_claim: totalClaimable > 0,
         launch_date: '2027-01-05',
-        disclaimer: 'Airdrops on-chain serao processados apos o lancamento oficial (05/01/2027). Acompanhe seu e-mail.',
+        disclaimer: 'Airdrops on-chain serão processados após o lançamento oficial (25/01/2027). Acompanhe seu e-mail.',
       },
       { headers: { 'Cache-Control': 'private, max-age=30' } }
     );
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     }
     const wallet = parsed.data.wallet_address.trim();
     if (!/^0x[a-fA-F0-9]{40}$/.test(wallet)) {
-      return NextResponse.json({ error: 'Carteira invalida. Use endereco 0x... (EVM).' }, { status: 400 });
+      return NextResponse.json({ error: 'Carteira inválida. Use endereço 0x... (EVM).' }, { status: 400 });
     }
 
     // Atualiza pre-registros do usuario (match por email)

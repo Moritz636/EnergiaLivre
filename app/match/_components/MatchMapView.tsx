@@ -38,7 +38,7 @@ export function MatchMapView({ consumer, matches, blurred, selectedUsinaId, onSe
     return (
       <div className="h-[420px] rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-center p-6">
         <div>
-          <p className="text-sm text-slate-400">Capturando localizacao...</p>
+          <p className="text-sm text-slate-400">Capturando localização...</p>
         </div>
       </div>
     )
@@ -50,8 +50,8 @@ export function MatchMapView({ consumer, matches, blurred, selectedUsinaId, onSe
       lat: consumer.lat,
       lng: consumer.lng,
       label: consumer.cidade
-        ? `${consumer.cidade}/${consumer.estado} (sua localizacao)`
-        : 'Sua localizacao',
+        ? `${consumer.cidade}/${consumer.estado} (sua localização)`
+        : 'Sua localização',
       color: 'blue' as const,
       popupHtml: `<strong>Voce</strong><br/>${consumer.cidade ?? ''} ${consumer.estado ?? ''}`,
     },

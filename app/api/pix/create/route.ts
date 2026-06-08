@@ -11,7 +11,6 @@ const ALLOWED_PURPOSES: PixPurpose[] = [
   'plan_subscription',
   'token_presale',
   'invoice_payment',
-  'celular_recharge',
   'other',
 ]
 

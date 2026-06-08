@@ -8,14 +8,16 @@ import {
   Users, TrendingUp, BatteryCharging, Sun, Car, Globe, Wallet,
   Gift, Star, Loader2, Menu, X, ExternalLink, BarChart3, Rocket,
   Lock, Coins, Activity, AlertTriangle, Mail, ChevronDown, ChevronUp,
-  Smartphone, Banknote, TrendingDown, Award, Sparkles, BookOpen,
+  Award, Sparkles, BookOpen, TrendingDown,
   Repeat, Shield, FileCheck, Calendar, Copy, Check, Info, Flame
 } from 'lucide-react';
 import {
   TOKEN_PACKAGES, TOKEN_LAUNCH_DATE, PRESALE_END_DATE, KWATT_UNIT_PRICE,
-  KWH_REFERENCE_PRICE, KWATT_TO_KWH_RATIO, TOKEN_TOTAL_SUPPLY, TOKEN_DISTRIBUTION,
+  KWH_REFERENCE_PRICE, TOKEN_TOTAL_SUPPLY, TOKEN_DISTRIBUTION,
   TOKEN_USE_CASES, getFinalPrice, getTotalTokens, formatBRL, formatTokens,
-  KWATT_CONTRACT_ADDRESS, KWATT_DEPLOY_STATUS, KWATT_EXPLORER_URL
+  getCurrentRatio, getCurrentUnitPrice, getReleasedTokens,
+  KWATT_CONTRACT_ADDRESS, KWATT_DEPLOY_STATUS, KWATT_EXPLORER_URL,
+  KWATT_INITIAL_RATIO, KWATT_MONTHLY_GROWTH, KWATT_RELEASE_PERCENT
 } from '@/lib/tokenomics';
 
 type Countdown = { days: number; hours: number; minutes: number; seconds: number }
@@ -32,7 +34,7 @@ function getCountdown(target: Date): Countdown {
 }
 
 const USE_CASE_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  Zap, Smartphone, TrendingUp, Gift, Shield, Globe,
+  Zap, TrendingUp, Gift, Shield, Globe,
 }
 
 export default function TokenPresalePage() {
@@ -185,9 +187,9 @@ export default function TokenPresalePage() {
               <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
               <p className="text-[11px] text-amber-200 leading-relaxed">
                 <strong>Token de utilidade</strong> — Não é valor mobiliário. Não há promessa de valorização. Lei 14.478/2022.
-                {KWATT_DEPLOY_STATUS === 'not_deployed' && (
-                  <> · <strong>Status on-chain:</strong> pre-deploy (contrato sera publicado em 05/01/2027).</>
-                )}
+                  {KWATT_DEPLOY_STATUS === 'not_deployed' && (
+                    <> · <strong>Status on-chain:</strong> pre-deploy (contrato será publicado em 25/01/2027).</>
+                  )}
               </p>
             </div>
             <button
@@ -224,9 +226,9 @@ export default function TokenPresalePage() {
           </h1>
 
           <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto mb-8">
-            <strong className="text-white">KWATT</strong> é o token utilitário que paga sua fatura de energia,
-            recarrega seu celular, dá cashback e ainda financia a transição energética.
-            1 KWATT = 30% de 1 kWh. <span className="text-amber-400 font-bold">Use onde quiser.</span>
+            <strong className="text-white">KWATT</strong> é o token utilitário do ecossistema EnergiaLivre:
+            pague sua fatura de energia, ganhe cashback, e participe da transição energética.
+            1 KWATT = 30% de 1 kWh, com valorização de 3% ao mês. <span className="text-amber-400 font-bold">Sistema interno.</span>
           </p>
 
           {/* Countdown */}
@@ -244,8 +246,7 @@ export default function TokenPresalePage() {
           {/* KVPs */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto mb-8">
             <Kvp icon={<Zap className="w-4 h-4" />} label="Paga fatura" accent="emerald" />
-            <Kvp icon={<Smartphone className="w-4 h-4" />} label="Recarga celular" accent="cyan" />
-            <Kvp icon={<TrendingDown className="w-4 h-4" />} label="Até 12% cashback" accent="amber" />
+            <Kvp icon={<TrendingDown className="w-4 h-4" />} label="Cashback kWatt" accent="amber" />
             <Kvp icon={<Gift className="w-4 h-4" />} label="Indicação KWATT" accent="pink" />
           </div>
 
@@ -297,9 +298,14 @@ export default function TokenPresalePage() {
 
           <div className="mt-8 p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/20 text-center">
             <p className="text-sm text-amber-100">
-              <Sparkles className="w-4 h-4 inline" /> <strong>Conversão fixa:</strong> 1 KWATT = {(KWATT_TO_KWH_RATIO * 100).toFixed(0)}% de 1 kWh (R$ {KWH_REFERENCE_PRICE.toFixed(2)}/kWh ANEEL).
+              <Sparkles className="w-4 h-4 inline" /> <strong>Valorização mensal:</strong> 1 KWATT = {(getCurrentRatio() * 100).toFixed(0)}% de 1 kWh hoje.
+              Cresce {KWATT_MONTHLY_GROWTH * 100}% ao mês até 25/01/2027.
               <br />
-              <span className="text-[11px] text-amber-200/70">Preço unitário base: R$ {KWATT_UNIT_PRICE.toFixed(3)} por KWATT. Use no app para abater consumo real.</span>
+              <span className="text-[11px] text-amber-200/70">
+                Preço atual: R$ {getCurrentUnitPrice().toFixed(3)}/KWATT. 
+                Após a compra, {KWATT_RELEASE_PERCENT * 100}% liberado para movimentação.
+                Uso interno no ecossistema EnergiaLivre.
+              </span>
             </p>
           </div>
         </section>
@@ -316,8 +322,8 @@ export default function TokenPresalePage() {
           <div className="grid md:grid-cols-3 gap-4">
             {[
               { step: '01', icon: <Coins className="w-5 h-5" />, title: 'Reserve KWATT', desc: 'Escolha um pacote e confirme seu pré-registro. Seu saldo fica travado até o lançamento.', color: 'amber' },
-              { step: '02', icon: <Rocket className="w-5 h-5" />, title: 'Receba em 05/01/2027', desc: 'Tokens são liberados na sua carteira EVM (MetaMask, Rabby, etc) no dia do lançamento.', color: 'emerald' },
-              { step: '03', icon: <Zap className="w-5 h-5" />, title: 'Use no ecossistema', desc: 'Pague fatura, faça recargas, ganhe cashback, indique amigos. Quanto mais usa, mais ganha.', color: 'cyan' },
+              { step: '02', icon: <Rocket className="w-5 h-5" />, title: 'Receba em 25/01/2027', desc: 'Tokens são liberados na sua carteira EVM (MetaMask, Rabby, etc) no dia do lançamento.', color: 'emerald' },
+              { step: '03', icon: <Zap className="w-5 h-5" />, title: 'Use no ecossistema', desc: 'Pague fatura, ganhe cashback, indique amigos. 50% liberado para movimentação após a compra.', color: 'cyan' },
             ].map((s) => (
               <div key={s.step} className="p-6 rounded-2xl bg-white/5 border border-white/10">
                 <div className="flex items-center gap-2 mb-3">
@@ -502,9 +508,9 @@ export default function TokenPresalePage() {
               { date: 'Q2 2026', label: 'Pré-venda + auditoria', status: 'active', desc: 'Captação pública, smart contract auditado por empresa independente' },
               { date: 'Q3 2026', label: 'Listagem pré-venda', status: 'done', desc: 'DEX listing com liquidez travada, KYC opcional para lifts' },
               { date: 'Q4 2026', label: 'Staking v1', status: 'done', desc: 'Pools de 30/90/180/365 dias com rewards 8-15% a.a.' },
-              { date: '05/01/2027', label: 'Lançamento oficial + airdrop', status: 'next', desc: 'Tokens liberados para carteiras de pré-registro. Mainnet público.' },
+              { date: '25/01/2027', label: 'Lançamento oficial + airdrop', status: 'next', desc: 'Tokens liberados para carteiras de pré-registro. Mainnet público.' },
               { date: 'Q1 2027', label: 'Pagamento de faturas on-chain', status: 'next', desc: 'Smart contract integrado com a plataforma EnergiaLivre' },
-              { date: 'Q2 2027', label: 'Recargas de celular via token', status: 'next', desc: 'Integração com provedor + cashback em KWATT' },
+              { date: 'Q2 2027', label: 'Compra de energia via token', status: 'next', desc: 'Integração direta com distribuidoras para pagamento via KWATT' },
             ].map((step, i) => (
               <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
@@ -561,12 +567,12 @@ export default function TokenPresalePage() {
                 <span className="text-sm font-bold text-white">ERC-20 + EIP-2612 + EIP-5805</span>
               </div>
               <div className="pt-2 border-t border-white/10">
-                <p className="text-xs text-slate-400 mb-1">Endereco do contrato</p>
+                <p className="text-xs text-slate-400 mb-1">Endereço do contrato</p>
                 <code className="text-[11px] text-amber-300 font-mono break-all block bg-slate-950 p-2 rounded border border-white/5">
                   {KWATT_CONTRACT_ADDRESS}
                 </code>
                 <p className="text-[10px] text-slate-500 mt-1">
-                  Endereco placeholder. O contrato sera publicado em 05/01/2027 no bloco ~75.500.000.
+                  Endereço placeholder. O contrato será publicado em 25/01/2027.
                 </p>
               </div>
             </div>

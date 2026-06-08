@@ -122,7 +122,7 @@ export function LocationForm({ onSubmit, onCoordsChange, loading }: LocationForm
       if (geo) pos = { lat: geo.lat, lng: geo.lng }
     }
     if (!pos) {
-      setError('Nao foi possivel geocodificar o endereco')
+      setError('Não foi possível geocodificar o endereço')
       return
     }
 
@@ -148,7 +148,7 @@ export function LocationForm({ onSubmit, onCoordsChange, loading }: LocationForm
 
       <div>
         <label className="block text-[10px] uppercase tracking-wider text-slate-400 mb-1.5">
-          Endereco (rua, numero)
+          Endereço (rua, número)
         </label>
         <div className="flex gap-2">
           <input

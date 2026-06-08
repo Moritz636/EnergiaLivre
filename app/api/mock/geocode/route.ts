@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     }
     const query = (endereco || cep || '').toLowerCase().trim()
     if (!query) {
-      return NextResponse.json({ error: 'endereco ou cep obrigatorio' }, { status: 400 })
+      return NextResponse.json({ error: 'endereço ou CEP obrigatório' }, { status: 400 })
     }
 
     const hit = KNOWN_CITIES.find((c) => c.keywords.some((k) => query.includes(k)))

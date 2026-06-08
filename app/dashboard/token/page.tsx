@@ -7,7 +7,7 @@ import {
   TrendingUp, TrendingDown, Calendar, FileText, Copy, Check, AlertCircle,
   Sparkles, Send, Flame, Zap, Gift, Award
 } from 'lucide-react';
-import { KWATT_SYMBOL, KWATT_UNIT_PRICE, KWATT_TO_KWH_RATIO } from '@/lib/tokenomics';
+import { KWATT_SYMBOL, KWATT_UNIT_PRICE, getCurrentRatio } from '@/lib/tokenomics';
 
 interface Holding {
   balance: number
@@ -51,7 +51,7 @@ export default function TokenDashboardPage() {
   const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [redeemOpen, setRedeemOpen] = useState(false)
-  const [redeemType, setRedeemType] = useState<'invoice_payment' | 'celular_recharge' | 'donation'>('invoice_payment')
+  const [redeemType, setRedeemType] = useState<'invoice_payment' | 'donation'>('invoice_payment')
   const [redeemAmount, setRedeemAmount] = useState('')
   const [redeemSubmitting, setRedeemSubmitting] = useState(false)
   const [redeemMessage, setRedeemMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
@@ -176,7 +176,7 @@ export default function TokenDashboardPage() {
   const lifetimeEarned = holding?.lifetime_earned ?? 0
   const lifetimeBurned = holding?.lifetime_burned ?? 0
   const brlValue = balance * KWATT_UNIT_PRICE
-  const kwhEquivalent = balance / KWATT_TO_KWH_RATIO
+  const kwhEquivalent = balance / getCurrentRatio()
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 p-6">
@@ -187,7 +187,7 @@ export default function TokenDashboardPage() {
             <h1 className="text-2xl font-black text-white">Minha Carteira KWATT</h1>
           </div>
           <p className="text-sm text-slate-400">
-            Seu saldo de tokens utilitarios. Use para pagar faturas, recargas e ganhar cashback.
+            Seu saldo de tokens utilitários. Use para pagar faturas, cashback e serviços da plataforma.
           </p>
         </header>
 
@@ -195,9 +195,9 @@ export default function TokenDashboardPage() {
           <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
             <div className="text-sm">
-              <p className="text-amber-100 font-bold mb-1">Token ainda nao deployado em mainnet</p>
+              <p className="text-amber-100 font-bold mb-1">Token ainda não implantado em mainnet</p>
               <p className="text-amber-200/80 text-xs">
-                O lancamento oficial esta marcado para <strong>05/01/2027</strong>. Ate la, os saldos mostrados aqui sao uma previsao baseada no seu historico de pre-registros e cashback.
+                O lançamento oficial está marcado para <strong>05/01/2027</strong>. Até lá, os saldos mostrados aqui são uma previsão baseada no seu historico de pre-registros e cashback.
               </p>
             </div>
           </div>
@@ -269,7 +269,7 @@ export default function TokenDashboardPage() {
             <h2 className="text-base font-bold text-white">Sua carteira de recebimento</h2>
           </div>
           <p className="text-xs text-slate-400 mb-3">
-            Endereco EVM (Polygon) onde voce recebera os tokens no lancamento (05/01/2027). Use MetaMask, Rabby, Trust Wallet, etc.
+            Endereço EVM (Polygon) onde você receberá os tokens no lançamento (05/01/2027). Use MetaMask, Rabby, Trust Wallet, etc.
           </p>
           <div className="flex flex-col sm:flex-row gap-2">
             <input
@@ -384,8 +384,7 @@ export default function TokenDashboardPage() {
                   className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-white/10 text-sm text-white"
                 >
                   <option value="invoice_payment">Pagar fatura de energia</option>
-                  <option value="celular_recharge">Recarga de celular</option>
-                  <option value="donation">Doacao</option>
+                  <option value="donation">Doação</option>
                 </select>
               </div>
               <div>
@@ -406,7 +405,7 @@ export default function TokenDashboardPage() {
                   <p className="text-[10px] text-slate-500 mt-1">
                     ≈ R$ {(Number(redeemAmount) * KWATT_UNIT_PRICE).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     {' · '}
-                    {(Number(redeemAmount) / KWATT_TO_KWH_RATIO).toFixed(2)} kWh
+                    {(Number(redeemAmount) / getCurrentRatio()).toFixed(2)} kWh
                   </p>
                 )}
               </div>

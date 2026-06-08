@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     const json = await request.json().catch(() => ({}));
     const parsed = v.object(json, {
       amount_tokens: (i) => v.number(i, { min: 1, max: 1_000_000 }),
-      redemption_type: (i) => v.enum(i, ['invoice_payment', 'celular_recharge', 'cashback', 'donation', 'other'] as const),
+      redemption_type: (i) => v.enum(i, ['invoice_payment', 'cashback', 'donation', 'other'] as const),
       target_id: v.optional((i) => v.string(i, { max: 80 })),
       target_type: v.optional((i) => v.string(i, { max: 40 })),
     });
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
     if (!holding || (holding.balance ?? 0) < data.amount_tokens) {
       return NextResponse.json(
-        { error: 'Saldo insuficiente. Faca uma compra de tokens ou aguarde o lancamento (05/01/2027).' },
+        { error: 'Saldo insuficiente. Faça uma compra de tokens ou aguarde o lançamento (25/01/2027).' },
         { status: 400 }
       );
     }

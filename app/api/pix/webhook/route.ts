@@ -69,13 +69,6 @@ export async function POST(request: NextRequest) {
           }
           break
         }
-        case 'celular_recharge': {
-          await supabase
-            .from('celular_recargas')
-            .update({ status: 'paid', pix_payment_id: payment.id } as any)
-            .eq('pix_payment_id', payment.id)
-          break
-        }
         case 'token_presale': {
           // No MVP mock: nada - usuário recebe token após lançamento
           break

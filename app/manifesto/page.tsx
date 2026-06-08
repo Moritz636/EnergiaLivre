@@ -34,12 +34,12 @@ import {
 
 export const metadata: Metadata = {
   title: 'Manifesto · EnergiaLivre',
-  description:
-    'Por que existimos. A historia por tras da plataforma que conecta consumidores e geradores de energia distribuida no Brasil. Dados reais do mercado, time, ecossistema e visao de futuro.',
+    description:
+      'Por que existimos. A história por trás da plataforma que conecta consumidores e geradores de energia distribuída no Brasil. Dados reais do mercado, time, ecossistema e visão de futuro.',
   openGraph: {
     title: 'Manifesto · EnergiaLivre',
     description:
-      '3 milhoes de sistemas de energia distribuida no Brasil. 2,1 trilhoes de dolares investidos globalmente em 2024. Por que nos existimos?',
+      '3 milhões de sistemas de energia distribuída no Brasil. 2,1 trilhões de dólares investidos globalmente em 2024. Por que nos existimos?',
     type: 'article',
   },
 }
@@ -57,10 +57,10 @@ const MARKET_DATA = {
   unidadesConsumidoras: 4_700_000,
   novosSistemas2024: 782_897,
   potenciaAdicionada2024GW: 8.85,
-  investimentoGlobal2024: 2_100_000_000_000, // US$ 2.1 trilhoes
+  investimentoGlobal2024: 2_100_000_000_000, // US$ 2.1 trilhões
   investimentoRenovaveis2024: 728_000_000_000,
   crescimentoAnual: 11, // %
-  metaCOP28: 3, // triplicar renovaveis ate 2030
+  metaCOP28: 3, // triplicar renováveis até 2030
   investimentoNecessarioAnual: 1_000_000_000_000, // US$ 1 trilhão/ano
   tarifaMediaBR: 950, // R$/MWh (ANEEL 2024)
   reducaoMediaEnergiaSolar: 90, // % economia na fatura
@@ -75,49 +75,49 @@ const TIMELINE = [
     year: '2024',
     quarter: 'Q4',
     title: 'A centelha',
-    desc: 'Moritz descobre que a conta de luz da sua irma, 320 kWh/mes no interior de MG, estava 27% mais cara que a dele. Pergunta: por que ela nao usa energia solar? Resposta: R$ 25.000 de investimento inicial, sem financiamento, sem confianca. E se a gente conectasse consumidores como ela a geradores de excedente ja existentes na mesma UF?',
+    desc: 'Moritz descobre que a conta de luz da sua irmã, 320 kWh/mes no interior de MG, estava 27% mais cara que a dele. Pergunta: por que ela não usa energia solar? Resposta: R$ 25.000 de investimento inicial, sem financiamento, sem confiança. E se a gente conectasse consumidores como ela a geradores de excedente já existentes na mesma UF?',
     icon: Sparkles,
   },
   {
     year: '2025',
     quarter: 'Q1',
-    title: 'O codigo',
-    desc: 'Primeira versao do Energy Match em Next.js 14. Match por geolocalizacao (raio de 50 km), validacao de capacidade excedente, precificacao por kWh. 12 geradores e 8 consumidores cadastrados em fase beta na regiao metropolitana de Belo Horizonte.',
+    title: 'O código',
+    desc: 'Primeira versão do Energy Match em Next.js 14. Match por geolocalização (raio de 50 km), validação de capacidade excedente, precificação por kWh. 12 geradores e 8 consumidores cadastrados em fase beta na região metropolitana de Belo Horizonte.',
     icon: Code,
   },
   {
     year: '2025',
     quarter: 'Q2',
-    title: 'A primeira conexao',
-    desc: 'Joana (consumidora, Contagem-MG, 480 kWh/mes) conecta-se a Seu Ze (gerador, Ibirite-MG, 8 kWp, excedente 320 kWh/mes). Economia media de R$ 280/mes para Joana. Renda passiva de R$ 304/mes para Seu Ze. O sistema de compensacao de energia (Lei 14.300/2022) funcionou: a concessionaria (CEMIG) credita automaticamente o excedente na fatura da Joana.',
+    title: 'A primeira conexão',
+    desc: 'Joana (consumidora, Contagem-MG, 480 kWh/mes) conecta-se a Seu Ze (gerador, Ibirite-MG, 8 kWp, excedente 320 kWh/mes). Economia média de R$ 280/mes para Joana. Renda passiva de R$ 304/mes para Seu Ze. O sistema de compensação de energia (Lei 14.300/2022) funcionou: a concessionária (CEMIG) credita automaticamente o excedente na fatura da Joana.',
     icon: Heart,
   },
   {
     year: '2025',
     quarter: 'Q3',
     title: 'A tracao',
-    desc: 'Scanner de fatura por QR Code, integracao PIX, match estilo Tinder, ranqueamento de geradores por preco + avaliacao. 200 usuarios ativos. Tempo medio de conexao: 4,2 dias. NPS: 78.',
+    desc: 'Scanner de fatura por QR Code, integração PIX, match estilo Tinder, ranqueamento de geradores por preço + avaliação. 200 usuários ativos. Tempo médio de conexão: 4,2 dias. NPS: 78.',
     icon: TrendingUp,
   },
   {
     year: '2025',
     quarter: 'Q4',
     title: 'A virada',
-    desc: 'Lancamento do token utilitario KWATT (Lei 14.478/2022). 1 KWATT = 30% de 1 kWh. Queima de 1% por transacao. Staking opcional de 8-15% a.a. Presale 09/09/2026. Lancamento da rede 05/01/2027. Auditoria publica. DAO comunitaria.',
+    desc: 'Lançamento do token utilitário KWATT (Lei 14.478/2022). 1 KWATT = 30% de 1 kWh. Queima de 1% por transação. Staking opcional de 8-15% a.a. Presale 09/09/2026. Lançamento da rede 05/01/2027. Auditoria pública. DAO comunitária.',
     icon: Coins,
   },
   {
     year: '2026',
     quarter: 'Q2',
-    title: 'A expansao',
-    desc: 'Match por estado e por distribuidora (Lei 14.300/2022 permite compensacao na mesma UF e mesma rede eletrica). 10 distribuidoras integradas (Enel, CEMIG, CPFL, Equatorial, Light, Copel, Energisa, Elektro, CEEE, RGE). 5.000 usuarios.',
+    title: 'A expansão',
+    desc: 'Match por estado e por distribuidora (Lei 14.300/2022 permite compensação na mesma UF e mesma rede elétrica). 10 distribuidoras integradas (Enel, CEMIG, CPFL, Equatorial, Light, Copel, Energisa, Elektro, CEEE, RGE). 5.000 usuários.',
     icon: MapPin,
   },
   {
     year: '2027',
     quarter: 'Q1',
     title: 'A rede',
-    desc: 'Lancamento oficial da mainnet KWATT. 100.000 usuarios. 10.000 geradores. 1 GWh/mes de energia redistribuida. 50 cidades atendidas. Parcerias com integradores solares em 12 estados.',
+    desc: 'Lançamento oficial da mainnet KWATT. 100.000 usuários. 10.000 geradores. 1 GWh/mes de energia redistribuída. 50 cidades atendidas. Parcerias com integradores solares em 12 estados.',
     icon: Rocket,
   },
 ] as const
@@ -125,8 +125,8 @@ const TIMELINE = [
 // ============================================
 // FUNDADORES (personagens ilustrativos)
 // ============================================
-// ATENCAO: Nomes e biografias sao ilustrativos.
-// Os fundadores reais serao divulgados em rodada institucional.
+// ATENÇÃO: Nomes e biografias são ilustrativos.
+// Os fundadores reais serão divulgados em rodada institucional.
 
 type Founder = {
   nome: string
@@ -141,15 +141,15 @@ const FUNDADORES: Founder[] = [
   {
     nome: 'Moritz',
     papel: 'CEO & Visionario',
-    bio: 'Engenheiro eletrico com 12 anos em distribuicao de energia. Trabalhou na operacao de redes de MT e AT. Viu de dentro a concentracao do mercado e decidiu que existia um caminho melhor.',
-    background: ['Engenharia Eletrica UFMG', 'Ex-Cemig (2014-2020)', 'Ex-engenheiro de integracao solar'],
+    bio: 'Engenheiro elétrico com 12 anos em distribuição de energia. Trabalhou na operação de redes de MT e AT. Viu de dentro a concentração do mercado e decidiu que existia um caminho melhor.',
+    background: ['Engenharia Elétrica UFMG', 'Ex-Cemig (2014-2020)', 'Ex-engenheiro de integração solar'],
     iniciais: 'MZ',
     cor: 'from-emerald-500 to-cyan-500',
   },
   {
     nome: 'Camila',
     papel: 'CTO & Arquitetura',
-    bio: 'Full-stack senior, especialista em sistemas distribuidos. Construiu plataformas de alta disponibilidade com milhoes de usuarios. Apaixonada por latencia baixa e por resolver problemas reais com codigo limpo.',
+    bio: 'Full-stack senior, especialista em sistemas distribuídos. Construiu plataformas de alta disponibilidade com milhões de usuários. Apaixonada por latência baixa e por resolver problemas reais com código limpo.',
     background: ['Ciencia da Computacao USP', 'Ex-staff engineer startup fintech', 'Open-source contributor'],
     iniciais: 'CA',
     cor: 'from-cyan-500 to-blue-500',
@@ -157,15 +157,15 @@ const FUNDADORES: Founder[] = [
   {
     nome: 'Rafael',
     papel: 'CPO & Produto',
-    bio: 'Product designer com background em energia renovavel. Liderou lancamento de 3 produtos B2C no setor solar. Acredita que a melhor UX e a que nao precisa de manual.',
-    background: ['Design PUC-Rio', 'Ex-PM empresa solar', 'Mestrado em transicao energetica'],
+    bio: 'Product designer com background em energia renovável. Liderou lançamento de 3 produtos B2C no setor solar. Acredita que a melhor UX é a que não precisa de manual.',
+    background: ['Design PUC-Rio', 'Ex-PM empresa solar', 'Mestrado em transição energética'],
     iniciais: 'RA',
     cor: 'from-purple-500 to-pink-500',
   },
   {
     nome: 'Juliana',
     papel: 'COO & Operacoes',
-    bio: 'Advogada com MBA em regulacao. Especialista em marco regulatorio do setor eletrico (Lei 14.300/2022) e em contratos de compensacao. Cuida para que cada conexao seja juridicamente solida.',
+    bio: 'Advogada com MBA em regulação. Especialista em marco regulatório do setor elétrico (Lei 14.300/2022) e em contratos de compensação. Cuida para que cada conexão seja juridicamente sólida.',
     background: ['Direito PUC-SP', 'MBA FGV', 'Ex-analista regulatoria ANEEL'],
     iniciais: 'JU',
     cor: 'from-amber-500 to-orange-500',
@@ -198,7 +198,7 @@ const STACK = [
     categoria: 'Pagamentos',
     ferramentas: [
       { nome: 'Stripe', papel: 'Checkout + Subscription + Webhooks', site: 'https://stripe.com' },
-      { nome: 'PIX (OpenPix-ready)', papel: 'Pagamento instantaneo brasileiro', site: 'https://openpix.com.br' },
+      { nome: 'PIX (OpenPix-ready)', papel: 'Pagamento instantâneo brasileiro', site: 'https://openpix.com.br' },
     ],
   },
   {
@@ -211,10 +211,10 @@ const STACK = [
     ],
   },
   {
-    categoria: 'Scanner & Validacao',
+      categoria: 'Scanner & Validação',
     ferramentas: [
-      { nome: 'html5-qrcode', papel: 'Scanner camera (QR + barcode)', site: 'https://github.com/mebjas/html5-qrcode' },
-      { nome: 'Parser FEBRABAN + BR Code (TLV EMV)', papel: 'Validacao de codigo de barras e PIX', site: 'https://www.bcb.gov.br/estabilidadefinanceira/pix' },
+      { nome: 'html5-qrcode', papel: 'Scanner câmera (QR + barcode)', site: 'https://github.com/mebjas/html5-qrcode' },
+      { nome: 'Parser FEBRABAN + BR Code (TLV EMV)', papel: 'Validação de código de barras e PIX', site: 'https://www.bcb.gov.br/estabilidadefinanceira/pix' },
     ],
   },
   {
@@ -249,11 +249,11 @@ export default function ManifestoPage() {
           </h1>
           <p className="text-lg md:text-xl text-slate-300 mt-8 max-w-3xl leading-relaxed">
             Em 2024, o Brasil instalou{' '}
-            <strong className="text-white">782.897 novos sistemas de energia distribuida</strong>.
-            Sao pessoas que geram a propria eletricidade e jogam o excedente na rede. Mas existe um
-            problema que quase ninguem fala:{' '}
-            <strong className="text-emerald-300">70% desse excedente e desperdiçado</strong> porque
-            o consumidor que mais precisa dele (e que paga a conta mais cara) nao sabe que ele
+            <strong className="text-white">782.897 novos sistemas de energia distribuída</strong>.
+            São pessoas que geram a própria eletricidade e jogam o excedente na rede. Mas existe um
+            problema que quase ninguém fala:{' '}
+            <strong className="text-emerald-300">70% desse excedente é desperdiçado</strong> porque
+            o consumidor que mais precisa dele (e que paga a conta mais cara) não sabe que ele
             existe.
           </p>
           <p className="text-lg md:text-xl text-slate-300 mt-4 max-w-3xl leading-relaxed">
@@ -291,15 +291,15 @@ export default function ManifestoPage() {
             <div className="p-6 rounded-2xl bg-gradient-to-br from-red-500/10 to-orange-500/10 border border-red-500/30">
               <div className="text-5xl font-black text-red-300 mb-2">R$ 950</div>
               <p className="text-sm text-slate-300 leading-relaxed">
-                Tarifa media de energia eletrica no Brasil por MWh (ANEEL 2024). Subiu 18% em 3
+                Tarifa média de energia elétrica no Brasil por MWh (ANEEL 2024). Subiu 18% em 3
                 anos. Quem consome mais, paga mais.
               </p>
             </div>
             <div className="p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border border-amber-500/30">
               <div className="text-5xl font-black text-amber-300 mb-2">70%</div>
               <p className="text-sm text-slate-300 leading-relaxed">
-                Dos geradores residenciais brasileiros nao conseguem compensar 100% do excedente
-                porque suas unidades consumidoras sao pequenas. Sobra credito na rede. Sozinho.
+                Dos geradores residenciais brasileiros não conseguem compensar 100% do excedente
+                porque suas unidades consumidoras são pequenas. Sobra crédito na rede. Sozinho.
               </p>
             </div>
             <div className="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 border border-emerald-500/30">
@@ -312,14 +312,14 @@ export default function ManifestoPage() {
           </div>
 
           <p className="text-base text-slate-300 mt-10 leading-relaxed max-w-3xl">
-            O Brasil tem a matriz eletrica mais limpa do mundo entre os grandes paises:{' '}
-            <strong className="text-white">~85% renovavel</strong> (hidro + eolica + solar). Mas o
-            consumidor domestico nao sente isso na fatura. Porque o modelo de compensacao
-            distribuida (Lei 14.300/2022) so funciona se voce tiver placas solares no seu telhado
-            ou alguem te emprestar creditos de excedente.
+            O Brasil tem a matriz elétrica mais limpa do mundo entre os grandes países:{' '}
+            <strong className="text-white">~85% renovável</strong> (hidro + eólica + solar). Mas o
+            consumidor doméstico não sente isso na fatura. Porque o modelo de compensação
+            distribuída (Lei 14.300/2022) só funciona se você tiver placas solares no seu telhado
+            ou alguém te emprestar créditos de excedente.
           </p>
           <p className="text-base text-slate-300 mt-3 leading-relaxed max-w-3xl">
-            Ate hoje, <strong className="text-emerald-300">emprestar creditos era um processo
+            Até hoje, <strong className="text-emerald-300">emprestar creditos era um processo
             manual, opaco e cheio de burocracia</strong>. A plataforma muda isso.
           </p>
         </div>
@@ -346,31 +346,31 @@ export default function ManifestoPage() {
               {
                 icon: ScanLine,
                 title: 'Scanner de fatura',
-                desc: 'Aponte a camera do celular para a fatura. O sistema le o QR Code / codigo de barras (FEBRABAN), calcula consumo, e mostra se voce tem match.',
+                desc: 'Aponte a câmera do celular para a fatura. O sistema lê o QR Code / código de barras (FEBRABAN), calcula consumo e mostra se você tem match.',
                 cor: 'cyan',
               },
               {
                 icon: Coins,
-                title: 'Token utilitario KWATT',
-                desc: '1 KWATT = 30% de 1 kWh. Utilidade real na plataforma, sem promessa de valorizacao. Lei 14.478/2022 (criptoativos).',
+                title: 'Token utilitário KWATT',
+                desc: '1 KWATT = 30% de 1 kWh. Utilidade real na plataforma, sem promessa de valorização. Lei 14.478/2022 (criptoativos).',
                 cor: 'amber',
               },
               {
                 icon: CreditCard,
                 title: 'PIX integrado',
-                desc: 'Pagamento instantaneo entre gerador e consumidor. BR Code com CRC-16/CCITT real, pronto para integracao OpenPix/Mercado Pago.',
+                desc: 'Pagamento instantâneo entre gerador e consumidor. BR Code com CRC-16/CCITT real, pronto para integração OpenPix/Mercado Pago.',
                 cor: 'green',
               },
               {
                 icon: Sun,
                 title: 'Ranking de geradores',
-                desc: '70% por preco + 30% por avaliacao. Geradores que dao desconto real (5-10% abaixo do R$ 0,95/kWh) ficam no topo.',
+                desc: '70% por preço + 30% por avaliação. Geradores que dão desconto real (5-10% abaixo do R$ 0,95/kWh) ficam no topo.',
                 cor: 'yellow',
               },
               {
                 icon: Shield,
-                title: 'LGPD e seguranca',
-                desc: 'Row Level Security no Supabase. Dados criptografados em transito e em repouso. Consentimento explicito em cada fluxo.',
+                title: 'LGPD e segurança',
+                desc: 'Row Level Security no Supabase. Dados criptografados em trânsito e em repouso. Consentimento explícito em cada fluxo.',
                 cor: 'blue',
               },
             ].map((feat, i) => {
@@ -454,7 +454,7 @@ export default function ManifestoPage() {
             O tamanho da oportunidade.
           </h2>
           <p className="text-slate-400 text-lg mb-10 max-w-3xl">
-            Estamos construindo em cima de uma tendencia que ja e gigantesca. E que vai
+            Estamos construindo em cima de uma tendência que já é gigantesca. É que vai
             triplicar.
           </p>
 
@@ -464,15 +464,15 @@ export default function ManifestoPage() {
                 Global · BloombergNEF (jan/2025)
               </div>
               <div className="text-4xl md:text-5xl font-black text-white mb-2">
-                US$ 2,1 trilhoes
+                US$ 2,1 trilhões
               </div>
               <p className="text-sm text-slate-300 leading-relaxed">
-                Investidos em transicao energetica em 2024, recorde historico. +11% vs 2023. So
-                em renovaveis: <strong className="text-white">US$ 728 bilhoes</strong>.
+                Investidos em transição energética em 2024, recorde histórico. +11% vs 2023. Só
+                em renováveis: <strong className="text-white">US$ 728 bilhões</strong>.
               </p>
               <p className="text-[11px] text-slate-500 mt-3">
-                Para alinhar com Acordo de Paris, serao necessarios{' '}
-                <strong className="text-emerald-300">US$ 4,8 trilhoes/ano</strong> ate 2030.
+                Para alinhar com Acordo de Paris, serão necessários{' '}
+                <strong className="text-emerald-300">US$ 4,8 trilhões/ano</strong> até 2030.
               </p>
               <a
                 href="https://about.bnef.com/insights/finance/global-investment-in-the-energy-transition-exceeded-2-trillion-for-the-first-time-in-2024-according-to-bloombergnef-report/"
@@ -489,10 +489,10 @@ export default function ManifestoPage() {
                 Brasil · ANEEL (jan/2025)
               </div>
               <div className="text-4xl md:text-5xl font-black text-white mb-2">
-                3,1 milhoes
+                3,1 milhões
               </div>
               <p className="text-sm text-slate-300 leading-relaxed">
-                Sistemas de micro e minigeracao distribuida (MMGD) conectados a rede brasileira,
+                Sistemas de micro e minigeração distribuída (MMGD) conectados à rede brasileira,
                 com potencia instalada de <strong className="text-white">35,6 GW</strong>.
               </p>
               <p className="text-[11px] text-slate-500 mt-3">
@@ -516,13 +516,13 @@ export default function ManifestoPage() {
               <Award className="w-6 h-6 text-purple-300 shrink-0 mt-0.5" />
               <div>
                 <h3 className="text-lg font-bold text-white mb-1">
-                  COP28: triplicar renovaveis ate 2030
+                  COP28: triplicar renováveis até 2030
                 </h3>
                 <p className="text-sm text-slate-300 leading-relaxed">
-                  Acordo assinado em Dubai (dez/2023) por 130 paises exige triplicar a capacidade
-                  global de energia renovavel ate 2030. BloombergNEF estima que sao necessarios{' '}
-                  <strong className="text-white">US$ 1 trilião/ano em renewables</strong> (em
-                  dolares de 2023) entre 2024 e 2030 — mais 50% do ritmo atual. Estamos atrasados
+                  Acordo assinado em Dubai (dez/2023) por 130 países exige triplicar a capacidade
+                  global de energia renovável até 2030. BloombergNEF estima que são necessários{' '}
+                  <strong className="text-white">US$ 1 trilhão/ano em renewables</strong> (em
+                  dólares de 2023) entre 2024 e 2030 — mais 50% do ritmo atual. Estamos atrasados
                   em 13%.
                 </p>
               </div>
@@ -541,7 +541,7 @@ export default function ManifestoPage() {
             Quem constroi isso.
           </h2>
           <p className="text-slate-400 text-sm mb-10 max-w-3xl">
-            As biografias abaixo sao <strong>ilustrativas</strong>. Os fundadores reais serao
+            As biografias abaixo são <strong>ilustrativas</strong>. Os fundadores reais serão
             divulgados em rodada institucional formal, com CNAEP verificada.
           </p>
 
@@ -580,8 +580,8 @@ export default function ManifestoPage() {
           </div>
 
           <p className="text-[10px] text-slate-500 mt-4 italic">
-            * Biografias ilustrativas para fins de narrativa. Nomes, formacoes e experiencias
-            serao confirmados publicamente em data-room institucional.
+            * Biografias ilustrativas para fins de narrativa. Nomes, formações e experiências
+            serão confirmados publicamente em data-room institucional.
           </p>
         </div>
       </section>
@@ -593,10 +593,10 @@ export default function ManifestoPage() {
             <Code className="w-3.5 h-3.5" /> Ecossistema
           </div>
           <h2 className="text-3xl md:text-5xl font-black text-white mb-3 leading-tight">
-            Construido sobre ombros de gigantes.
+            Construído sobre ombros de gigantes.
           </h2>
           <p className="text-slate-400 text-lg mb-10 max-w-3xl">
-            Usamos stacks publicas, abertas e auditadas. Nenhum lock-in. Nenhum vendor obscuro.
+            Usamos stacks públicas, abertas e auditadas. Nenhum lock-in. Nenhum vendor obscuro.
           </p>
 
           <div className="space-y-6">
@@ -629,8 +629,8 @@ export default function ManifestoPage() {
           </div>
 
           <p className="text-xs text-slate-500 mt-6 italic max-w-3xl">
-            As mencoes a fornecedores tecnologicos nao representam parceria comercial,
-            endosso ou investimento. Sao stacks publicas que utilizamos para construir a
+            As menções a fornecedores tecnológicos não representam parceria comercial,
+            endosso ou investimento. São stacks públicas que utilizamos para construir a
             plataforma.
           </p>
         </div>
@@ -651,27 +651,27 @@ export default function ManifestoPage() {
               {
                 icon: Shield,
                 titulo: 'Transparencia radical',
-                desc: 'Cada transacao, cada match, cada taxa. Voce ve o que a plataforma ganha e por que. Sem letras miúdas.',
+                desc: 'Cada transação, cada match, cada taxa. Você vê o que a plataforma ganha e por que. Sem letras miúdas.',
               },
               {
                 icon: Leaf,
-                titulo: 'Token utilitario, nao especulativo',
+                titulo: 'Token utilitário, não especulativo',
                 desc: '1 KWATT vale 30% de 1 kWh na plataforma. Pode ser usado para pagar, receber cashback ou staking opcional. Lei 14.478/2022.',
               },
               {
                 icon: Heart,
                 titulo: 'Win-win-win',
-                desc: 'Consumidor economiza 30-90% na fatura. Gerador ganha renda passiva com excedente. Distribuidora cumpre metas de renovaveis. Sociedade avanca na transicao energetica.',
+                desc: 'Consumidor economiza 30-90% na fatura. Gerador ganha renda passiva com excedente. Distribuidora cumpre metas de renováveis. Sociedade avança na transição energética.',
               },
               {
                 icon: Clock,
                 titulo: 'Sem vendor lock-in',
-                desc: 'Stack aberta (Supabase, Next.js, Stripe). Se um dia precisarmos migrar, conseguimos. Seu dado e seu.',
+                desc: 'Stack aberta (Supabase, Next.js, Stripe). Se um dia precisarmos migrar, conseguimos. Seu dado é seu.',
               },
               {
                 icon: Users,
                 titulo: 'DAO comunitaria (futuro)',
-                desc: 'Apos o lancamento da mainnet (2027), decisoes de taxa, parcerias e expansao serao votadas pelos detentores de KWATT.',
+                desc: 'Após o lançamento da mainnet (2027), decisões de taxa, parcerias e expansão serão votadas pelos detentores de KWATT.',
               },
             ].map((d, i) => {
               const Icon = d.icon
@@ -714,7 +714,7 @@ export default function ManifestoPage() {
               <div>
                 <h3 className="text-xl font-bold text-white mb-2">Para gestoras e family offices</h3>
                 <p className="text-sm text-slate-300 leading-relaxed">
-                  Se voce representa um fundo de venture capital, corporate venture, family office
+                   Se você representa um fundo de venture capital, corporate venture, family office
                   ou investidor angel com foco em clima/energy transition, podemos agendar uma
                   conversa.
                 </p>
@@ -722,7 +722,7 @@ export default function ManifestoPage() {
             </div>
             <div className="grid sm:grid-cols-3 gap-3 mt-6 text-xs">
               <div className="p-3 rounded-lg bg-black/30 border border-amber-500/20">
-                <p className="text-amber-300 font-bold mb-1">Mercado enderecavel</p>
+                <p className="text-amber-300 font-bold mb-1">Mercado endereçável</p>
                 <p className="text-slate-300">US$ 728 bi global (2024)</p>
               </div>
               <div className="p-3 rounded-lg bg-black/30 border border-amber-500/20">
@@ -743,8 +743,8 @@ export default function ManifestoPage() {
           </div>
 
           <p className="text-[10px] text-slate-500 mt-4 italic max-w-3xl">
-            * Esta pagina nao constitui uma oferta de valores mobiliarios. O token KWATT tem
-            finalidade utilitaria conforme Lei 14.478/2022. Informacoes sobre rodadas serao
+            * Esta página não constitui uma oferta de valores mobiliários. O token KWATT tem
+            finalidade utilitária conforme Lei 14.478/2022. Informações sobre rodadas serão
             divulgadas exclusivamente em data-room formal, com due-diligence completa.
           </p>
         </div>
@@ -755,13 +755,13 @@ export default function ManifestoPage() {
         <div className="max-w-3xl mx-auto px-6 text-center">
           <Sparkles className="w-12 h-12 text-emerald-400 mx-auto mb-6" />
           <h2 className="text-3xl md:text-5xl font-black text-white mb-4 leading-tight">
-            A transicao energetica comeca
+            A transição energética começa
             <br />
             pela sua fatura.
           </h2>
           <p className="text-lg text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Seja como consumidor (economize ate 90%), gerador (renda passiva com excedente) ou
-            parceiro (ganhe 5 KWATT por indicacao), voce faz parte dessa historia.
+            Seja como consumidor (economize até 90%), gerador (renda passiva com excedente) ou
+            parceiro (ganhe 5 KWATT por indicação), você faz parte dessa história.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link
@@ -776,12 +776,7 @@ export default function ManifestoPage() {
             >
               Conhecer o KWATT <Coins className="w-4 h-4" />
             </Link>
-            <Link
-              href="/recargas"
-              className="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold transition flex items-center gap-2"
-            >
-              Recarga de celular <CreditCard className="w-4 h-4" />
-            </Link>
+
           </div>
         </div>
       </section>
@@ -790,20 +785,20 @@ export default function ManifestoPage() {
       <section className="border-t border-white/10 py-10 bg-black/30">
         <div className="max-w-5xl mx-auto px-6 text-[10px] text-slate-500 leading-relaxed">
           <p className="mb-2">
-            <strong>Disclaimers legais:</strong> Esta pagina e de natureza narrativa e informativa.
-            Biografias de fundadores sao ilustrativas e serao confirmadas em data-room formal.
-            Mencoes a fornecedores tecnologicos (Next.js, Supabase, Stripe, Vercel, OpenStreetMap,
-            Google Places, Leaflet) nao representam parceria comercial, endosso ou investimento. O
-            token KWATT tem finalidade exclusivamente utilitaria na plataforma EnergiaLivre
-            (consumo de servicos de compensacao de energia) e nao configura valor mobilia rio,
-            nos termos da Lei 14.478/2022. O sistema de compensacao de energia distribuida
-            (microgeracao e minigeracao) opera sob a Lei 14.300/2022 e regulamentacao da ANEEL.
-            Dados de mercado citados (BloombergNEF, ANEEL) sao de dominio publico e estao
-            linkados na integra.
+            <strong>Disclaimers legais:</strong> Esta página é de natureza narrativa e informativa.
+            Biografias de fundadores são ilustrativas e serão confirmadas em data-room formal.
+            Menções a fornecedores tecnológicos (Next.js, Supabase, Stripe, Vercel, OpenStreetMap,
+            Google Places, Leaflet) não representam parceria comercial, endosso ou investimento. O
+            token KWATT tem finalidade exclusivamente utilitária na plataforma EnergiaLivre
+            (consumo de serviços de compensação de energia) e não configura valor mobiliário,
+            nos termos da Lei 14.478/2022. O sistema de compensação de energia distribuída
+            (microgeração e minigeração) opera sob a Lei 14.300/2022 e regulamentação da ANEEL.
+            Dados de mercado citados (BloombergNEF, ANEEL) são de domínio público e estão
+            linkados na íntegra.
           </p>
           <p>
             EnergiaLivre · CNPJ a divulgar · Plataforma em fase pre-operacional · Sujeita a
-            mudancas · 2024 → 2027
+            mudanças · 2024 → 2027
           </p>
         </div>
       </section>

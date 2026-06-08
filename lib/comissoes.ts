@@ -7,15 +7,17 @@ export interface ComissaoConfig {
   percentualRecorrente: number;   // % mensal recorrente
   percentualBonus: number;        // % bonus por meta atingida
   percentualGeradorReferral: number; // % para gerador que indica outro gerador
+  percentualPlataforma: number;   // % taxa da plataforma sobre faturas
   valorMinimoPagamento: number;   // R$ mínimo para saque
 }
 
-// Configuração padrão (Lei 38: Parece generoso, mas é estratégico)
+// Configuração padrão
 export const COMISSAO_CONFIG: ComissaoConfig = {
   percentualCadastro: 100,    // 100% no primeiro cadastro (gancho)
   percentualRecorrente: 5,    // 5% mensal (renda passiva)
   percentualBonus: 10,        // 10% bonus por meta
   percentualGeradorReferral: 5, // 5% para gerador que indica amigo gerador+rede
+  percentualPlataforma: 8,    // 8% taxa da plataforma sobre todas as faturas
   valorMinimoPagamento: 50.00 // R$ 50 mínimo para saque
 };
 
@@ -52,6 +54,14 @@ export function calcularComissaoGeradorReferral(
   percentual: number = COMISSAO_CONFIG.percentualGeradorReferral
 ): number {
   return (receitaAmigo * percentual) / 100;
+}
+
+// 8% de taxa da plataforma sobre o valor da fatura
+export function calcularTaxaPlataforma(
+  valorFatura: number,
+  percentual: number = COMISSAO_CONFIG.percentualPlataforma
+): number {
+  return (valorFatura * percentual) / 100;
 }
 
 // ============================================
@@ -131,6 +141,7 @@ export const comissoes = {
   calcularComissaoRecorrente,
   calcularComissaoBonus,
   calcularComissaoGeradorReferral,
+  calcularTaxaPlataforma,
   calcularNivelParceiro,
   calcularProjecaoRenda,
   COMISSAO_CONFIG,
@@ -140,3 +151,4 @@ export const comissoes = {
 // Funções nomeadas para import direto (compatibilidade com a API route)
 export const calcular_comissao_cadastro = calcularComissaoCadastro;
 export const calcular_comissao_recorrente = calcularComissaoRecorrente;
+export const calcular_taxa_plataforma = calcularTaxaPlataforma;

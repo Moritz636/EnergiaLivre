@@ -16,7 +16,6 @@ export type PixPurpose =
   | 'plan_subscription'
   | 'token_presale'
   | 'invoice_payment'
-  | 'celular_recharge'
   | 'other'
 
 export interface CreatePixInput {

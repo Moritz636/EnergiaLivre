@@ -60,11 +60,11 @@ export default function LocationPage() {
             <Zap className="w-3 h-3" /> Passo 1 de 2
           </span>
           <h1 className="mt-3 text-3xl sm:text-4xl font-black text-white tracking-tight">
-            Encontre a usina <span className="text-emerald-400">perfeita</span> para voce
+            Encontre a usina <span className="text-emerald-400">perfeita</span> para você
           </h1>
           <p className="mt-2 text-sm text-slate-400 max-w-2xl mx-auto">
             Informe os dados da sua fatura de energia. Vamos cruzar com nosso
-            banco de geradoras e mostrar quem pode economizar mais para voce.
+            banco de geradoras e mostrar quem pode economizar mais para você.
           </p>
         </header>
 
@@ -85,7 +85,7 @@ export default function LocationPage() {
             <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
               <div className="flex items-center gap-2 mb-3">
                 <MapPin className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-sm font-bold text-white">Sua localizacao</h3>
+                <h3 className="text-sm font-bold text-white">Sua localização</h3>
               </div>
               {coords ? (
                 <MiniMap lat={coords.lat} lng={coords.lng} />
@@ -94,7 +94,7 @@ export default function LocationPage() {
                   <div>
                     <MapPin className="w-8 h-8 text-cyan-500/40 mx-auto mb-2" />
                     <p className="text-xs text-slate-500">
-                      O mapa aparecera aqui apos voce inserir seu endereco.
+                      O mapa aparecerá aqui após você inserir seu endereço.
                     </p>
                   </div>
                 </div>

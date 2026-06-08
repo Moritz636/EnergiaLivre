@@ -45,7 +45,7 @@ export async function GET() {
       ufv: map['commission.ufv_percent']?.value ?? 15,
       descriptions: {
         signup: map['commission.signup_percent']?.description ?? 'Comissao de cadastro do cliente',
-        recurring: map['commission.recurring_percent']?.description ?? 'Comissao recorrente mensal',
+        recurring: map['commission.recurring_percent']?.description ?? 'Comissão recorrente mensal',
         embaixador: map['commission.embaixador_percent']?.description ?? 'Bonus para parceiro que indicou',
         ufv: map['commission.ufv_percent']?.description ?? 'Percentual retido pela UFV (gerador)',
       },

@@ -15,7 +15,7 @@ export async function POST() {
     mock: true,
     fatura: {
       cliente_nome: 'Maria da Silva (exemplo)',
-      endereco: 'Av. Paulista, 1000 - Sao Paulo/SP',
+      endereco: 'Av. Paulista, 1000 - São Paulo/SP',
       cep: '01310-100',
       cidade: 'Sao Paulo',
       estado: 'SP',

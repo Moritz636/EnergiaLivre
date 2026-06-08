@@ -1,25 +1,58 @@
-// ============================================
-// TOKENOMICS - KWATT
-// ============================================
-// Constantes públicas do token utilitário $KWATT.
-// NÃO inclui promessas de valorização ou retorno financeiro.
-// Token de utilidade - Lei 14.478/2022 (Brasil)
-// ============================================
-
-export const KWH_REFERENCE_PRICE = 0.95 // Tarifa média ANEEL (R$/kWh)
-export const KWATT_TO_KWH_RATIO = 0.30 // 1 kWatt = 30% de 1 kWh
-export const KWATT_UNIT_PRICE = KWH_REFERENCE_PRICE * KWATT_TO_KWH_RATIO // R$ 0,285
+export const KWH_REFERENCE_PRICE = 0.95
 export const KWATT_SYMBOL = 'KWATT'
-export const KWATT_DECIMALS = 18 // Padrão ERC-20/BEP-20
+export const KWATT_DECIMALS = 18
 
-// ─── ON-CHAIN (placeholder até deploy) ────────────────────────────────
-export const KWATT_CHAIN_ID = 137 // Polygon PoS
+export const KWATT_CHAIN_ID = 137
 export const KWATT_NETWORK = 'polygon-mainnet'
 export const KWATT_RPC_URL = 'https://polygon-rpc.com'
-export const KWATT_CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000' // placeholder pre-deploy
+export const KWATT_CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000'
 export const KWATT_EXPLORER_URL = 'https://polygonscan.com/token/' + KWATT_CONTRACT_ADDRESS
-export const KWATT_DEPLOY_STATUS = 'not_deployed' // not_deployed | pending | deployed | verified
-export const KWATT_LAUNCH_BLOCK_TARGET = 75_500_000 // ~05/01/2027
+export const KWATT_DEPLOY_STATUS = 'not_deployed'
+export const KWATT_LAUNCH_BLOCK_TARGET = 72_500_000
+
+// ============================================
+// REGRAS DE VALORIZAÇÃO
+// ============================================
+// O token KWATT é um utilitário do ecossistema EnergiaLivre.
+//  - Uso interno: pagamento de faturas, cashback, staking
+//  - Preço inicial: 30% do valor do kWh no Brasil (R$ 0,285)
+//  - Cresce 3% ao mês (composto)
+//  - Após compra: 50% liberado para movimentação
+//  - Lançamento externo: 25 de janeiro de 2027
+// ============================================
+
+export const KWATT_INITIAL_RATIO = 0.30
+export const KWATT_MONTHLY_GROWTH = 0.03
+export const KWATT_RELEASE_PERCENT = 0.50
+
+export const TOKEN_LAUNCH_DATE = new Date(2027, 0, 25, 0, 0, 0)
+export const PRESALE_END_DATE = new Date(2027, 0, 25, 0, 0, 0)
+
+// Data de referência para início da contagem de valorização
+const PRICE_START_DATE = new Date(2026, 5, 8, 0, 0, 0)
+
+export function getCurrentRatio(): number {
+  const now = new Date()
+  const monthsSinceStart = (now.getFullYear() - PRICE_START_DATE.getFullYear()) * 12
+    + (now.getMonth() - PRICE_START_DATE.getMonth())
+
+  if (monthsSinceStart <= 0) return KWATT_INITIAL_RATIO
+  return KWATT_INITIAL_RATIO * Math.pow(1 + KWATT_MONTHLY_GROWTH, monthsSinceStart)
+}
+
+export function getCurrentUnitPrice(): number {
+  return KWH_REFERENCE_PRICE * getCurrentRatio()
+}
+
+export function getPriceAtDate(date: Date): number {
+  const monthsSinceStart = (date.getFullYear() - PRICE_START_DATE.getFullYear()) * 12
+    + (date.getMonth() - PRICE_START_DATE.getMonth())
+  if (monthsSinceStart <= 0) return KWH_REFERENCE_PRICE * KWATT_INITIAL_RATIO
+  const ratio = KWATT_INITIAL_RATIO * Math.pow(1 + KWATT_MONTHLY_GROWTH, monthsSinceStart)
+  return KWH_REFERENCE_PRICE * ratio
+}
+
+export const KWATT_UNIT_PRICE = getCurrentUnitPrice()
 
 export function getTokenExplorerLink(addr?: string): string {
   const a = addr && addr !== '0x0000000000000000000000000000000000000000' ? addr : KWATT_CONTRACT_ADDRESS
@@ -32,26 +65,23 @@ export function getTokenDeployStatus(): 'not_deployed' | 'pending' | 'deployed' 
     : 'deployed'
 }
 
-export const TOKEN_LAUNCH_DATE = new Date(2027, 0, 5, 0, 0, 0) // 05/01/2027
-export const PRESALE_END_DATE = new Date(2026, 8, 9, 23, 59, 59) // 09/09/2026
-
-export const TOKEN_TOTAL_SUPPLY = 1_000_000_000 // 1 bilhão
-export const PRESALE_ALLOCATION = 0.20 // 20% (200M tokens)
-export const REWARDS_ALLOCATION = 0.15 // 15% (150M tokens) - usuários, staking
-export const TREASURY_ALLOCATION = 0.25 // 25% (250M tokens) - DAO/equipe
-export const LIQUIDITY_ALLOCATION = 0.20 // 20% (200M tokens) - pools DEX
-export const ECOSYSTEM_ALLOCATION = 0.15 // 15% (150M tokens) - parcerias
-export const ADVISORS_ALLOCATION = 0.05 // 5% (50M tokens) - advisors
+export const TOKEN_TOTAL_SUPPLY = 1_000_000_000
+export const PRESALE_ALLOCATION = 0.20
+export const REWARDS_ALLOCATION = 0.15
+export const TREASURY_ALLOCATION = 0.25
+export const LIQUIDITY_ALLOCATION = 0.20
+export const ECOSYSTEM_ALLOCATION = 0.15
+export const ADVISORS_ALLOCATION = 0.05
 
 export interface TokenPackage {
   code: string
   tokens: number
-  basePrice: number // R$ sem desconto
-  discount: number // 0-100
-  bonus: number // tokens bônus
+  basePrice: number
+  discount: number
+  bonus: number
   popular: boolean
   description: string
-  referralBonus: number // tokens extras por referral
+  referralBonus: number
 }
 
 export const TOKEN_PACKAGES: TokenPackage[] = [
@@ -107,23 +137,18 @@ export const TOKEN_PACKAGES: TokenPackage[] = [
   },
 ]
 
-/**
- * Calcula o preço final de um pacote aplicando o desconto
- */
 export function getFinalPrice(pkg: TokenPackage): number {
   return pkg.basePrice * (1 - pkg.discount / 100)
 }
 
-/**
- * Calcula total de tokens com bônus
- */
 export function getTotalTokens(pkg: TokenPackage): number {
   return pkg.tokens + pkg.bonus
 }
 
-/**
- * Formata um número como R$ pt-BR
- */
+export function getReleasedTokens(tokens: number): number {
+  return Math.round(tokens * KWATT_RELEASE_PERCENT)
+}
+
 export function formatBRL(value: number): string {
   return value.toLocaleString('pt-BR', {
     style: 'currency',
@@ -131,30 +156,18 @@ export function formatBRL(value: number): string {
   })
 }
 
-/**
- * Formata quantidade de tokens com sufixo k/M
- */
 export function formatTokens(value: number): string {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
   if (value >= 1_000) return `${(value / 1_000).toFixed(1)}k`
   return value.toLocaleString('pt-BR')
 }
 
-/**
- * Casos de uso oficiais do token $KWATT (utility - SEM promessa de valorização)
- */
 export const TOKEN_USE_CASES = [
   {
     icon: 'Zap',
     title: 'Pagar sua conta de energia',
     description: 'Cada 1 KWATT equivale a 30% de 1 kWh. Use tokens para abater do seu consumo real na fatura.',
     color: 'emerald',
-  },
-  {
-    icon: 'Smartphone',
-    title: 'Recarga de celular',
-    description: 'Compre recargas de todas as operadoras direto pela plataforma, pagando com KWATT ou saldo misto.',
-    color: 'cyan',
   },
   {
     icon: 'TrendingUp',
@@ -182,9 +195,6 @@ export const TOKEN_USE_CASES = [
   },
 ] as const
 
-/**
- * Token distribution breakdown
- */
 export const TOKEN_DISTRIBUTION = [
   { label: 'Pré-venda pública', percent: PRESALE_ALLOCATION * 100, tokens: TOKEN_TOTAL_SUPPLY * PRESALE_ALLOCATION, color: 'emerald' },
   { label: 'Recompensas usuários', percent: REWARDS_ALLOCATION * 100, tokens: TOKEN_TOTAL_SUPPLY * REWARDS_ALLOCATION, color: 'cyan' },

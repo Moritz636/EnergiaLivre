@@ -1,11 +1,7 @@
 'use client'
 
-// ============================================================
-// QuickActions — 2 cards grandes: Escanear fatura + Recarga
-// ============================================================
-
 import Link from 'next/link'
-import { Camera, ScanLine, ArrowRight } from 'lucide-react'
+import { Camera, ArrowRight } from 'lucide-react'
 
 const ACTIONS = [
   {
@@ -17,16 +13,6 @@ const ACTIONS = [
     icon: Camera,
     title: 'Escanear fatura',
     desc: 'Use a câmera para cadastrar pelo QR Code ou código de barras',
-  },
-  {
-    href: '/recargas',
-    gradient: 'from-cyan-500/15 to-blue-500/10 border-cyan-500/30 hover:border-cyan-500/50',
-    iconBg: 'bg-cyan-500/20',
-    iconColor: 'text-cyan-300',
-    arrowColor: 'text-cyan-400',
-    icon: ScanLine,
-    title: 'Recarga de celular',
-    desc: 'Pague com PIX ou saldo da plataforma, cashback em KWATT',
   },
 ] as const
 

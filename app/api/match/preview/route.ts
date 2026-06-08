@@ -72,7 +72,7 @@ export async function POST(req: Request) {
       if (distance_km <= 50) motivos.push(`${Math.round(distance_km)} km de distancia`)
       else if (distance_km <= 200) motivos.push(`${Math.round(distance_km)} km`)
       if (economiaPct >= 20) motivos.push(`Economia de ${Math.round(economiaPct)}%`)
-      if (u.media_avaliacoes >= 4.5) motivos.push(`Avaliacao ${u.media_avaliacoes.toFixed(1)}/5`)
+      if (u.media_avaliacoes >= 4.5) motivos.push(`Avaliação ${u.media_avaliacoes.toFixed(1)}/5`)
       if (motivos.length === 0) motivos.push('Compativel com sua regiao')
 
       // Score: 0-100

@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // 3) Marcar a minha proposta como aceita tambem
+      // 3) Marcar a minha proposta como aceita também
       const { error: acceptMineErr } = await (supabase
         .from('match_proposals') as any)
         .update({

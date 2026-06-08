@@ -30,7 +30,7 @@ const ESTADOS_BRASILEIROS = [
 
 const CONCESSIONARIAS: Array<{ pattern: RegExp; name: string }> = [
   { pattern: /equatorial/i, name: 'Equatorial' },
-  { pattern: /enel\s*(distribuicao|s\.p\.|rio|ceara|goias|sao\s*paulo)?/i, name: 'Enel' },
+  { pattern: /enel\s*(distribuição|s\.p\.|rio|ceara|goias|sao\s*paulo)?/i, name: 'Enel' },
   { pattern: /cemig/i, name: 'Cemig' },
   { pattern: /cpfl/i, name: 'CPFL' },
   { pattern: /elektro/i, name: 'Elektro' },

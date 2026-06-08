@@ -1126,7 +1126,6 @@ const PAGES_LIST = [
   { name: 'Regulamentação', path: '/regulamentacao', desc: 'Regulamentação ANEEL' },
   { name: 'Manifesto', path: '/manifesto', desc: 'Manifesto da empresa' },
   { name: 'Termos', path: '/termos', desc: 'Termos de serviço' },
-  { name: 'Recargas', path: '/recargas', desc: 'Recargas de celular' },
   { name: 'Para Geradores', path: '/para-geradores', desc: 'Landing para geradores' },
   { name: 'Painel Admin', path: '/admin/dashboard', desc: 'Este painel administrativo' },
   { name: 'Painel Créditos', path: '/admin/credits', desc: 'Gerenciamento de créditos' },
