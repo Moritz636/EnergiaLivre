@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import {
@@ -52,7 +52,7 @@ const beneficios = [
   },
 ]
 
-export default function EmailConfirmadoPage() {
+function EmailConfirmadoContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const tipo = searchParams.get('from') || 'consumidor'
@@ -279,5 +279,17 @@ export default function EmailConfirmadoPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function EmailConfirmadoPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <EmailConfirmadoContent />
+    </Suspense>
   )
 }
