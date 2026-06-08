@@ -157,7 +157,7 @@ export default function EconomizarPage() {
           src="/images/familia-economia.webp"
           alt=""
           fill
-          className="object-cover opacity-[0.06]"
+          className="object-cover opacity-[0.15]"
           priority
         />
       </div>

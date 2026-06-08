@@ -174,7 +174,7 @@ export default function LoginPage() {
           src="/images/login-security.webp"
           alt=""
           fill
-          className="object-cover opacity-[0.05]"
+          className="object-cover opacity-[0.12]"
           priority
         />
       </div>
@@ -183,7 +183,7 @@ export default function LoginPage() {
           src="/images/login-security.webp"
           alt=""
           fill
-          className="object-cover opacity-[0.05]"
+          className="object-cover opacity-[0.12]"
           priority
         />
       </div>

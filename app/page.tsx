@@ -89,7 +89,7 @@ export default function HomePage() {
             src="/images/hero-home.webp"
             alt=""
             fill
-            className="object-cover opacity-[0.08]"
+            className="object-cover opacity-20"
             priority
           />
         </div>
@@ -152,7 +152,7 @@ export default function HomePage() {
             src="/images/escritorio-equipe.webp"
             alt=""
             fill
-            className="object-cover opacity-[0.06]"
+            className="object-cover opacity-[0.15]"
           />
         </div>
         <div className="max-w-6xl mx-auto">

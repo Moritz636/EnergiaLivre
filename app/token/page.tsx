@@ -208,7 +208,7 @@ export default function TokenPresalePage() {
               src="/images/token-futuro.webp"
               alt=""
               fill
-              className="object-cover opacity-[0.08]"
+              className="object-cover opacity-[0.15]"
               priority
             />
           </div>
