@@ -1,5 +1,5 @@
 // ============================================================
-// _utils/format — helpers puros para /embaixador
+// _utils/format — helpers puros para /embaixador (parceiros)
 // ============================================================
 
 /** Formata BRL com 0 casas decimais (usado nos cards do simulador). */

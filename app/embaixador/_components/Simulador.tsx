@@ -1,7 +1,7 @@
 'use client'
 
 // ============================================================
-// Simulador — Calculadora interativa de ganhos do embaixador
+// Simulador — Calculadora interativa de ganhos do parceiro
 // (usa comissões REAIS do backend via props).
 // ============================================================
 

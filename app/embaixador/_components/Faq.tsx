@@ -13,7 +13,7 @@ const FAQS = [
   },
   {
     q: 'Quanto posso ganhar?',
-    a: 'Depende do seu número de indicações. Use o simulador acima — ele usa os percentuais reais do programa (15% no cadastro, 10% recorrente, 5% bônus embaixador).',
+    a: 'Depende do seu número de indicações. Use o simulador acima — ele usa os percentuais reais do programa (15% no cadastro, 10% recorrente, 5% bônus parceiro).',
   },
   {
     q: 'Preciso ser CLT ou ter CNPJ?',
@@ -25,7 +25,7 @@ const FAQS = [
   },
   {
     q: 'Posso indicar em qualquer estado?',
-    a: 'Sim. A plataforma opera em 5 estados piloto (RS, SC, PR, SP, MT) e cresce conforme demanda. Cada estado tem sua própria rede de embaixadores.',
+    a: 'Sim. A plataforma opera em 5 estados piloto (RS, SC, PR, SP, MT) e cresce conforme demanda. Cada estado tem sua própria rede de parceiros.',
   },
   {
     q: 'Tem materiais de venda prontos?',

@@ -210,7 +210,31 @@ export default function CheckoutPage() {
               <div className="flex items-center gap-2"><Zap className="w-4 h-4 text-emerald-500" /> Cancele quando quiser</div>
               <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-emerald-500" /> Ativação em até 48h</div>
             </div>
-            <p className="text-[10px] text-slate-600 mt-4">
+          </div>
+
+          {/* WhatsApp Help Message */}
+          <div className="mt-8 p-6 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-blue-500/5 border border-emerald-500/20">
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex-1 min-w-[200px]">
+                <h3 className="text-sm font-bold text-white mb-1">Precisa de ajuda para escolher o plano ideal?</h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Fale com um técnico especializado. Ele analisará seu consumo da fatura e indicará o pacote de kWh 
+                  que melhor atende suas necessidades, sem compromisso.
+                </p>
+              </div>
+              <a
+                href="https://wa.me/5584987858668?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20para%20escolher%20o%20plano%20ideal%20de%20energia%20solar."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-900 rounded-xl font-bold text-sm transition shadow-lg flex-shrink-0"
+              >
+                Falar com Técnico
+              </a>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <p className="text-[10px] text-slate-600 text-center">
               Ao assinar, você concorda com nossos Termos de Uso. A economia é estimada e pode variar conforme sua região e consumo.
             </p>
           </div>

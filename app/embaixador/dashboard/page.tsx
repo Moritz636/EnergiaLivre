@@ -1,7 +1,7 @@
 'use client'
 
 // ============================================================
-// /embaixador/dashboard — Painel principal do embaixador.
+// /embaixador/dashboard — Painel principal do parceiro.
 //
 // Orquestra:
 //   • Carregamento de métricas (leads, comissões, meta).
@@ -54,10 +54,17 @@ export default function DashboardEmbaixadorPage() {
   const [consentChecked, setConsentChecked] = useState(false)
   const supabase = getSupabase()
 
+  const partnerCode = useMemo(() => {
+    if (!profile?.nome) return ''
+    const firstTwo = profile.nome.trim().substring(0, 2).toUpperCase()
+    const year = new Date().getFullYear().toString()
+    return `${firstTwo}PRC${year}`
+  }, [profile])
+
   const referralLink = useMemo(() => {
     if (typeof window === 'undefined' || !user) return ''
-    return `${window.location.origin}/?ref=${user.id}`
-  }, [user])
+    return `${window.location.origin}/?ref=${partnerCode || user.id}`
+  }, [user, partnerCode])
 
   // Termos de pagamento: força re-aceite se versão mudou.
   useEffect(() => {
@@ -140,7 +147,7 @@ export default function DashboardEmbaixadorPage() {
           indicadosMes,
         })
       } catch (err) {
-        console.error('Erro ao carregar dashboard do embaixador:', err)
+        console.error('Erro ao carregar dashboard do parceiro:', err)
       } finally {
         if (!cancelled) setLoadingMetrics(false)
       }
@@ -196,7 +203,7 @@ export default function DashboardEmbaixadorPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-2 grid md:grid-cols-2 gap-6">
-            <ReferralCard referralLink={referralLink} />
+            <ReferralCard referralLink={referralLink} partnerCode={partnerCode} />
             <CommissionsList comissoes={recentComissoes} />
           </div>
           <div>

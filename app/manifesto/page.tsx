@@ -761,7 +761,7 @@ export default function ManifestoPage() {
           </h2>
           <p className="text-lg text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed">
             Seja como consumidor (economize ate 90%), gerador (renda passiva com excedente) ou
-            embaixador (ganhe 5 KWATT por indicacao), voce faz parte dessa historia.
+            parceiro (ganhe 5 KWATT por indicacao), voce faz parte dessa historia.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link

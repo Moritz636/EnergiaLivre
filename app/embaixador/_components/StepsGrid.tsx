@@ -11,7 +11,7 @@ const STEPS = [
     n: '01',
     icon: Users,
     titulo: 'Indique',
-    desc: 'Compartilhe seu link de embaixador. WhatsApp, Instagram, boca a boca — você escolhe.',
+    desc: 'Compartilhe seu link de parceiro. WhatsApp, Instagram, boca a boca — você escolhe.',
   },
   {
     n: '02',

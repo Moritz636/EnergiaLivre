@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
         profile.tipo === 'parceiro' || profile.role === 'admin'
       if (!isEmbaixador) {
         return NextResponse.json(
-          { error: 'Apenas embaixadores podem enviar propostas' },
+          { error: 'Apenas parceiros podem enviar propostas' },
           { status: 403 },
         )
       }

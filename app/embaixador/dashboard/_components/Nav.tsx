@@ -1,7 +1,7 @@
 'use client'
 
 // ============================================================
-// Nav — Barra de navegação superior do painel do embaixador.
+// Nav — Barra de navegação superior do painel do parceiro.
 // Inclui brand, badge "EMBAIXADOR", saudação e ações rápidas.
 // ============================================================
 
@@ -40,13 +40,13 @@ export function Nav({ profile, onLogout }: NavProps) {
             ENERGIA<span className="text-emerald-500">LIVRE</span>
           </span>
           <div className="ml-3 px-2 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-[9px] font-black text-yellow-400 uppercase tracking-wider">
-            Embaixador
+            Parceiro
           </div>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4">
           <span className="text-sm text-slate-400 hidden md:block">
-            Olá, <span className="text-white font-medium">{profile?.nome || 'Embaixador'}</span>
+            Olá, <span className="text-white font-medium">{profile?.nome || 'Parceiro'}</span>
           </span>
 
           <Link
@@ -85,7 +85,7 @@ export function Nav({ profile, onLogout }: NavProps) {
           <Link
             href="/dashboard/chat"
             className="flex items-center gap-1.5 px-3 py-2 text-sm text-slate-300 hover:text-emerald-400 transition"
-            title="Chat interno (exclusivo embaixador)"
+            title="Chat interno (exclusivo parceiro)"
           >
             <MessageCircle className="w-4 h-4" />
             <span className="hidden md:inline">Chat</span>

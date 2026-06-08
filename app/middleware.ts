@@ -147,7 +147,7 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // Chat interno: exclusivo do programa de embaixadores (tipo=parceiro)
+    // Chat interno: exclusivo do programa de parceiros (tipo=parceiro)
     // ou role=admin. Bloqueia consumidores/geradores.
     if (pathname.startsWith('/dashboard/chat')) {
       const role = await getUserRole(supabase, user.id)

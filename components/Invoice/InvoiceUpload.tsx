@@ -79,7 +79,7 @@ export default function InvoiceUpload({
       {isEmbaixador && (
         <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
           <p className="text-xs text-yellow-300 font-bold">
-            Modo Embaixador
+            Modo Parceiro
           </p>
           <p className="text-[10px] text-slate-400 mt-1">
             Esta fatura será cadastrada em nome de um cliente da sua rede. Preencha os dados dele abaixo.

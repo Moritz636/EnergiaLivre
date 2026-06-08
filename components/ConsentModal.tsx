@@ -5,7 +5,7 @@
 // ============================================
 // Aparece no 1o login (e quando last_terms_version !== current).
 // Bloqueia o dashboard ate aceitar.
-// Usado em: 3 dashboards (consumidor, gerador, embaixador)
+// Usado em: 3 dashboards (consumidor, gerador, parceiro)
 // ============================================
 
 import { useEffect, useState } from 'react'
@@ -121,9 +121,9 @@ export function ConsentModal({ open, onAccepted, termsVersion = CURRENT_TERMS_VE
             <ul className="space-y-1 list-disc list-inside text-slate-400 text-xs">
               <li>Consumidor não paga nada (Member Plus opcional R$ 9,90/mês);</li>
               <li>Moedas são <strong>desconto</strong> em fatura (não pagamento direto);</li>
-              <li>Embaixador recebe 5% dos clientes da rede + 20 moedas por match;</li>
+              <li>Parceiro recebe 5% dos clientes da rede + 20 moedas por match;</li>
               <li>Gerador (UFV) paga 15% de taxa por conexão ativa;</li>
-              <li>Match aceito → 20 moedas para cada parte + 20 ao embaixador;</li>
+              <li>Match aceito → 20 moedas para cada parte + 20 ao parceiro;</li>
               <li>Dados protegidos pela LGPD (Lei 13.709/2018).</li>
             </ul>
           </div>
@@ -147,8 +147,8 @@ export function ConsentModal({ open, onAccepted, termsVersion = CURRENT_TERMS_VE
               Ao aceitar, você concorda com o processamento automático de comissões:
             </p>
             <ul className="space-y-1 list-disc list-inside text-slate-400 text-xs mt-1">
-              <li>Match aceito → 20 moedas para você + 20 para a contraparte + 20 ao embaixador (se houver);</li>
-              <li>Pagamento confirmado → 5% ao embaixador (se houver) + 15% ao gerador (se você for consumidor com match ativo).</li>
+              <li>Match aceito → 20 moedas para você + 20 para a contraparte + 20 ao parceiro (se houver);</li>
+              <li>Pagamento confirmado → 5% ao parceiro (se houver) + 15% ao gerador (se você for consumidor com match ativo).</li>
             </ul>
           </div>
 

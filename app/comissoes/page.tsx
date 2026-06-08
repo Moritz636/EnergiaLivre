@@ -1,7 +1,7 @@
 'use client'
 
 // ============================================================
-// /comissoes — Painel admin/embaixador de comissões.
+// /comissoes — Painel admin/parceiro de comissões.
 // Orquestra KPIs, meta, filtros e tabela.
 // ============================================================
 

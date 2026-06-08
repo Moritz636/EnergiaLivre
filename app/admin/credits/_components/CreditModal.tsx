@@ -27,7 +27,7 @@ interface CreditModalProps {
 
 const TYPE_OPTIONS = [
   { value: 'purchase', label: 'Compra de créditos (Pix confirmado)' },
-  { value: 'commission', label: 'Comissão de embaixador' },
+  { value: 'commission', label: 'Comissão de parceiro' },
   { value: 'refund', label: 'Estorno' },
   { value: 'admin_credit', label: 'Crédito manual' },
   { value: 'admin_debit', label: 'Débito manual' },

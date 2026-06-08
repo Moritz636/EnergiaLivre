@@ -1,7 +1,7 @@
 'use client'
 
 // ============================================================
-// LeadForm — Formulário de cadastro do embaixador (3 passos)
+// LeadForm — Formulário de cadastro do parceiro (3 passos)
 //   1. Dados básicos
 //   2. Nicho/canal/audiencia
 //   3. Loading animado (4 fases) + tela de sucesso
@@ -46,7 +46,7 @@ const CANAL_OPTIONS = [
 
 const PHASES = [
   { icon: Sparkles, text: 'Validando seus dados...' },
-  { icon: Users, text: 'Cruzando com a base de embaixadores...' },
+  { icon: Users, text: 'Cruzando com a base de parceiros...' },
   { icon: Handshake, text: 'Preparando seu contrato de parceria...' },
   { icon: DollarSign, text: 'Calculando projeção personalizada...' },
 ]
@@ -116,7 +116,7 @@ export function LeadForm({ whatsappGroupUrl }: LeadFormProps) {
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[10px] font-black mb-4 uppercase tracking-widest">
-            <Briefcase className="w-3 h-3" /> Cadastro de Embaixador
+            <Briefcase className="w-3 h-3" /> Cadastro de Parceiro
           </div>
           <h2 className="text-3xl md:text-5xl font-black text-white mb-4 leading-tight">
             Comece a{' '}
@@ -355,7 +355,7 @@ function Step2Form({
           type="submit"
           className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-900 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 group"
         >
-          Quero ser embaixador <Send className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          Quero ser parceiro <Send className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </button>
       </div>
     </form>

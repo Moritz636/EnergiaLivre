@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getSupabase } from '@/lib/supabase/singleton';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, Loader2, Eye, EyeOff, Zap, ArrowRight, Sparkles, Sun, Wallet } from 'lucide-react';
+import { Mail, Lock, Loader2, Eye, EyeOff, Zap, ArrowRight, Sparkles, Sun, Wallet, Home, Briefcase } from 'lucide-react';
 import Link from 'next/link';
 
 const FROM_ROLE_MAP: Record<string, string> = {
@@ -56,8 +56,8 @@ export default function LoginPage() {
       const labels: Record<string, string> = {
         consumidor: 'Painel do Consumidor',
         gerador: 'Painel do Gerador',
-        parceiro: 'Painel do Embaixador',
-        embaixador: 'Painel do Embaixador',
+        parceiro: 'Painel do Parceiro',
+        embaixador: 'Painel do Parceiro',
       };
       setFromLabel(labels[from] || '');
     }
@@ -265,7 +265,36 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <div className="mt-8 space-y-2 text-center">
+        <div className="mt-6 pt-4 border-t border-white/5">
+          <p className="text-[10px] text-slate-500 text-center mb-3 uppercase tracking-wider font-bold">
+            Entrar como:
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            <Link
+              href="/login?from=consumidor"
+              className="flex flex-col items-center gap-1 py-3 px-2 rounded-xl bg-white/5 hover:bg-emerald-500/20 border border-white/5 hover:border-emerald-500/30 transition text-center group"
+            >
+              <Home className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition" />
+              <span className="text-[9px] text-slate-400 group-hover:text-emerald-300 font-bold">Consumidor</span>
+            </Link>
+            <Link
+              href="/login?from=gerador"
+              className="flex flex-col items-center gap-1 py-3 px-2 rounded-xl bg-white/5 hover:bg-blue-500/20 border border-white/5 hover:border-blue-500/30 transition text-center group"
+            >
+              <Sun className="w-4 h-4 text-blue-400 group-hover:scale-110 transition" />
+              <span className="text-[9px] text-slate-400 group-hover:text-blue-300 font-bold">Gerador</span>
+            </Link>
+            <Link
+              href="/login?from=parceiro"
+              className="flex flex-col items-center gap-1 py-3 px-2 rounded-xl bg-white/5 hover:bg-yellow-500/20 border border-white/5 hover:border-yellow-500/30 transition text-center group"
+            >
+              <Briefcase className="w-4 h-4 text-yellow-400 group-hover:scale-110 transition" />
+              <span className="text-[9px] text-slate-400 group-hover:text-yellow-300 font-bold">Parceiro</span>
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-6 space-y-2 text-center">
           <p className="text-slate-400 text-sm">
             Não tem conta?{' '}
             <Link href="/cadastro" className="text-emerald-400 hover:text-emerald-300 transition font-medium">

@@ -191,12 +191,12 @@ export default function CadastroEmbaixadorPage() {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 rounded-full mb-6 animate-bounce">
             <Crown className="w-10 h-10 text-yellow-500" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Bem-vindo ao time de embaixadores</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">Bem-vindo ao time de parceiros</h1>
           <p className="text-slate-400 mb-6">Sua conta foi criada. Confirme seu e-mail para acessar o painel de comissões.</p>
 
           <p className="text-slate-500 text-sm flex items-center justify-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin text-yellow-500" />
-            Redirecionando para o dashboard do embaixador...
+            Redirecionando para o dashboard do parceiro...
           </p>
         </div>
       </div>
@@ -217,7 +217,7 @@ export default function CadastroEmbaixadorPage() {
             <ArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform" /> Voltar
           </Link>
           <div className="px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-[9px] font-black text-yellow-400 uppercase tracking-wider flex items-center gap-1">
-            <Crown className="w-3 h-3" /> Programa de Embaixadores
+            <Crown className="w-3 h-3" /> Programa de Parceiros
           </div>
         </div>
 
@@ -234,7 +234,7 @@ export default function CadastroEmbaixadorPage() {
               <Crown className="w-8 h-8 text-yellow-500" />
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">
-              Seja um <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-500">Embaixador</span>
+              Seja um <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-500">Parceiro</span>
             </h1>
             <p className="text-slate-400 text-sm">Ganhe comissões indicando energia solar.</p>
           </div>
@@ -244,13 +244,13 @@ export default function CadastroEmbaixadorPage() {
               {stats.novosHoje > 0 && (
                 <div className="flex items-center gap-1">
                   <Users className="w-3 h-3 text-yellow-400" />
-                  {stats.novosHoje} {stats.novosHoje === 1 ? 'novo embaixador' : 'novos embaixadores'} hoje
+                  {stats.novosHoje} {stats.novosHoje === 1 ? 'novo parceiro' : 'novos parceiros'} hoje
                 </div>
               )}
               {stats.totalAtivos > 0 && (
                 <div className="flex items-center gap-1">
                   <TrendingUp className="w-3 h-3 text-yellow-400" />
-                  {stats.totalAtivos} {stats.totalAtivos === 1 ? 'embaixador ativo' : 'embaixadores ativos'}
+                  {stats.totalAtivos} {stats.totalAtivos === 1 ? 'parceiro ativo' : 'parceiros ativos'}
                 </div>
               )}
               {stats.comissaoPaga > 0 && (
@@ -420,7 +420,7 @@ export default function CadastroEmbaixadorPage() {
               ) : (
                 <>
                   <Star className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                  Criar conta de Embaixador
+                  Criar conta de Parceiro
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </>
               )}

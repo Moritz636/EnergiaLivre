@@ -3,7 +3,7 @@
 // ------------------------------------------------------------
 // Gera um PDF premium (A4) com:
 //   • Logo EnergiaLivre (desenhada via primitivas).
-//   • Identificação do cliente + dados do embaixador.
+//   • Identificação do cliente + dados do parceiro.
 //   • Simulação de economia (R$ gasto → economia mensal/anual).
 //   • Prazos regulatórios ANEEL (Lei 14.300/2022, REN 687/2015).
 //   • Validade de 48h destacada no topo.
@@ -52,7 +52,7 @@ const MARGIN_X = 40
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN_X * 2
 
 export interface ProposalData {
-  // Embaixador
+  // Dados do parceiro
   embaixadorNome: string
   embaixadorEmail: string
   embaixadorCidade: string
@@ -287,9 +287,9 @@ function drawClientEmbaixador(
     color: COLORS.slate300,
   })
 
-  // Coluna Embaixador
+  // Coluna Parceiro
   const col2X = PAGE_WIDTH / 2 + 10
-  drawLabel(page, fontBold, 'EMBAIXADOR', col2X, y)
+  drawLabel(page, fontBold, 'PARCEIRO', col2X, y)
   const embY = y - 16
   page.drawText(data.embaixadorNome, {
     x: col2X,
@@ -599,14 +599,14 @@ function drawSignatureFooter(
     color: COLORS.slate300,
   })
 
-  // Linha do embaixador
+  // Linha do parceiro
   page.drawLine({
     start: { x: col2X, y: y + 18 },
     end: { x: col2X + lineW, y: y + 18 },
     thickness: 0.5,
     color: COLORS.slate500,
   })
-  page.drawText('Embaixador EnergiaLivre', {
+  page.drawText('Parceiro EnergiaLivre', {
     x: col2X,
     y: y + 4,
     size: 8,

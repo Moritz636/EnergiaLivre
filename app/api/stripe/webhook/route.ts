@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
             })
             .eq('stripe_subscription_id', subscriptionId);
 
-          // Comissão recorrente para embaixador
+          // Comissão recorrente para parceiro
           await criarComissaoRecorrente(supabase, subscriptionId, invoice.amount_paid / 100);
         }
 
@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
           .select('id')
           .single();
 
-        // Processa comissões 5% embaixador + 15% UFV (idempotente)
+        // Processa comissões 5% parceiro + 15% UFV (idempotente)
         if (newPag?.id) {
           const { error: commErr } = await (supabase.rpc('process_payment_commissions', {
             p_payment_id: newPag.id,

@@ -18,7 +18,7 @@ export function FooterMeta({ createdAt, leadsCount }: FooterMetaProps) {
   return (
     <div className="mt-6 flex items-center gap-2 text-xs text-slate-500 flex-wrap">
       <Calendar className="w-3 h-3" aria-hidden />
-      <span>Embaixador desde {formatDate(createdAt)}</span>
+      <span>Parceiro desde {formatDate(createdAt)}</span>
       {leadsCount > 0 && (
         <>
           <span aria-hidden>•</span>

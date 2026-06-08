@@ -1,7 +1,7 @@
 'use client'
 
 // ============================================================
-// WhatsappCta — CTA final para entrar no grupo de embaixadores.
+// WhatsappCta — CTA final para entrar no grupo de parceiros.
 // ============================================================
 
 import { MessageCircle } from 'lucide-react'
@@ -21,11 +21,11 @@ export function WhatsappCta({ whatsappGroupUrl }: WhatsappCtaProps) {
           <MessageCircle className="w-8 h-8 text-emerald-300" />
         </div>
         <h2 className="text-3xl md:text-5xl font-black text-white mb-4 leading-tight">
-          Entre no grupo de embaixadores.
+          Entre no grupo de parceiros.
         </h2>
         <p className="text-lg text-slate-300 mb-8 max-w-xl mx-auto leading-relaxed">
-          Network com outros embaixadores, tire dúvidas em tempo real, receba materiais
-          exclusivos e fique por dentro das novidades do programa.
+Network com outros parceiros, tire dúvidas em tempo real, receba materiais
+           exclusivos e fique por dentro das novidades do programa.
         </p>
         <a
           href={whatsappGroupUrl}
@@ -36,7 +36,7 @@ export function WhatsappCta({ whatsappGroupUrl }: WhatsappCtaProps) {
           <MessageCircle className="w-4 h-4" /> Entrar no grupo agora
         </a>
         <p className="text-[10px] text-slate-500 mt-3">
-          Grupo oficial · ~100 embaixadores ativos · Moderação diária
+          Grupo oficial · ~100 parceiros ativos · Moderação diária
         </p>
       </div>
     </section>

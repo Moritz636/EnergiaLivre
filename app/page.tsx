@@ -4,7 +4,7 @@ import Link from 'next/link';
 import {
   ArrowRight, Zap, ShieldCheck, Crown, ChevronDown, Mail, Wallet, Award,
   Sun, CheckCircle2, Building2, Leaf, Calculator, Clock, Sparkles, MapPin,
-  TrendingUp, Lock, Phone, Target, Flame, Users, BadgeCheck,
+  TrendingUp, Lock, Phone, Target, Flame, Users, BadgeCheck, Share2,
 } from 'lucide-react';
 import { WHATSAPP_BASE } from '@/lib/leads';
 
@@ -62,6 +62,13 @@ export default function HomePage() {
             <a href="#contato" className="hover:text-white transition">Contato</a>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => { if (typeof navigator !== 'undefined' && navigator.share) { navigator.share({ title: 'EnergiaLivre', text: 'Economize na conta de luz com energia solar. Sem instalação, sem fidelidade.', url: 'https://energialivre.dev.br' }); } else { navigator.clipboard?.writeText('https://energialivre.dev.br'); alert('Link copiado! Compartilhe com seus amigos.'); } }}
+              className="hidden md:inline-flex text-sm font-bold text-emerald-400 hover:text-emerald-300 transition px-3 py-2 items-center gap-1.5"
+              title="Compartilhar"
+            >
+              <Share2 className="w-4 h-4" /> Compartilhar
+            </button>
             <Link href="/login" className="hidden md:inline-flex text-sm font-bold text-slate-300 hover:text-white transition px-4 py-2">
               Entrar
             </Link>
@@ -544,7 +551,7 @@ export default function HomePage() {
                 <li><Link href="/login" className="hover:text-emerald-400 transition">Entrar</Link></li>
                 <li><Link href="/cadastro" className="hover:text-emerald-400 transition">Cadastrar</Link></li>
                 <li><Link href="/cadastro-gerador" className="hover:text-emerald-400 transition">Sou Gerador</Link></li>
-                <li><Link href="/cadastro-embaixador" className="hover:text-emerald-400 transition">Sou Embaixador</Link></li>
+                <li><Link href="/cadastro-parceiro" className="hover:text-emerald-400 transition">Sou Parceiro</Link></li>
                 <li><a href="#contato" className="hover:text-emerald-400 transition">Contato</a></li>
               </ul>
             </div>

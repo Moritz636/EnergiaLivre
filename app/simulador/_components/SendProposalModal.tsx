@@ -9,7 +9,7 @@
 //
 // Fluxo:
 //   1) Usuário informa nome + e-mail (gasto já vem do slider).
-//   2) Submit → POST /api/embaixador/send-proposal.
+//   2) Submit → POST /api/embaixador/send-proposal (envio de proposta do parceiro).
 //   3) Sucesso: mostra confirmação + protocolo.
 //   4) Em paralelo, abre WhatsApp com mensagem pronta.
 //

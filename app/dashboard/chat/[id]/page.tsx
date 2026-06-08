@@ -9,7 +9,7 @@ import CreateGroupModal from '@/components/Chat/CreateGroupModal'
 import { Loader2 } from 'lucide-react'
 
 // ============================================================
-// CHAT — conversa individual (exclusivo Embaixador)
+// CHAT — conversa individual (exclusivo Parceiro)
 // Mesma regra do /dashboard/chat: só abre para tipo=parceiro
 // (ou role=admin). Consumidores/geradores são redirecionados.
 // ============================================================
@@ -37,7 +37,7 @@ export default function ChatConversationPage({ params }: PageProps) {
     }
   }, [user, loading, router])
 
-  // Role check → redireciona quem não é embaixador
+  // Role check → redireciona quem não é parceiro
   useEffect(() => {
     if (loading || !user || !profile) return
     const isEmbaixador =

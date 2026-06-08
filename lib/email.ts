@@ -8,7 +8,7 @@
 //
 // O transporte é desenhado para o ambiente do EnergiaLivre:
 //   - Logs estruturados para auditoria.
-//   - Não quebra a request do embaixador se o SMTP cair.
+//   - Não quebra a request do parceiro se o SMTP cair.
 // ============================================================
 
 export interface EmailAttachment {
@@ -211,7 +211,7 @@ export function proposalEmailHtml(args: {
                   conforme Lei 14.300/2022 e REN 687/2015.
                 </p>
                 <p style="font-size:13px;line-height:1.6;color:#94a3b8;margin:0;">
-                  Dúvidas? Fale com seu embaixador
+                  Dúvidas? Fale com seu parceiro
                   <strong style="color:#cbd5e1;">${args.embaixadorName}</strong>
                   ou responda este e-mail.
                 </p>

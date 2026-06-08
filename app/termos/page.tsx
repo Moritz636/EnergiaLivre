@@ -48,14 +48,14 @@ export default function TermosPage() {
               <p className="text-slate-300 leading-relaxed">
                 A plataforma <strong className="text-emerald-400">EnergiaLivre</strong> conecta
                 consumidores residenciais/comerciais (<em>consumidores</em>) a geradores de energia
-                distribuída (<em>geradores</em>) e embaixadores/indicadores (<em>embaixadores</em>),
+                distribuída (<em>geradores</em>) e parceiros/indicadores (<em>parceiros</em>),
                 possibilitando:
               </p>
               <ul className="mt-3 space-y-2 text-slate-300 list-disc list-inside">
                 <li>Match georreferenciado entre oferta (excedente solar) e demanda (economia na fatura);</li>
                 <li>Negociação de condições diretamente entre as partes (chat + propostas);</li>
                 <li>Pagamento de assinaturas opcionais (planos Consumidor/Gerador, Member Plus) e moedas internas (1 moeda = R$ 0,70 de desconto);</li>
-                <li>Programa de indicação com cupons e comissões para embaixadores.</li>
+                <li>Programa de indicação com cupons e comissões para parceiros.</li>
               </ul>
               <p className="text-slate-300 leading-relaxed mt-3">
                 A plataforma <strong>não</strong> é distribuidora de energia, não realiza venda direta de kWh,
@@ -93,7 +93,7 @@ export default function TermosPage() {
                       <td className="py-3">Plano de assinatura Gerador + 15% de taxa por conexão ativa</td>
                     </tr>
                     <tr className="border-b border-slate-800">
-                      <td className="py-3 font-semibold text-emerald-300">Embaixador</td>
+                      <td className="py-3 font-semibold text-emerald-300">Parceiro</td>
                       <td className="py-3">5% da receita dos clientes indicados + 20 moedas por match</td>
                       <td className="py-3">R$ 0 (gratuito)</td>
                     </tr>
@@ -126,16 +126,16 @@ export default function TermosPage() {
                   <p>
                     Quando uma proposta de match é aceita por ambas as partes, a plataforma credita
                     automaticamente <strong>20 moedas</strong> a cada parte (consumidor e gerador) como
-                    bônus de boas-vindas à conexão. Se houver um embaixador indicador
-                    (campo <code className="text-emerald-300">referred_by</code>), o embaixador recebe
+                    bônus de boas-vindas à conexão. Se houver um parceiro indicador
+                    (campo <code className="text-emerald-300">referred_by</code>), o parceiro recebe
                     também <strong>20 moedas</strong> por indicação confirmada.
                   </p>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-emerald-300 mb-1">3.2. Comissão de Embaixador (5%)</h3>
+                  <h3 className="font-semibold text-emerald-300 mb-1">3.2. Comissão de Parceiro (5%)</h3>
                   <p>
                     Para cada pagamento processado pela plataforma de um cliente que tenha sido indicado
-                    por um embaixador, o embaixador recebe <strong>5% do valor</strong> do pagamento.
+                    por um parceiro, o parceiro recebe <strong>5% do valor</strong> do pagamento.
                     Esta comissão é calculada atomicamente via RPC <code>process_payment_commissions</code> e
                     registrada na tabela <code>comissoes</code> com tipo <code>embaixador_5pct</code>.
                   </p>
@@ -221,7 +221,7 @@ export default function TermosPage() {
                   </p>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-emerald-300 mb-1">5.4. Embaixador</h3>
+                  <h3 className="font-semibold text-emerald-300 mb-1">5.4. Parceiro</h3>
                   <p>
                     Indicar consumidores/geradores de forma ética e não enganosa, não fazer promessas
                     financeiras além das previstas neste acordo, comunicar à plataforma eventuais

@@ -22,7 +22,7 @@ export function Header({ cidade, estado }: HeaderProps) {
         <div className="flex items-center gap-3 mb-2">
           <Handshake className="w-6 h-6 text-yellow-400" aria-hidden />
           <h1 className="text-3xl md:text-4xl font-black text-white">
-            Painel do Embaixador
+            Painel do Parceiro
           </h1>
         </div>
         <p className="text-slate-400">

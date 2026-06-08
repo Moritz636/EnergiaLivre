@@ -11,10 +11,12 @@ import { Share2, Copy, Check, Sparkles } from 'lucide-react'
 
 interface ReferralCardProps {
   referralLink: string
+  partnerCode?: string
 }
 
-export function ReferralCard({ referralLink }: ReferralCardProps) {
+export function ReferralCard({ referralLink, partnerCode }: ReferralCardProps) {
   const [copied, setCopied] = useState(false)
+  const [codeCopied, setCodeCopied] = useState(false)
 
   const handleCopy = async () => {
     if (!referralLink) return
@@ -27,8 +29,19 @@ export function ReferralCard({ referralLink }: ReferralCardProps) {
     }
   }
 
+  const handleCopyCode = async () => {
+    if (!partnerCode) return
+    try {
+      await navigator.clipboard.writeText(partnerCode)
+      setCodeCopied(true)
+      setTimeout(() => setCodeCopied(false), 1800)
+    } catch {
+      /* clipboard bloqueado */
+    }
+  }
+
   const whatsappMessage = encodeURIComponent(
-    `Olha essa plataforma de energia solar: ${referralLink}`,
+    `Olha essa plataforma de energia solar: ${referralLink}${partnerCode ? `\n\nMeu código de parceiro: ${partnerCode}` : ''}`,
   )
 
   return (
@@ -40,6 +53,27 @@ export function ReferralCard({ referralLink }: ReferralCardProps) {
       <p className="text-xs text-slate-400 mb-3">
         Compartilhe este link. Cada cadastro conta como sua indicação.
       </p>
+
+      {partnerCode && (
+        <div className="mb-4 p-4 rounded-xl bg-gradient-to-r from-yellow-500/10 to-amber-500/5 border border-yellow-500/30">
+          <p className="text-[10px] text-yellow-400 font-bold uppercase tracking-wider mb-1">Seu Código de Parceiro</p>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 font-mono text-xl font-black text-white tracking-widest bg-slate-900/50 rounded-lg py-2 px-3 border border-white/10 text-center">
+              {partnerCode}
+            </div>
+            <button
+              onClick={handleCopyCode}
+              className="inline-flex items-center gap-1 px-3 py-2 bg-yellow-500 hover:bg-yellow-400 text-slate-900 rounded-lg font-bold transition text-sm"
+              aria-label={codeCopied ? 'Código copiado' : 'Copiar código'}
+            >
+              {codeCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            </button>
+          </div>
+          <p className="text-[10px] text-slate-500 mt-2">
+            Use este código para indicar amigos. Eles podem inserir na hora do cadastro.
+          </p>
+        </div>
+      )}
 
       <div className="flex items-center gap-2">
         <input

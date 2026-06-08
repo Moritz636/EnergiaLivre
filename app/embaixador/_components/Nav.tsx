@@ -43,7 +43,7 @@ export function Nav({ whatsappGroupUrl }: NavProps) {
             href="#cadastro"
             className="px-4 py-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-900 text-xs font-bold hover:from-emerald-400 hover:to-cyan-400 transition"
           >
-            Ser Embaixador
+            Ser Parceiro
           </a>
         </div>
       </div>

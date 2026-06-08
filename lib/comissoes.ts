@@ -6,6 +6,7 @@ export interface ComissaoConfig {
   percentualCadastro: number;     // % no primeiro cadastro
   percentualRecorrente: number;   // % mensal recorrente
   percentualBonus: number;        // % bonus por meta atingida
+  percentualGeradorReferral: number; // % para gerador que indica outro gerador
   valorMinimoPagamento: number;   // R$ mínimo para saque
 }
 
@@ -14,6 +15,7 @@ export const COMISSAO_CONFIG: ComissaoConfig = {
   percentualCadastro: 100,    // 100% no primeiro cadastro (gancho)
   percentualRecorrente: 5,    // 5% mensal (renda passiva)
   percentualBonus: 10,        // 10% bonus por meta
+  percentualGeradorReferral: 5, // 5% para gerador que indica amigo gerador+rede
   valorMinimoPagamento: 50.00 // R$ 50 mínimo para saque
 };
 
@@ -43,6 +45,15 @@ export function calcularComissaoBonus(
   return (valorBase * percentual * metasAtingidas) / 100;
 }
 
+// 5% de comissão para gerador que indica outro gerador
+// O indicado gera X kWh, e o indicador ganha 5% sobre a receita do amigo
+export function calcularComissaoGeradorReferral(
+  receitaAmigo: number,
+  percentual: number = COMISSAO_CONFIG.percentualGeradorReferral
+): number {
+  return (receitaAmigo * percentual) / 100;
+}
+
 // ============================================
 // SISTEMA DE METAS (Lei 32: Submeta-se à ação)
 // ============================================
@@ -53,7 +64,7 @@ export interface Meta {
   descricao: string;
 }
 
-export const METAS_EMBaixADOR: Meta[] = [
+export const METAS_PARCEIRO: Meta[] = [
   { cadastros: 10, bonus: 100, descricao: 'Iniciante' },
   { cadastros: 25, bonus: 250, descricao: 'Bronze' },
   { cadastros: 50, bonus: 500, descricao: 'Prata' },
@@ -62,10 +73,10 @@ export const METAS_EMBaixADOR: Meta[] = [
   { cadastros: 500, bonus: 5000, descricao: 'Elite' },
 ];
 
-export function calcularNivelEmbaixador(cadastros: number): Meta {
-  return METAS_EMBaixADOR.reduce((meta, atual) => {
+export function calcularNivelParceiro(cadastros: number): Meta {
+  return METAS_PARCEIRO.reduce((meta, atual) => {
     return cadastros >= atual.cadastros ? atual : meta;
-  }, METAS_EMBaixADOR[0]);
+  }, METAS_PARCEIRO[0]);
 }
 
 // ============================================
@@ -95,7 +106,7 @@ export function calcularProjecaoRenda(
 
     const rendaCadastro = calcularComissaoCadastro(ticketMedio) * novosCadastros;
     const rendaRecorrente = calcularComissaoRecorrente(ticketMedio) * totalClientes;
-    const meta = calcularNivelEmbaixador(totalClientes);
+    const meta = calcularNivelParceiro(totalClientes);
     const rendaBonus = totalClientes % meta.cadastros === 0 ? meta.bonus : 0;
 
     projecao.push({
@@ -119,10 +130,11 @@ export const comissoes = {
   calcularComissaoCadastro,
   calcularComissaoRecorrente,
   calcularComissaoBonus,
-  calcularNivelEmbaixador,
+  calcularComissaoGeradorReferral,
+  calcularNivelParceiro,
   calcularProjecaoRenda,
   COMISSAO_CONFIG,
-  METAS_EMBaixADOR,
+  METAS_PARCEIRO,
 };
 
 // Funções nomeadas para import direto (compatibilidade com a API route)

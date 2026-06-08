@@ -1,6 +1,6 @@
 // ============================================================
 // _utils/format — Formatadores puros (sem React) usados no
-// painel do embaixador. Isolados para fácil reuso/teste.
+// painel do parceiro. Isolados para fácil reuso/teste.
 // ============================================================
 
 /** Formata um número como BRL (sem símbolo, pt-BR). */

@@ -44,7 +44,7 @@ export default function VenderPage() {
   });
 
   const [acceptedLgpd, setAcceptedLgpd] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<React.ReactNode>(null);
 
   const whatsappRegex = /^\(?\d{2}\)?\s?9?\d{4}-?\d{4}$/;
   const isValidWhatsapp = whatsappRegex.test(formData.whatsapp.replace(/\s/g, ''));
@@ -144,7 +144,20 @@ export default function VenderPage() {
       setStep(5);
     } catch (error: any) {
       console.error("Falha no envio:", error);
-      setSubmitError('Não conseguimos enviar agora. Tente novamente ou chame no WhatsApp.');
+      const msg = encodeURIComponent(`Olá! Tentei enviar meus dados de gerador pelo site mas ocorreu um erro. Seguem meus dados:%0A%0ANome: ${formData.nome}%0AEmail: ${formData.email}%0AWhatsApp: ${formData.whatsapp}%0ACapacidade: ${formData.capacidade} kWp%0AEstado: ${formData.estado}%0A%0APor favor, me ajude a concluir o cadastro.`);
+      setSubmitError(
+        <div className="space-y-2">
+          <p>Não conseguimos enviar agora. Tente novamente ou chame no WhatsApp.</p>
+          <a
+            href={`https://wa.me/5584987858668?text=${msg}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded-lg text-sm font-bold text-center border border-emerald-500/30 transition"
+          >
+            Falar no WhatsApp
+          </a>
+        </div>
+      );
     } finally {
       setIsLoading(false);
     }
@@ -411,6 +424,11 @@ export default function VenderPage() {
                   <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-[11px] text-red-300" role="alert">
                     {submitError}
                   </div>
+                )}
+                {submitError && (
+                  <p className="text-[10px] text-slate-500 text-center">
+                    Seu cadastro também será enviado para análise paralela. Em até 24h retornamos.
+                  </p>
                 )}
 
                 <div className="flex items-center justify-center gap-4 py-2">

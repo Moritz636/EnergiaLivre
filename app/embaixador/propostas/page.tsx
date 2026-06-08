@@ -1,10 +1,10 @@
 'use client'
 
 // ============================================================
-// Embaixador Propostas — Ferramenta de envio de PDF + histórico
+// Parceiro Propostas — Ferramenta de envio de PDF + histórico
 // ------------------------------------------------------------
 // 1) Formulário minimalista: nome, e-mail, gasto mensal.
-//    Cidade/estado opcionais (auto do embaixador).
+//    Cidade/estado opcionais (auto do parceiro).
 // 2) Submit → POST /api/embaixador/send-proposal.
 // 3) Sucesso: confirmação + protocolo + ações (baixar, copiar).
 // 4) Lista histórica das últimas 50 propostas enviadas.
@@ -131,16 +131,16 @@ export default function EmbaixadorPropostasPage() {
         <div className="max-w-md w-full bg-white/[0.02] border border-white/10 rounded-2xl p-8 text-center">
           <ShieldCheck className="w-10 h-10 text-amber-400 mx-auto mb-3" />
           <h1 className="text-xl font-bold text-white mb-2">
-            Acesso restrito a embaixadores
+            Acesso restrito a parceiros
           </h1>
           <p className="text-sm text-slate-400">
-            Esta ferramenta é exclusiva do programa de embaixadores EnergiaLivre.
+            Esta ferramenta é exclusiva do programa de parceiros EnergiaLivre.
             Quer participar?{' '}
             <Link
               href="/cadastro-embaixador"
               className="text-emerald-400 hover:underline"
             >
-              Cadastre-se como embaixador
+              Cadastre-se como parceiro
             </Link>
             .
           </p>
@@ -246,7 +246,7 @@ export default function EmbaixadorPropostasPage() {
                   Propostas por E-mail
                 </p>
                 <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">
-                  Ferramenta do Embaixador
+                  Ferramenta do Parceiro
                 </p>
               </div>
             </div>

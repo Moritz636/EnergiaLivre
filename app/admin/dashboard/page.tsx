@@ -32,6 +32,8 @@ import {
   TrendingUp,
   X,
   Coins,
+  Globe,
+  ExternalLink,
 } from 'lucide-react';
 
 type Section =
@@ -42,7 +44,8 @@ type Section =
   | 'finance'
   | 'matches'
   | 'coupons'
-  | 'settings';
+  | 'settings'
+  | 'pages';
 
 interface Lead {
   id: number;
@@ -163,6 +166,7 @@ const SECTION_LABELS: Record<Section, string> = {
   matches: 'Match',
   coupons: 'Cupons',
   settings: 'Configurações',
+  pages: 'Páginas',
 };
 
 export default function AdminDashboardPage() {
@@ -307,6 +311,7 @@ export default function AdminDashboardPage() {
     { id: 'finance', name: 'Financeiro', icon: CreditCard },
     { id: 'matches', name: 'Match', icon: Zap },
     { id: 'coupons', name: 'Cupons', icon: Ticket },
+    { id: 'pages', name: 'Páginas', icon: Globe },
     { id: 'settings', name: 'Configurações', icon: Settings },
   ];
 
@@ -447,6 +452,7 @@ export default function AdminDashboardPage() {
               )}
               {section === 'matches' && <MatchesSection matches={matches} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />}
               {section === 'coupons' && <CouponsSection coupons={coupons} users={users} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />}
+              {section === 'pages' && <PagesSection />}
               {section === 'settings' && (
                 <SettingsSection
                   settings={settings}
@@ -488,7 +494,7 @@ function OverviewSection({ stats, leads, commissions, pagamentos }: { stats: Sta
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard icon={Users} label="Usuários" value={stats.totalUsuarios} sub={`${stats.embaixadores} embaixadores`} accent="purple" />
+        <StatCard icon={Users} label="Usuários" value={stats.totalUsuarios} sub={`${stats.embaixadores} parceiros`} accent="purple" />
         <StatCard icon={UserCheck} label="Leads pendentes" value={stats.leadsPendentes} sub={`${stats.totalLeads} no total`} accent="yellow" />
         <StatCard icon={CheckCircle} label="Leads aprovados" value={stats.leadsAprovados} accent="emerald" />
         <StatCard icon={DollarSign} label="Faturamento do mês" value={`R$ ${stats.faturamentoMensal.toFixed(2)}`} sub={`R$ ${stats.faturamentoTotal.toFixed(2)} total`} accent="blue" />
@@ -496,7 +502,7 @@ function OverviewSection({ stats, leads, commissions, pagamentos }: { stats: Sta
 
       <div className="grid grid-cols-3 gap-3">
         <StatCard icon={Zap} label="Geradores" value={stats.geradores} accent="yellow" />
-        <StatCard icon={UserCheck} label="Embaixadores" value={stats.embaixadores} accent="purple" />
+        <StatCard icon={UserCheck} label="Parceiros" value={stats.embaixadores} accent="purple" />
         <StatCard icon={CreditCard} label="Assinaturas ativas" value={stats.assinaturasAtivas} accent="emerald" />
       </div>
 
@@ -690,7 +696,7 @@ function UsersSection({ users, searchTerm, setSearchTerm, userFilter, setUserFil
     { id: 'todos', label: 'Todos' },
     { id: 'consumidor', label: 'Consumidores' },
     { id: 'gerador', label: 'Geradores' },
-    { id: 'parceiro', label: 'Embaixadores' },
+    { id: 'parceiro', label: 'Parceiros' },
   ];
 
   return (
@@ -778,7 +784,7 @@ function CommissionsSection({ commissions, searchTerm, setSearchTerm }: any) {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
         <input
           type="text"
-          placeholder="Buscar por embaixador..."
+          placeholder="Buscar por parceiro..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
           className="w-full bg-slate-900/50 border border-white/10 rounded-lg py-1.5 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-purple-500 outline-none"
@@ -790,7 +796,7 @@ function CommissionsSection({ commissions, searchTerm, setSearchTerm }: any) {
           <table className="w-full text-sm">
             <thead className="border-b border-white/5 text-slate-500 text-[10px] uppercase tracking-wider">
               <tr>
-                <th className="p-3 text-left font-medium">Embaixador</th>
+                <th className="p-3 text-left font-medium">Parceiro</th>
                 <th className="p-3 text-left font-medium">Valor</th>
                 <th className="p-3 text-left font-medium">%</th>
                 <th className="p-3 text-left font-medium">Tipo</th>
@@ -1100,6 +1106,71 @@ function CouponsSection({ coupons, users, searchTerm, setSearchTerm }: any) {
           </table>
         </div>
       </div>
+    </div>
+  );
+}
+
+const PAGES_LIST = [
+  { name: 'Home', path: '/', desc: 'Página inicial do marketplace' },
+  { name: 'Login', path: '/login', desc: 'Login de usuários' },
+  { name: 'Cadastro', path: '/cadastro', desc: 'Cadastro de novos usuários' },
+  { name: 'Cadastro Gerador', path: '/cadastro-gerador', desc: 'Cadastro específico para geradores' },
+  { name: 'Cadastro Parceiro', path: '/cadastro-embaixador', desc: 'Cadastro de parceiros' },
+  { name: 'Dashboard Consumidor', path: '/dashboard-consumidor', desc: 'Painel do consumidor' },
+  { name: 'Dashboard Gerador', path: '/dashboard-gerador', desc: 'Painel do gerador' },
+  { name: 'Dashboard Parceiro', path: '/embaixador/dashboard', desc: 'Painel do parceiro' },
+  { name: 'Match', path: '/match', desc: 'Página de match de usinas' },
+  { name: 'Simulador', path: '/simulador', desc: 'Simulador de economia' },
+  { name: 'Vender', path: '/vender', desc: 'Página para geradores' },
+  { name: 'Token KWATT', path: '/token', desc: 'Página do token KWATT' },
+  { name: 'Regulamentação', path: '/regulamentacao', desc: 'Regulamentação ANEEL' },
+  { name: 'Manifesto', path: '/manifesto', desc: 'Manifesto da empresa' },
+  { name: 'Termos', path: '/termos', desc: 'Termos de serviço' },
+  { name: 'Recargas', path: '/recargas', desc: 'Recargas de celular' },
+  { name: 'Para Geradores', path: '/para-geradores', desc: 'Landing para geradores' },
+  { name: 'Painel Admin', path: '/admin/dashboard', desc: 'Este painel administrativo' },
+  { name: 'Painel Créditos', path: '/admin/credits', desc: 'Gerenciamento de créditos' },
+  { name: 'Painel Leads', path: '/admin/leads', desc: 'Gerenciamento de leads' },
+];
+
+function PagesSection() {
+  const [filter, setFilter] = useState('')
+  const filtered = PAGES_LIST.filter(p => 
+    p.name.toLowerCase().includes(filter.toLowerCase()) || 
+    p.path.toLowerCase().includes(filter.toLowerCase())
+  )
+  
+  return (
+    <div className="space-y-4">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+        <input
+          type="text"
+          placeholder="Buscar página..."
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+          className="w-full bg-slate-900/50 border border-white/10 rounded-lg py-1.5 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-purple-500 outline-none"
+        />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {filtered.map(page => (
+          <Link
+            key={page.path}
+            href={page.path}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group p-4 rounded-xl bg-slate-900/40 border border-white/5 hover:border-purple-500/30 hover:bg-slate-900/60 transition-all"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-sm font-bold text-white group-hover:text-purple-400 transition">{page.name}</h3>
+              <ExternalLink className="w-3.5 h-3.5 text-slate-600 group-hover:text-purple-400 transition" />
+            </div>
+            <p className="text-[10px] text-slate-500 font-mono">{page.path}</p>
+            <p className="text-[11px] text-slate-400 mt-1">{page.desc}</p>
+          </Link>
+        ))}
+      </div>
+      <p className="text-[11px] text-slate-600">{filtered.length} página(s) encontrada(s)</p>
     </div>
   );
 }

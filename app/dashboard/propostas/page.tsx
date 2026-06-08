@@ -127,7 +127,7 @@ export default function PropostasPage() {
   }
 
   // ============================================================
-  // CHAT INTERNO → apenas para embaixadores (tipo=parceiro).
+  // CHAT INTERNO → apenas para parceiros (tipo=parceiro).
   // Consumidores/geradores caem no WhatsApp institucional.
   // ============================================================
   const handleOpenChat = async (matchId: number) => {

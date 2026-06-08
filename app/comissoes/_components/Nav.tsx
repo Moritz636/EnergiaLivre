@@ -26,7 +26,7 @@ export function Nav({ userName }: NavProps) {
             ENERGIA<span className="text-yellow-500">LIVRE</span>
           </span>
           <div className="ml-3 px-2 py-0.5 rounded-full bg-yellow-500/20 border border-yellow-500/30 text-[9px] font-black text-yellow-400 uppercase tracking-wider">
-            Embaixador
+            Parceiro
           </div>
         </div>
         <div className="flex items-center gap-4">

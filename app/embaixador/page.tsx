@@ -1,7 +1,7 @@
 'use client'
 
 // ============================================================
-// /embaixador — Landing do Programa de Embaixadores.
+// /embaixador — Landing do Programa de Parceiros.
 //
 // Orquestra:
 //   • Carregamento de comissões reais do backend.

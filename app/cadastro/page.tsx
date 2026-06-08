@@ -365,14 +365,14 @@ export default function CadastroPage() {
                       : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50 border border-white/5'
                   }`}
                 >
-                  <Users className="w-3 h-3" /> Embaixador
+                  <Users className="w-3 h-3" /> Parceiro
                 </button>
               </div>
 
               <p className="text-[10px] text-slate-500 text-center">
                 {tipo === 'consumidor' && 'Consumidores economizam na conta de luz via créditos de energia solar.'}
                 {tipo === 'gerador' && 'Geradores monetizam excedente de energia com demanda garantida.'}
-                {tipo === 'parceiro' && 'Embaixadores ganham comissões indicando energia solar.'}
+                {tipo === 'parceiro' && 'Parceiros ganham comissões indicando energia solar.'}
               </p>
             </div>
 

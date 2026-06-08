@@ -9,9 +9,9 @@ import CreateGroupModal from '@/components/Chat/CreateGroupModal'
 import { ArrowLeft, MessageCircle, ShieldCheck } from 'lucide-react'
 
 // ============================================================
-// CHAT — Exclusivo do Embaixador (modelo Hinode)
+// CHAT — Exclusivo do Parceiro (modelo Hinode)
 // ------------------------------------------------------------
-// O chat serve ao embaixador para:
+// O chat serve ao parceiro para:
 //   • Conversar com seus assinantes / indicados.
 //   • Coordenar transferências de moedas e tokens.
 //   • Planejar divulgações e materiais de campanha.
@@ -66,7 +66,7 @@ export default function ChatIndexPage() {
             <Link
               href="/embaixador/dashboard"
               className="p-1.5 rounded-lg hover:bg-white/10 transition"
-              aria-label="Voltar ao painel do embaixador"
+              aria-label="Voltar ao painel do parceiro"
             >
               <ArrowLeft className="w-5 h-5 text-slate-300" />
             </Link>
@@ -77,7 +77,7 @@ export default function ChatIndexPage() {
               <span className="text-xl font-black text-white">CHAT</span>
               <span className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold flex items-center gap-1">
                 <ShieldCheck className="w-2.5 h-2.5" />
-                Embaixador
+                Parceiro
               </span>
             </div>
           </div>
