@@ -24,6 +24,8 @@ export default function InvoiceScanner({ onScan, onClose, fps = 10, formats = [.
   const [errorMsg, setErrorMsg] = useState('');
   const [manualCode, setManualCode] = useState('');
 
+  const mountedRef = useRef(true)
+
   const stop = useCallback(async () => {
     try {
       if (scannerRef.current) {
@@ -80,7 +82,9 @@ export default function InvoiceScanner({ onScan, onClose, fps = 10, formats = [.
           }
           lastScanRef.current = { payload: decodedText, ts: now }
           setState('processing')
-          void onScan(decodedText)
+          Promise.resolve(onScan(decodedText)).finally(() => {
+            if (mountedRef.current) setState('scanning')
+          })
         },
         () => {
           // ignore parse errors (a cada frame)
@@ -100,8 +104,10 @@ export default function InvoiceScanner({ onScan, onClose, fps = 10, formats = [.
   }, [fps, onScan])
 
   useEffect(() => {
+    mountedRef.current = true
     void start()
     return () => {
+      mountedRef.current = false
       void stop()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -111,7 +117,11 @@ export default function InvoiceScanner({ onScan, onClose, fps = 10, formats = [.
     e.preventDefault()
     if (!manualCode.trim()) return
     setState('processing')
-    await onScan(manualCode.trim())
+    try {
+      await onScan(manualCode.trim())
+    } finally {
+      if (mountedRef.current) setState('scanning')
+    }
   }
 
   return (

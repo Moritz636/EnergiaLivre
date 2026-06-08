@@ -40,6 +40,7 @@ type Section =
   | 'overview'
   | 'leads'
   | 'users'
+  | 'geradores'
   | 'commissions'
   | 'finance'
   | 'matches'
@@ -141,6 +142,21 @@ interface SystemSetting {
   updated_at: string;
 }
 
+interface GeradorRow {
+  id: string;
+  nome_usina: string;
+  capacidade_kwp: number;
+  excedente_mensal_kwh: number;
+  concessionaria: string;
+  cidade: string;
+  estado: string;
+  endereco: string | null;
+  status: string;
+  data_aprovacao: string | null;
+  created_at: string;
+  profiles: { nome: string | null; email: string | null; whatsapp: string | null; cidade: string | null; estado: string | null } | null;
+}
+
 interface Stats {
   totalUsuarios: number;
   totalLeads: number;
@@ -151,6 +167,7 @@ interface Stats {
   comissoesPendentes: number;
   embaixadores: number;
   geradores: number;
+  geradoresPendentes: number;
   consumidores: number;
   faturamentoMensal: number;
   faturamentoTotal: number;
@@ -161,6 +178,7 @@ const SECTION_LABELS: Record<Section, string> = {
   overview: 'Visão Geral',
   leads: 'Leads',
   users: 'Usuários',
+  geradores: 'Geradores',
   commissions: 'Comissões',
   finance: 'Financeiro',
   matches: 'Match',
@@ -182,6 +200,7 @@ export default function AdminDashboardPage() {
   const [matches, setMatches] = useState<MatchProposal[]>([]);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [settings, setSettings] = useState<SystemSetting[]>([]);
+  const [geradores, setGeradores] = useState<GeradorRow[]>([]);
 
   const [stats, setStats] = useState<Stats | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
@@ -199,6 +218,7 @@ export default function AdminDashboardPage() {
     const [
       leadsRes,
       usersRes,
+      geradoresRes,
       commissionsRes,
       pagamentosRes,
       assinaturasRes,
@@ -208,6 +228,7 @@ export default function AdminDashboardPage() {
     ] = await Promise.all([
       supabase.from('leads').select('*').order('created_at', { ascending: false }).limit(500),
       supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(500),
+      supabase.from('geradores').select('*, profiles!geradores_id_fkey(nome, email, whatsapp, cidade, estado)').order('created_at', { ascending: false }).limit(500),
       (supabase.from('comissoes') as any)
         .select('*, profiles!comissoes_embaixador_id_fkey(nome, email)')
         .order('created_at', { ascending: false })
@@ -224,6 +245,7 @@ export default function AdminDashboardPage() {
 
     if (leadsRes.data) setLeads(leadsRes.data as Lead[]);
     if (usersRes.data) setUsers(usersRes.data as ProfileRow[]);
+    if (geradoresRes.data) setGeradores(geradoresRes.data as GeradorRow[]);
     if (commissionsRes.data) setCommissions(commissionsRes.data as Commission[]);
     if (pagamentosRes.data) setPagamentos(pagamentosRes.data as Pagamento[]);
     if (assinaturasRes.data) setAssinaturas(assinaturasRes.data as Assinatura[]);
@@ -233,6 +255,7 @@ export default function AdminDashboardPage() {
 
     const leadsList = (leadsRes.data || []) as Lead[];
     const usersList = (usersRes.data || []) as ProfileRow[];
+    const geradoresList = (geradoresRes.data || []) as GeradorRow[];
     const commissionsList = (commissionsRes.data || []) as Commission[];
     const pagamentosList = (pagamentosRes.data || []) as Pagamento[];
     const assinaturasList = (assinaturasRes.data || []) as Assinatura[];
@@ -258,6 +281,7 @@ export default function AdminDashboardPage() {
       comissoesPendentes: commissionsList.filter(c => c.status_pagamento === 'pendente').length,
       embaixadores: usersList.filter(u => u.tipo === 'parceiro').length,
       geradores: usersList.filter(u => u.tipo === 'gerador').length,
+      geradoresPendentes: geradoresList.filter(g => g.status === 'pendente').length,
       consumidores: usersList.filter(u => u.tipo === 'consumidor' || !u.tipo).length,
       faturamentoMensal,
       faturamentoTotal,
@@ -307,6 +331,7 @@ export default function AdminDashboardPage() {
     { id: 'overview', name: 'Visão Geral', icon: LayoutDashboard },
     { id: 'leads', name: 'Leads', icon: UserCheck, badge: stats?.leadsPendentes },
     { id: 'users', name: 'Usuários', icon: Users },
+    { id: 'geradores', name: 'Geradores', icon: Zap, badge: stats?.geradoresPendentes },
     { id: 'commissions', name: 'Comissões', icon: DollarSign, badge: stats?.comissoesPendentes },
     { id: 'finance', name: 'Financeiro', icon: CreditCard },
     { id: 'matches', name: 'Match', icon: Zap },
@@ -413,6 +438,12 @@ export default function AdminDashboardPage() {
           ) : (
             <>
               {section === 'overview' && stats && <OverviewSection stats={stats} leads={leads} commissions={commissions} pagamentos={pagamentos} />}
+              {section === 'geradores' && (
+                <GeradoresSection
+                  geradores={geradores}
+                  onUpdate={loadAll}
+                />
+              )}
               {section === 'leads' && (
                 <LeadsSection
                   leads={leads}
@@ -1170,6 +1201,137 @@ function PagesSection() {
         ))}
       </div>
       <p className="text-[11px] text-slate-600">{filtered.length} página(s) encontrada(s)</p>
+    </div>
+  );
+}
+
+function GeradoresSection({ geradores, onUpdate }: { geradores: GeradorRow[]; onUpdate: () => void }) {
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  const handleAction = async (id: string, action: 'approve' | 'reject') => {
+    setActionLoading(id);
+    try {
+      await fetch('/api/admin/geradores', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, action }),
+      });
+      onUpdate();
+    } catch {
+      // silent
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const pendentes = geradores.filter(g => g.status === 'pendente');
+  const aprovados = geradores.filter(g => g.status === 'aprovado');
+  const ativos = geradores.filter(g => g.status === 'ativo');
+  const inativos = geradores.filter(g => g.status === 'inativo');
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-4 gap-3">
+        <StatCard icon={Clock} label="Pendentes" value={pendentes.length} accent="yellow" />
+        <StatCard icon={CheckCircle} label="Aprovados" value={aprovados.length} accent="emerald" />
+        <StatCard icon={Zap} label="Ativos" value={ativos.length} accent="blue" />
+        <StatCard icon={XCircle} label="Inativos" value={inativos.length} accent="red" />
+      </div>
+
+      <div className="rounded-xl bg-slate-900/40 border border-white/5 overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-white/5 bg-white/[0.02]">
+          <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            Usinas Pendentes ({pendentes.length})
+          </h3>
+        </div>
+        {pendentes.length === 0 ? (
+          <div className="p-8 text-center text-slate-600 text-xs">Nenhuma usina pendente de aprovação</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b border-white/5 text-slate-500 text-[10px] uppercase tracking-wider">
+                <tr>
+                  <th className="p-3 text-left font-medium">Usina</th>
+                  <th className="p-3 text-left font-medium">Proprietário</th>
+                  <th className="p-3 text-left font-medium">kWp</th>
+                  <th className="p-3 text-left font-medium">Excedente</th>
+                  <th className="p-3 text-left font-medium">Concessionária</th>
+                  <th className="p-3 text-left font-medium">Local</th>
+                  <th className="p-3 text-left font-medium">Data</th>
+                  <th className="p-3 text-right font-medium">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendentes.map(g => (
+                  <tr key={g.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                    <td className="p-3 text-[13px] text-white font-medium">{g.nome_usina}</td>
+                    <td className="p-3 text-[11px] text-slate-400">{g.profiles?.nome || g.profiles?.email || '—'}</td>
+                    <td className="p-3 text-[11px] text-slate-300">{g.capacidade_kwp} kWp</td>
+                    <td className="p-3 text-[11px] text-emerald-400">{g.excedente_mensal_kwh} kWh/mês</td>
+                    <td className="p-3 text-[11px] text-slate-400">{g.concessionaria}</td>
+                    <td className="p-3 text-[11px] text-slate-400">{g.cidade}/{g.estado}</td>
+                    <td className="p-3 text-[11px] text-slate-500">{new Date(g.created_at).toLocaleDateString('pt-BR')}</td>
+                    <td className="p-3 text-right">
+                      <div className="flex gap-1 justify-end">
+                        <button
+                          onClick={() => handleAction(g.id, 'approve')}
+                          disabled={actionLoading === g.id}
+                          className="p-1.5 rounded bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 disabled:opacity-50"
+                          title="Aprovar usina"
+                        >
+                          {actionLoading === g.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+                        </button>
+                        <button
+                          onClick={() => handleAction(g.id, 'reject')}
+                          disabled={actionLoading === g.id}
+                          className="p-1.5 rounded bg-red-500/15 text-red-400 hover:bg-red-500/25 disabled:opacity-50"
+                          title="Recusar usina"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {aprovados.length > 0 && (
+        <div className="rounded-xl bg-slate-900/40 border border-white/5 overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-white/5 bg-white/[0.02]">
+            <h3 className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">
+              Usinas Aprovadas ({aprovados.length})
+            </h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b border-white/5 text-slate-500 text-[10px] uppercase tracking-wider">
+                <tr>
+                  <th className="p-3 text-left font-medium">Usina</th>
+                  <th className="p-3 text-left font-medium">Proprietário</th>
+                  <th className="p-3 text-left font-medium">kWp</th>
+                  <th className="p-3 text-left font-medium">Excedente</th>
+                  <th className="p-3 text-left font-medium">Aprovado em</th>
+                </tr>
+              </thead>
+              <tbody>
+                {aprovados.slice(0, 10).map(g => (
+                  <tr key={g.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                    <td className="p-3 text-[13px] text-white">{g.nome_usina}</td>
+                    <td className="p-3 text-[11px] text-slate-400">{g.profiles?.nome || g.profiles?.email || '—'}</td>
+                    <td className="p-3 text-[11px] text-slate-300">{g.capacidade_kwp} kWp</td>
+                    <td className="p-3 text-[11px] text-emerald-400">{g.excedente_mensal_kwh} kWh/mês</td>
+                    <td className="p-3 text-[11px] text-slate-500">{g.data_aprovacao ? new Date(g.data_aprovacao).toLocaleDateString('pt-BR') : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -69,7 +69,8 @@ export async function POST(request: NextRequest) {
 
     const matchEligible = kwhEstimado >= 300
 
-    const insert = {
+    // Base columns (existem na tabela original 20260109)
+    const baseInsert: Record<string, unknown> = {
       user_id: user.id,
       uploaded_by_role: isEmbaixador ? 'embaixador' : 'consumidor',
       cliente_nome: data.clienteNome || null,
@@ -77,11 +78,24 @@ export async function POST(request: NextRequest) {
       file_url: placeholderUrl,
       file_name: data.fileName || `scan-${parsedBarcode.tipo}-${Date.now()}`,
       file_type: parsedBarcode.tipo === 'qrcode' ? 'qrcode' : 'barcode',
-      status: 'analyzed' as const,
+      status: 'analyzed',
       valor_total: parsedBarcode.valor,
       kwh_mensal: kwhEstimado,
       vencimento: parsedBarcode.vencimento,
-      raw_extraction: parsedBarcode as any,
+      raw_extraction: {
+        ...parsedBarcode,
+        barcode_payload: data.barcodePayload,
+        source: 'scan',
+        match_eligible: matchEligible,
+        latitude: data.latitude ?? null,
+        longitude: data.longitude ?? null,
+        endereco: data.endereco ?? null,
+      },
+    }
+
+    // Tenta insert com colunas extras (migration 20260606 pode existir)
+    const extraInsert = {
+      ...baseInsert,
       match_eligible: matchEligible,
       match_eligible_at: matchEligible ? new Date().toISOString() : null,
       latitude: data.latitude ?? null,
@@ -89,23 +103,20 @@ export async function POST(request: NextRequest) {
       endereco: data.endereco ?? null,
       barcode_payload: data.barcodePayload,
       barcode_type: parsedBarcode.tipo,
-      source: 'scan' as const,
+      source: 'scan',
     }
 
-    const { data: created, error } = await (supabase
-      .from('invoice_uploads')
-      .insert(insert as any)
-      .select('id, kwh_mensal, match_eligible, valor_total, vencimento')
-      .single() as any)
-
-    if (error) {
-      console.error('[invoices/scan] insert error:', error)
+    // Tenta com colunas extras primeiro; fallback para base se coluna faltar
+    const insertResult = await tryInsertInvoice(supabase, extraInsert, baseInsert, ['match_eligible'])
+    if (!insertResult.success) {
+      console.error('[invoices/scan] insert error:', insertResult.error)
       return NextResponse.json({ error: 'Erro ao salvar fatura escaneada' }, { status: 500 })
     }
+    const created = insertResult.data
 
     return NextResponse.json({
       success: true,
-      invoice: created,
+      invoice: { ...created, match_eligible: matchEligible },
       parsed: parsedBarcode,
       message: matchEligible
         ? 'Fatura cadastrada. Consumo estimado ≥ 300 kWh — você aparece no mapa de match!'
@@ -115,6 +126,43 @@ export async function POST(request: NextRequest) {
     console.error('[invoices/scan] exception:', err)
     return NextResponse.json({ error: err?.message ?? 'Erro interno' }, { status: 500 })
   }
+}
+
+/**
+ * Tenta inserir com colunas extras; se falhar por coluna inexistente,
+ * faz fallback para apenas colunas base (sem as adicionadas na migration 20260606).
+ */
+async function tryInsertInvoice(
+  supabase: any,
+  extraInsert: Record<string, unknown>,
+  baseInsert: Record<string, unknown>,
+  selectFields: string[],
+): Promise<{ success: true; data: any } | { success: false; error: any }> {
+  const fields = ['id', 'kwh_mensal', 'valor_total', 'vencimento', ...selectFields]
+  const uniqueFields = [...new Set(fields)]
+
+  // Tenta insert completo primeiro
+  const { data, error } = await supabase
+    .from('invoice_uploads')
+    .insert(extraInsert)
+    .select(uniqueFields.join(','))
+    .single()
+
+  if (!error) return { success: true, data }
+
+  // Se erro for coluna inexistente, fallback para base apenas
+  const msg = (error?.message || '').toLowerCase()
+  if ((msg.includes('column') || msg.includes('coluna')) && msg.includes('exist')) {
+    const { data: baseData, error: baseError } = await supabase
+      .from('invoice_uploads')
+      .insert(baseInsert)
+      .select('id, kwh_mensal, valor_total, vencimento')
+      .single()
+    if (baseError) return { success: false, error: baseError }
+    return { success: true, data: baseData }
+  }
+
+  return { success: false, error }
 }
 
 /**
