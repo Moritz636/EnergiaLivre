@@ -54,11 +54,13 @@ export async function POST(request: NextRequest) {
       }, { status: 422 })
     }
 
-    const isEmbaixador = (await supabase
+    const profile = await (supabase
       .from('profiles')
       .select('tipo')
       .eq('id', user.id)
-      .single() as any)?.data?.tipo === 'parceiro'
+      .single() as any)
+    const isEmbaixador = profile?.data?.tipo === 'parceiro'
+    const isGerador = profile?.data?.tipo === 'gerador'
 
     // file_url vazio (fatura escaneada não tem upload, mas coluna é NOT NULL)
     const placeholderUrl = `scan://${parsedBarcode.tipo}/${parsedBarcode.documentId ?? parsedBarcode.txid ?? 'unknown'}`

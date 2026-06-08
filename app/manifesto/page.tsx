@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Sparkles, ArrowRight, Zap, Target, Heart, Shield, MapPin, Coins, CreditCard, Sun, Calendar, AlertTriangle, Globe2, Award, Users, Code, Building2, ChevronRight } from 'lucide-react'
+import { Sparkles, ArrowRight, Zap, Target, Heart, Shield, MapPin, Coins, CreditCard, Sun, Calendar, AlertTriangle, Globe2, Award, Users, Code, Building2, ChevronRight, TrendingUp, Rocket } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Manifesto · EnergiaLivre',
