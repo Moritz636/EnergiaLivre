@@ -1,6 +1,8 @@
 import { Suspense } from 'react'
 import EmailConfirmadoContent from './content'
 
+export const dynamic = 'force-dynamic'
+
 export default function EmailConfirmadoPage() {
   return (
     <Suspense fallback={
