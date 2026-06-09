@@ -100,14 +100,14 @@ function parseLinhaDigitavel(digits: string): ParsedBarcode {
   const blocks = []
   let i = 0
 
-  // Bloco 1: AAAAA.BBBBBB (11 dígitos) + DV (1)
-  blocks.push(digits.slice(i, i + 11)); i += 11
+  // Bloco 1: 10 dígitos + DV (1)
+  blocks.push(digits.slice(i, i + 10)); i += 10
   blocks.push(digits.slice(i, i + 1)); i += 1
-  // Bloco 2: BBBBBB.CCCCCC (11) + DV (1)
-  blocks.push(digits.slice(i, i + 11)); i += 11
+  // Bloco 2: 10 dígitos + DV (1)
+  blocks.push(digits.slice(i, i + 10)); i += 10
   blocks.push(digits.slice(i, i + 1)); i += 1
-  // Bloco 3: CCCCCC.DDDDDD (11) + DV (1)
-  blocks.push(digits.slice(i, i + 11)); i += 11
+  // Bloco 3: 10 dígitos + DV (1)
+  blocks.push(digits.slice(i, i + 10)); i += 10
   blocks.push(digits.slice(i, i + 1)); i += 1
   // Bloco 4 (DV geral) - se presente
   let dv = ''
