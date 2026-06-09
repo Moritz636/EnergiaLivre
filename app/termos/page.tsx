@@ -84,13 +84,13 @@ export default function TermosPage() {
                   <tbody className="text-slate-300">
                     <tr className="border-b border-slate-800">
                       <td className="py-3 font-semibold text-emerald-300">Consumidor</td>
-                      <td className="py-3">Economia de até 30% na fatura via match</td>
+                      <td className="py-3">Economia de até 32% na fatura via match</td>
                       <td className="py-3">R$ 0 (cliente grátis). Member Plus opcional R$ 9,90/mês</td>
                     </tr>
                     <tr className="border-b border-slate-800">
                       <td className="py-3 font-semibold text-emerald-300">Gerador (UFV)</td>
                       <td className="py-3">Venda de excedente a consumidores próximos (preço melhor que rede)</td>
-                      <td className="py-3">Plano de assinatura Gerador + 15% de taxa por conexão ativa</td>
+                      <td className="py-3">Plano de assinatura Gerador + 8% de taxa da plataforma por transação</td>
                     </tr>
                     <tr className="border-b border-slate-800">
                       <td className="py-3 font-semibold text-emerald-300">Parceiro</td>
@@ -99,8 +99,8 @@ export default function TermosPage() {
                     </tr>
                     <tr>
                       <td className="py-3 font-semibold text-emerald-300">Plataforma</td>
-                      <td className="py-3">Assinaturas + moedas + taxa UFV 15%</td>
-                      <td className="py-3">Operação, infraestrutura, marketing</td>
+                      <td className="py-3">Assinaturas + moedas + taxa de 8% por transação entre as partes</td>
+                      <td className="py-3">Operação, infraestrutura, suporte ao time</td>
                     </tr>
                   </tbody>
                 </table>
@@ -141,11 +141,12 @@ export default function TermosPage() {
                   </p>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-emerald-300 mb-1">3.3. Taxa UFV (15%)</h3>
+                  <h3 className="font-semibold text-emerald-300 mb-1">3.3. Taxa da Plataforma (8%)</h3>
                   <p>
-                    Para cada pagamento de assinatura processado de um cliente consumidor que possui match
-                    ativo com um gerador, o gerador (dono da UFV) recebe <strong>15% do valor</strong> como
-                    taxa de conexão. Registrada com tipo <code>ufv_15pct</code>.
+                    Para cada transação realizada entre consumidor e gerador, a plataforma retém
+                    <strong> 8% do valor</strong> como taxa de operação. Esta taxa mantém o time,
+                    infraestrutura e garante o funcionamento contínuo da plataforma.
+                    Registrada automaticamente a cada pagamento processado.
                   </p>
                 </div>
                 <div>
@@ -216,8 +217,8 @@ export default function TermosPage() {
                   <h3 className="font-semibold text-emerald-300 mb-1">5.3. Gerador</h3>
                   <p>
                     Manter a usina em condições operacionais conforme regulamentação ANEEL, entregar a energia
-                    acordada com qualidade e continuidade, honrar o pagamento da taxa UFV de 15% por conexão
-                    ativa, manter o registro de microgeração/minigeração atualizado.
+                    acordada com qualidade e continuidade, honrar o pagamento da taxa da plataforma de 8% por
+                    transação realizada, manter o registro de microgeração/minigeração atualizado.
                   </p>
                 </div>
                 <div>

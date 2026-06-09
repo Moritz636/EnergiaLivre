@@ -52,27 +52,24 @@ const beneficios = [
   },
 ]
 
+const REDIRECT_SECONDS = 39
+
 export default function EmailConfirmadoContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const tipo = searchParams.get('from') || 'consumidor'
   const [tempoLeitura, setTempoLeitura] = useState(0)
   const [showPopup, setShowPopup] = useState(false)
-  const [redirectCountdown, setRedirectCountdown] = useState(10)
+  const [redirectCountdown, setRedirectCountdown] = useState(REDIRECT_SECONDS)
 
   useEffect(() => {
-    if (tempoLeitura >= 10 && !showPopup) {
+    if (tempoLeitura >= REDIRECT_SECONDS && !showPopup) {
       setShowPopup(true)
       const interval = setInterval(() => {
         setRedirectCountdown((prev) => {
           if (prev <= 1) {
             clearInterval(interval)
-            const destinos: Record<string, string> = {
-              consumidor: '/dashboard',
-              gerador: '/dashboard-gerador',
-              parceiro: '/embaixador/dashboard',
-            }
-            router.push(destinos[tipo] || '/dashboard')
+            router.push('/')
             return 0
           }
           return prev - 1
@@ -80,7 +77,7 @@ export default function EmailConfirmadoContent() {
       }, 1000)
       return () => clearInterval(interval)
     }
-  }, [tempoLeitura, showPopup, router, tipo])
+  }, [tempoLeitura, showPopup, router])
 
   const tempoDecorrido = useCallback(() => {
     const interval = setInterval(() => {
@@ -227,9 +224,7 @@ export default function EmailConfirmadoContent() {
       {showPopup && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-in fade-in duration-500">
           <div className="max-w-md w-full rounded-2xl bg-slate-900 border border-white/10 p-8 text-center shadow-2xl">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 mx-auto mb-5 flex items-center justify-center">
-              <ArrowRight className="w-7 h-7 text-slate-900" />
-            </div>
+            <div className="text-5xl mb-4">⚡</div>
             <h3 className="text-xl font-black text-white mb-2">
               Redirecionando em {redirectCountdown}s
             </h3>
@@ -245,7 +240,7 @@ export default function EmailConfirmadoContent() {
                   stroke="url(#countdownGrad)"
                   strokeWidth="4"
                   strokeLinecap="round"
-                  strokeDasharray={`${(redirectCountdown / 10) * 176} 176`}
+                  strokeDasharray={`${(redirectCountdown / REDIRECT_SECONDS) * 176} 176`}
                   className="transition-all duration-1000"
                 />
                 <defs>
@@ -262,6 +257,14 @@ export default function EmailConfirmadoContent() {
             <p className="text-[10px] text-slate-500 italic leading-relaxed">
               &ldquo;Quem hesita perde. Quem age cedo, define o preço.&rdquo;
             </p>
+            <div className="mt-4 flex flex-col gap-2">
+              <a href="/" className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-900 font-bold text-sm hover:from-emerald-400 hover:to-cyan-400 transition">
+                Ir para a Home agora
+              </a>
+              <button onClick={() => router.push('/')} className="text-xs text-slate-500 hover:text-white transition">
+                Não esperar — ir agora
+              </button>
+            </div>
           </div>
         </div>
       )}

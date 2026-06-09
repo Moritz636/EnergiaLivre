@@ -235,7 +235,6 @@ export default function RegulamentacaoPage() {
         <div className="mt-8 p-4 rounded-xl bg-white/5 border border-white/10 text-center text-xs text-slate-400">
           <p>
             Plataforma em conformidade com a <span className="text-emerald-400">Resolução Normativa ANEEL 687/2015</span> e a <span className="text-emerald-400">Lei 14.300/2022</span>.
-            Indicadores operacionais publicados no <Link href="/admin/dashboard" className="text-emerald-400 hover:underline">painel administrativo</Link> (acesso restrito).
           </p>
         </div>
       </section>

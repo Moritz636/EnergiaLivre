@@ -64,7 +64,7 @@ export default function HomePage() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => { if (typeof navigator !== 'undefined' && navigator.share) { navigator.share({ title: 'EnergiaLivre', text: 'Economize na conta de luz com energia solar. Sem instalação, sem fidelidade.', url: 'https://energialivre.dev.br' }); } else { navigator.clipboard?.writeText('https://energialivre.dev.br'); alert('Link copiado! Compartilhe com seus amigos.'); } }}
+              onClick={() => { if (typeof navigator !== 'undefined' && navigator.share) { navigator.share({ title: 'EnergiaLivre', text: 'Economize na conta de luz com energia solar. Sem instalação, sem fidelidade.', url: 'https://energialivre.dev.br' }); } else { navigator.clipboard?.writeText('https://energialivre.dev.br'); alert('⚡ Link copiado! Compartilhe com seus amigos e ajude mais pessoas a economizar na conta de luz.'); } }}
               className="hidden md:inline-flex text-sm font-bold text-emerald-400 hover:text-emerald-300 transition px-3 py-2 items-center gap-1.5"
               title="Compartilhar"
             >

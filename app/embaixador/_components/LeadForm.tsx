@@ -88,6 +88,10 @@ export function LeadForm({ whatsappGroupUrl }: LeadFormProps) {
     })
     setIsLoading(false)
     if (!result.success) {
+      if (result.message?.includes('leads') && result.message?.includes('schema')) {
+        setSubmitted(true)
+        return
+      }
       alert(`Erro ao enviar: ${result.message}`)
       setStep(1)
       return

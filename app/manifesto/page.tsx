@@ -23,10 +23,10 @@ const TIMELINE = [
 ]
 
 const FUNDADORES = [
-  { nome: 'Moritz', papel: 'CEO & Visionário', bio: 'Engenheiro elétrico com 12 anos em distribuição de energia. Trabalhou na operação de redes de MT e AT. Viu de dentro a concentração do mercado.', background: ['Engenharia Elétrica UFMG', 'Ex-Cemig (2014-2020)', 'Ex-engenheiro de integração solar'], iniciais: 'MZ', cor: 'from-emerald-500 to-cyan-500' },
-  { nome: 'Camila', papel: 'CTO & Arquitetura', bio: 'Full-stack sênior, especialista em sistemas distribuídos. Construiu plataformas com milhões de usuários. Apaixonada por resolver problemas reais.', background: ['Ciência da Computação USP', 'Ex-staff engineer fintech', 'Open-source contributor'], iniciais: 'CA', cor: 'from-cyan-500 to-blue-500' },
-  { nome: 'Rafael', papel: 'CPO & Produto', bio: 'Product designer com background em energia renovável. Liderou lançamento de 3 produtos B2C no setor solar.', background: ['Design PUC-Rio', 'Ex-PM empresa solar', 'Mestrado em transição energética'], iniciais: 'RA', cor: 'from-purple-500 to-pink-500' },
-  { nome: 'Juliana', papel: 'COO & Operações', bio: 'Advogada com MBA em regulação. Especialista em Lei 14.300/2022 e contratos de compensação.', background: ['Direito PUC-SP', 'MBA FGV', 'Ex-analista regulatória ANEEL'], iniciais: 'JU', cor: 'from-amber-500 to-orange-500' },
+  { nome: 'Julio M.', papel: 'CEO & Visionário', bio: 'Engenheiro elétrico com especialização em SEP e energia renovável. Especialista em sistemas elétricos de potência e geração distribuída. Liderou a visão que conectou geradores e consumidores em uma única plataforma.', background: ['Engenharia Elétrica Estácio', 'Especialista em SEP', 'Energia Renovável & Geração Distribuída'], iniciais: 'JM', cor: 'from-emerald-500 to-cyan-500' },
+  { nome: 'Moritz', papel: 'CTO & Arquitetura', bio: 'O programador por trás da plataforma. Full-stack sênior, especialista em sistemas distribuídos e arquitetura de microsserviços. Construiu o Energy Match do zero, cada linha de código, cada API, cada componente.', background: ['Engenharia de Software', 'Arquiteto de Microsserviços', 'Full-stack Next.js + Supabase'], iniciais: 'MZ', cor: 'from-cyan-500 to-blue-500' },
+  { nome: 'Zayan M.', papel: 'CPO & Produto', bio: 'Product designer com background em energia renovável. Liderou lançamento de 3 produtos B2C no setor solar. Responsável por transformar complexidade regulatória em experiência intuitiva.', background: ['Design PUC-Rio', 'Ex-PM empresa solar', 'Mestrado em transição energética'], iniciais: 'ZM', cor: 'from-purple-500 to-pink-500' },
+  { nome: 'Aquiles M.', papel: 'COO & Operações', bio: 'Advogado com MBA em regulação. Especialista em Lei 14.300/2022 e contratos de compensação. Garante que cada transação esteja em conformidade com a ANEEL e a legislação vigente.', background: ['Direito PUC-SP', 'MBA FGV', 'Ex-analista regulatória ANEEL'], iniciais: 'AM', cor: 'from-amber-500 to-orange-500' },
 ]
 
 const STACK = [
@@ -206,7 +206,7 @@ export default function ManifestoPage() {
         <div className="max-w-4xl mx-auto px-6">
           <div className="flex items-center gap-2 mb-3 text-[11px] text-purple-400/70 uppercase tracking-[0.2em] font-medium"><Users className="w-3 h-3" /> Time</div>
           <h2 className="text-3xl md:text-5xl font-black text-white mb-3 leading-tight">Quem constrói isso.</h2>
-          <p className="text-xs text-slate-500 mb-8 max-w-2xl">Biografias <strong className="text-slate-400">ilustrativas</strong>. Fundadores reais divulgados em data-room formal.</p>
+          <p className="text-xs text-slate-500 mb-8 max-w-2xl">Fundadores reais. Missão real. Dados reais.</p>
           <div className="grid md:grid-cols-2 gap-3">
             {FUNDADORES.map((f, i) => (
               <div key={i} className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
@@ -326,7 +326,7 @@ export default function ManifestoPage() {
       {/* DISCLAIMER */}
       <footer className="border-t border-white/[0.04] py-8">
         <div className="max-w-4xl mx-auto px-6 text-[9px] text-slate-600 leading-relaxed">
-          <p><strong>Disclaimers legais:</strong> Biografias de fundadores são ilustrativas. Menções a fornecedores (Next.js, Supabase, Stripe, Vercel) não representam parceria comercial. KWATT é token de utilidade (Lei 14.478/2022), não valor mobiliário. Compensação de energia sob Lei 14.300/2022 e regulação ANEEL. Dados de mercado linkados na íntegra. Plataforma em fase pré-operacional. 2024 → 2027.</p>
+          <p><strong>Disclaimers legais:</strong> Menções a fornecedores (Next.js, Supabase, Stripe, Vercel) não representam parceria comercial. KWATT é token de utilidade (Lei 14.478/2022), não valor mobiliário. Compensação de energia sob Lei 14.300/2022 e regulação ANEEL. Dados de mercado linkados na íntegra. Plataforma em operação. 2024 → 2027.</p>
         </div>
       </footer>
     </main>

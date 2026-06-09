@@ -130,34 +130,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleMagicLink = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
 
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const emailRedirectTo = `${window.location.origin}/login?${urlParams.toString()}`;
-      const { error: magicLinkError } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo },
-      });
-
-      if (magicLinkError) {
-        setError('Erro ao enviar link mágico. Tente novamente.');
-        setLoading(false);
-        return;
-      }
-
-      alert(`Link mágico enviado para ${email}. Verifique sua caixa de entrada!`);
-      setEmail('');
-    } catch (err: any) {
-      setError('Erro ao enviar link mágico.');
-      console.error('Magic link error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (!authChecked) {
     return (
@@ -261,20 +234,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-6">
-          <button
-            onClick={handleMagicLink}
-            disabled={loading}
-            className="w-full py-3 bg-white/10 text-white rounded-xl font-medium hover:bg-white/20 transition disabled:opacity-50"
-          >
-            {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin mx-auto" />
-            ) : (
-              'Entrar com Link Mágico'
-            )}
-          </button>
-        </div>
-
         <div className="mt-6 pt-4 border-t border-white/5">
           <p className="text-[10px] text-slate-500 text-center mb-3 uppercase tracking-wider font-bold">
             Entrar como:
@@ -309,11 +268,6 @@ export default function LoginPage() {
             Não tem conta?{' '}
             <Link href="/cadastro" className="text-emerald-400 hover:text-emerald-300 transition font-medium">
               Cadastre-se
-            </Link>
-          </p>
-          <p className="text-slate-500 text-xs">
-            <Link href="/admin-login" className="text-purple-400 hover:text-purple-300 transition font-medium">
-              Acessar Painel Admin
             </Link>
           </p>
         </div>
