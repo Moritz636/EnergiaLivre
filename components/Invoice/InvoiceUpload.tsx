@@ -89,17 +89,19 @@ export default function InvoiceUpload() {
 
       const dist = distribuidora === 'Outra' ? outraDistribuidora : distribuidora
 
-      const { error: insertError } = await (supabase as any).from('faturas_upload').insert({
+      const { error: insertError } = await (supabase as any).from('invoice_uploads').insert({
         user_id: user.id,
-        file_url: fileUrl,
+        uploaded_by_role: 'consumidor',
+        file_url: fileUrl || '/manual',
+        file_name: file?.name || 'manual',
         file_type: fileType,
-        file_name: file?.name || null,
-        consumo_kwh: Number(consumo),
-        distribuidora: dist || null,
+        file_size: file?.size || null,
+        kwh_mensal: Number(consumo),
+        concessionaria: dist || null,
         estado,
-        valor: valor ? Number(valor.replace(',', '.')) : null,
+        valor_total: valor ? Number(valor.replace(',', '.')) : null,
         vencimento: vencimento || null,
-        status: 'pendente',
+        status: 'pending',
       })
 
       if (insertError) {
