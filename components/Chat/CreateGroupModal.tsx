@@ -44,7 +44,8 @@ export default function CreateGroupModal({ onClose, onCreated }: CreateGroupModa
       mounted = false
       clearTimeout(t)
     }
-  }, [query, user?.id])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, user])
 
   const toggle = (id: string) => {
     setSelected((prev) => {

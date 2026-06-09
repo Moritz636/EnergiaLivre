@@ -48,6 +48,7 @@ export default function ChatHeader({ conversationId, onBack }: ChatHeaderProps) 
     return () => {
       mounted = false
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId])
 
   if (loading) {

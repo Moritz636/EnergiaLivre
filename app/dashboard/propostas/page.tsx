@@ -103,11 +103,11 @@ export default function PropostasPage() {
     } finally {
       setLoadingList(false)
     }
-  }, [tab, user?.id])
+  }, [tab, user])
 
   useEffect(() => {
     if (user) load()
-  }, [tab, user?.id, load])
+  }, [tab, user, load])
 
   const handleRespond = async (proposalId: number, response: 'accepted' | 'rejected') => {
     setActionId(proposalId)

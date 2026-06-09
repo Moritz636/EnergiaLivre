@@ -19,7 +19,7 @@
     "html5-qrcode": "^2.3.8",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.446.0",
-    "next": "14.2.13",
+    "next": "14.2.21",
     "pdf-lib": "^1.17.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

@@ -58,6 +58,7 @@ export default function ChatList({
     load()
     const unsub = subscribeToConversations(supabase, user.id, () => load())
     return () => unsub()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
 
   const filtered = useMemo(() => {

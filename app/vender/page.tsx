@@ -85,6 +85,7 @@ export default function VenderPage() {
       }, 1000);
       return () => clearInterval(interval);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, formData.estado]);
 
   // Redirecionamento automático do Passo 5 para /login após captura

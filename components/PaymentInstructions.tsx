@@ -150,6 +150,7 @@ export function PaymentInstructions({
             <>
               <div className="flex flex-col items-center gap-3">
                 <div className="bg-white p-3 rounded-xl">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={qrCode} alt="QR Code Pix" className="w-52 h-52 rounded-lg" />
                 </div>
                 {expiresIn !== null && expiresIn > 0 && (

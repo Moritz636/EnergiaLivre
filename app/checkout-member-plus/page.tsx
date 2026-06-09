@@ -37,7 +37,8 @@ export default function CheckoutMemberPlusPage() {
       if (status.active) { setAlreadyActive(true); setDaysRemaining(status.daysRemaining ?? 0); }
     };
     checkUser();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]);
 
   const handleAssinar = async () => {
     if (gateway === 'stripe') {
@@ -237,6 +238,7 @@ export default function CheckoutMemberPlusPage() {
                     <p className="text-xs text-slate-400 mb-4">Escaneie o QR Code ou copie o código PIX</p>
                     {psResult.qrCodeImage && (
                       <div className="mb-4 inline-block p-3 bg-white rounded-2xl">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={`data:image/png;base64,${psResult.qrCodeImage}`} alt="QR Code PIX" className="w-48 h-48 mx-auto" />
                       </div>
                     )}

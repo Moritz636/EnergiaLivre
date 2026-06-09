@@ -143,6 +143,7 @@ export default function InvoiceUpload() {
               <X className="w-3 h-3 text-slate-400" />
             </button>
             {preview ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img src={preview} alt="Preview" className="w-full h-40 object-contain rounded-lg" />
             ) : (
               <div className="flex items-center gap-3">

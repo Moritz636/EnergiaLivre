@@ -120,6 +120,7 @@ export default function SwipeCard({ candidate, onPropose, onSkip, loading, swipe
       el.removeEventListener('pointerup', onPointerUp)
       el.removeEventListener('pointercancel', onPointerUp)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [swipeEnabled, isDragging, dragX, dragY, loading, actionLoading])
 
   const rotation = isDragging ? dragX / 15 : 0

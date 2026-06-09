@@ -18,7 +18,8 @@ export default function CompletarPerfilConsumidor() {
       else setUser(data.user);
       setLoading(false);
     });
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

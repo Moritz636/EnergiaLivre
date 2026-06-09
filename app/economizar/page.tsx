@@ -87,6 +87,7 @@ export default function EconomizarPage() {
         clearTimeout(timer);
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
   // Redirecionamento automático do Passo 5 para /login após captura

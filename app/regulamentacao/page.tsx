@@ -39,6 +39,7 @@ export default function RegulamentacaoPage() {
         {/* IMAGEM DE REGULAMENTAÇÃO - Com Efeito de Poder */}
         <div className="w-full overflow-hidden rounded-2xl shadow-2xl shadow-emerald-500/20 mb-12 relative group">
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-transparent to-yellow-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img 
             src="/images/image.png" 
             alt="Lei ANEEL 687/2015 - Geração Compartilhada de Energia Solar - Autoridade Regulatória Brasileira" 

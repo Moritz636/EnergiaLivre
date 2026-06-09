@@ -31,7 +31,8 @@ export default function DashboardPage() {
       }
     };
     checkUser();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-[#020617] flex items-center justify-center">

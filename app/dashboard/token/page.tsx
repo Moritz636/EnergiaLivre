@@ -82,6 +82,7 @@ export default function TokenDashboardPage() {
   const [psError, setPsError] = useState('')
   const [pixCopied, setPixCopied] = useState(false)
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     void loadAll()
     const interval = setInterval(updateCountdown, 1000)
@@ -525,6 +526,7 @@ export default function TokenDashboardPage() {
                     <p className="text-xs text-slate-400 mb-4">Escaneie o QR Code ou copie o código PIX</p>
                     {psResult.qrCodeImage && (
                       <div className="mb-4 inline-block p-3 bg-white rounded-2xl">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={`data:image/png;base64,${psResult.qrCodeImage}`} alt="QR Code PIX" className="w-48 h-48 mx-auto" />
                       </div>
                     )}

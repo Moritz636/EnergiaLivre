@@ -56,6 +56,7 @@ export default function ChatWindow({ conversationId, onBack }: ChatWindowProps) 
     return () => {
       mounted = false
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId, user?.id])
 
   // Realtime
@@ -73,6 +74,7 @@ export default function ChatWindow({ conversationId, onBack }: ChatWindowProps) 
       }
     })
     return () => unsub()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId, user?.id])
 
   // Auto-scroll para o fim ao receber mensagens

@@ -113,7 +113,7 @@ export default function DashboardGeradorPage() {
     }
 
     loadMetrics()
-  }, [user, supabase]);
+  }, [user, supabase, profile, consentChecked]);
 
   if (loading || loadingMetrics) {
     return (

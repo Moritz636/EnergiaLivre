@@ -42,6 +42,7 @@ export default function CouponsCard() {
     return () => {
       mounted = false
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
 
   const handleCopy = async (text: string, code: string) => {

@@ -47,6 +47,7 @@ export default function FaturaDetailPage({ params }: PageProps) {
     return () => {
       mounted = false
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [invoiceId, user?.id])
 
   if (loading || !user || !invoiceId || loadingInv) {
