@@ -89,7 +89,7 @@ export default function InvoiceUpload() {
 
       const dist = distribuidora === 'Outra' ? outraDistribuidora : distribuidora
 
-      const { error: insertError } = await supabase.from('faturas_upload').insert({
+      const { error: insertError } = await (supabase as any).from('faturas_upload').insert({
         user_id: user.id,
         file_url: fileUrl,
         file_type: fileType,
