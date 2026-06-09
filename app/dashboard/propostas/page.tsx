@@ -17,6 +17,7 @@ import {
   Clock,
   Sparkles,
   Crown,
+  MapPin,
 } from 'lucide-react'
 
 type ProposalStatus = 'pending' | 'accepted' | 'rejected' | 'expired' | 'cancelled'
@@ -49,6 +50,7 @@ interface Stats {
 }
 
 type Tab = 'received' | 'sent' | 'accepted'
+const UF_LIST = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
 
 const TABS: Array<{ value: Tab; label: string; icon: any }> = [
   { value: 'received', label: 'Recebidas', icon: Inbox },
@@ -78,6 +80,7 @@ export default function PropostasPage() {
   const [actionId, setActionId] = useState<number | null>(null)
   const [error, setError] = useState('')
   const [openingChatId, setOpeningChatId] = useState<number | null>(null)
+  const [ufFilter, setUfFilter] = useState('')
 
   useEffect(() => {
     if (!loading && !user) {
@@ -241,6 +244,22 @@ export default function PropostasPage() {
             </div>
           )}
 
+          {/* Filtro UF */}
+          <div className="px-4 py-2.5 border-b border-white/5 flex items-center gap-2">
+            <MapPin className="w-3.5 h-3.5 text-slate-500" />
+            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Filtrar por estado:</span>
+            <select
+              value={ufFilter}
+              onChange={(e) => setUfFilter(e.target.value)}
+              className="px-2 py-1 rounded-md bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-emerald-500/50"
+            >
+              <option value="">Todos</option>
+              {UF_LIST.map((uf) => (
+                <option key={uf} value={uf}>{uf}</option>
+              ))}
+            </select>
+          </div>
+
           {/* Lista */}
           {loadingList ? (
             <div className="p-12 text-center">
@@ -273,7 +292,9 @@ export default function PropostasPage() {
             </div>
           ) : (
             <ul className="divide-y divide-white/5">
-              {proposals.map((p) => (
+              {proposals
+                .filter((p) => !ufFilter || p.other_user?.estado === ufFilter)
+                .map((p) => (
                 <ProposalCard
                   key={p.id}
                   proposal={p}

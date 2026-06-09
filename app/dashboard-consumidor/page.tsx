@@ -27,6 +27,7 @@ import { MotivationBlock } from './_components/MotivationBlock'
 import { MemberPlusCta } from './_components/MemberPlusCta'
 import { LoadingState } from './_components/LoadingState'
 import { CreditWallet } from '@/components/CreditWallet'
+import FaturasSummary from './_components/FaturasSummary'
 
 type Assinatura = Database['public']['Tables']['assinaturas']['Row']
 
@@ -202,7 +203,8 @@ export default function DashboardConsumidorPage() {
             <InvoicesList invoices={invoices} loading={loadingInvoices} />
             <PlanCard plan={state.plan} />
           </div>
-          <div>
+          <div className="space-y-6">
+            <FaturasSummary userId={user.id} />
             <CreditWallet userId={user.id} />
           </div>
         </div>

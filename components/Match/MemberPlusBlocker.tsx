@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { Crown, Lock, Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Crown, Lock, Sparkles, ArrowRight, CheckCircle2, Zap, Users, MapPin } from 'lucide-react';
 
 type Props = {
   daysRemaining?: number
@@ -15,31 +15,46 @@ export default function MemberPlusBlocker({ daysRemaining = 0, expired = false }
         <Lock className="w-8 h-8 text-slate-900" />
       </div>
       <h2 className="text-2xl font-bold text-white mb-2">
-        {expired ? 'Renove seu Member Plus' : 'Match é exclusivo para Member Plus'}
+        {expired ? 'Seu acesso expirou' : 'Você está quase lá.'}
       </h2>
-      <p className="text-slate-400 mb-6 max-w-md mx-auto">
-        Acesse o mapa interativo de geradores e envie propostas ilimitadas por apenas{' '}
-        <strong className="text-yellow-400">R$ 9,99/mês</strong>.
+      <p className="text-slate-400 mb-2 max-w-md mx-auto">
+        {expired
+          ? 'Sem o Member Plus, o match fica travado. Renove e volte a conectar.'
+          : 'Enquanto outros ficam de fora, você pode ativar o match agora e começar a economizar.'}
+      </p>
+      <p className="text-[11px] text-slate-500 mb-6 max-w-sm mx-auto">
+        Aqueles que ativaram antes já estão conectados com geradores na sua região. 
+        Cada dia sem acesso é um dia a mais pagando tarifa cheia.
       </p>
 
       {daysRemaining > 0 && !expired && (
         <p className="text-sm text-slate-300 mb-4">
-          Você tem <strong className="text-emerald-400">{daysRemaining} dias</strong> restantes.
+          Seu acesso ainda tem <strong className="text-emerald-400">{daysRemaining} dias</strong>.
         </p>
       )}
 
-      <ul className="space-y-2 mb-8 text-left max-w-sm mx-auto">
-        {[
-          'Mapa interativo com geradores próximos',
-          'Match com 1 clique (curta perfis)',
-          'Chat integrado para negociar',
-        ].map((b) => (
-          <li key={b} className="flex items-center gap-2 text-slate-300 text-sm">
-            <CheckCircle2 className="w-4 h-4 text-yellow-400 shrink-0" />
-            {b}
-          </li>
-        ))}
-      </ul>
+      <div className="bg-black/30 rounded-xl p-4 mb-6 max-w-sm mx-auto">
+        <p className="text-[10px] text-yellow-400/80 uppercase tracking-wider font-bold mb-3">O que você libera:</p>
+        <ul className="space-y-2.5 text-left">
+          {[
+            { icon: MapPin, text: 'Mapa interativo com geradores da sua região' },
+            { icon: Zap, text: 'Match com 1 toque — curta e conecte' },
+            { icon: Users, text: 'Chat direto para negociar sem intermediário' },
+          ].map((b) => (
+            <li key={b.text} className="flex items-center gap-2.5 text-slate-300 text-sm">
+              <b.icon className="w-4 h-4 text-yellow-400 shrink-0" />
+              {b.text}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="mb-4">
+        <p className="text-3xl font-black text-white">
+          R$ 9,90<span className="text-sm font-normal text-slate-400">/mês</span>
+        </p>
+        <p className="text-[10px] text-slate-500">Menos que um café por dia. Economia real na sua fatura.</p>
+      </div>
 
       <Link
         href="/checkout-member-plus"
@@ -47,7 +62,7 @@ export default function MemberPlusBlocker({ daysRemaining = 0, expired = false }
       >
         {expired ? (
           <>
-            <Sparkles className="w-5 h-5" /> Renovar Member Plus
+            <Sparkles className="w-5 h-5" /> Renovar agora
           </>
         ) : (
           <>
@@ -56,6 +71,10 @@ export default function MemberPlusBlocker({ daysRemaining = 0, expired = false }
         )}
         <ArrowRight className="w-4 h-4" />
       </Link>
+
+      <p className="text-[9px] text-slate-600 mt-4">
+        Cancele quando quiser. Sem multa, sem burocracia.
+      </p>
     </div>
   )
 }
