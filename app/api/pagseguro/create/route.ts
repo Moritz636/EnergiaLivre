@@ -3,6 +3,13 @@ import { createPagSeguroCharge } from '@/lib/pagseguro'
 
 export async function POST(req: NextRequest) {
   try {
+    if (!process.env.PAGSEGURO_CLIENT_ID || !process.env.PAGSEGURO_CLIENT_SECRET) {
+      return NextResponse.json(
+        { error: 'PagSeguro ainda não configurado. Use Stripe ou PIX diretamente.', fallback: 'stripe' },
+        { status: 503 }
+      )
+    }
+
     const body = await req.json()
     const {
       userId,

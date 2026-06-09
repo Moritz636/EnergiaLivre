@@ -55,21 +55,39 @@ export function LocationForm({ onSubmit, onCoordsChange, loading }: LocationForm
     setGeocoding(true)
     setError('')
     try {
-      const res = await fetch('/api/mock/geocode', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ endereco: address, cep }),
-      })
+      let query = address || ''
+      if (cep && cep.length >= 8) {
+        query = `Brazil ${cep}`
+      }
+      if (!query) {
+        setError('Informe um endereço ou CEP')
+        setGeocoding(false)
+        return null
+      }
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=br&limit=1`,
+        { headers: { 'User-Agent': 'EnergiaLivre/1.0' } }
+      )
       if (!res.ok) throw new Error('Falha no geocode')
-      const json = (await res.json()) as { lat: number; lng: number; cidade: string; estado: string; message?: string }
-      const newCoords = { lat: json.lat, lng: json.lng }
+      const results = await res.json()
+      if (!results || results.length === 0) {
+        setError('Endereço não encontrado. Tente ser mais específico.')
+        setGeocoding(false)
+        return null
+      }
+      const r = results[0]
+      const lat = parseFloat(r.lat)
+      const lng = parseFloat(r.lon)
+      const newCoords = { lat, lng }
       setCoords(newCoords)
       onCoordsChange?.(newCoords)
-      // Preenche cidade/estado se vierem do geocode
-      if (json.cidade && !form.cidade) {
-        setForm((f) => ({ ...f, cidade: json.cidade, estado: json.estado }))
+      const addr = r.address || {}
+      const cidade = addr.city || addr.town || addr.municipality || form.cidade
+      const estado = addr.state ? addr.state.toUpperCase().slice(0, 2) : form.estado
+      if (cidade && !form.cidade) {
+        setForm((f) => ({ ...f, cidade, estado }))
       }
-      return { lat: json.lat, lng: json.lng, cidade: json.cidade, estado: json.estado, message: json.message }
+      return { lat, lng, cidade, estado, message: r.display_name }
     } catch (err: any) {
       setError(err?.message ?? 'Erro no geocode')
       return null

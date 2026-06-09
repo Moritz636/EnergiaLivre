@@ -315,14 +315,26 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     if (!loading && user && !isAdmin) {
-      router.push('/dashboard-consumidor');
+      router.push('/');
     }
   }, [loading, user, isAdmin, router]);
 
-  if (loading || !isAdmin) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <Loader2 className="w-6 h-6 text-purple-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <Shield className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">Acesso Restrito</h2>
+          <p className="text-slate-400 text-sm">Você não tem permissão para acessar o painel administrativo.</p>
+        </div>
       </div>
     );
   }

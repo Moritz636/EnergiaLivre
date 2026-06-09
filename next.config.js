@@ -54,7 +54,8 @@ const nextConfig = {
       { source: '/parceiros', destination: '/embaixador', permanent: true },
       { source: '/dashboard-parceiro', destination: '/embaixador/dashboard', permanent: true },
       { source: '/cadastro-parceiro', destination: '/cadastro-embaixador', permanent: true },
-      { source: '/admin-login', destination: '/login', permanent: true },
+      { source: '/dashboard/chat', destination: '/dashboard/match', permanent: true },
+      { source: '/dashboard/chat/:id*', destination: '/dashboard/match', permanent: true },
     ]
   },
   typescript: {

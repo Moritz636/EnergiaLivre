@@ -54,9 +54,14 @@ export default function DashboardMatchPage() {
       return
     }
     const checkMemberPlus = async () => {
-      const status = await getMemberPlusStatus(supabase, user.id)
-      setMemberPlusActive(status.active)
-      setDaysRemaining(status.daysRemaining ?? 0)
+      try {
+        const status = await getMemberPlusStatus(supabase, user.id)
+        setMemberPlusActive(status.active)
+        setDaysRemaining(status.daysRemaining ?? 0)
+      } catch {
+        setMemberPlusActive(false)
+        setDaysRemaining(0)
+      }
     }
     checkMemberPlus()
   }, [user, authLoading, supabase, router])
@@ -239,6 +244,13 @@ export default function DashboardMatchPage() {
         : null,
     }
   }, [candidates])
+
+  // Safety timeout - if Member Plus check hangs, show blocker after 5s
+  useEffect(() => {
+    if (memberPlusActive !== null) return
+    const timeout = setTimeout(() => setMemberPlusActive(false), 5000)
+    return () => clearTimeout(timeout)
+  }, [memberPlusActive])
 
   // ============================================================
   // Render
