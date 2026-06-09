@@ -65,7 +65,12 @@ export function parseBarcode(payload: string): ParsedBarcode {
     return parseItfCode(digits)
   }
 
-  // 4) Outros
+  // 4) Fallback: qualquer string numérica longa (>= 30 dígitos) — tenta extrair valor
+  if (digits.length >= 30) {
+    return parseFallbackNumeric(digits)
+  }
+
+  // 5) Outros
   return {
     tipo: 'other',
     raw: digits,
@@ -177,23 +182,10 @@ function parseItfCode(digits: string): ParsedBarcode {
     }
   }
   const moeda = digits.slice(0, 1)
-  if (moeda !== '9') {
-    return {
-      tipo: 'itf',
-      raw: digits,
-      valor: null,
-      vencimento: null,
-      pixKey: null,
-      txid: null,
-      documentId: digits.slice(0, 20),
-      beneficiario: null,
-      confidence: 'nenhum',
-    }
-  }
   const fator = parseInt(digits.slice(5, 9), 10)
   const valorCents = parseInt(digits.slice(9, 19), 10)
   const valor = Number.isFinite(valorCents) ? valorCents / 100 : null
-  const vencimento = fator >= 1000 ? daysToIso(fator) : null
+  const vencimento = (moeda === '9' && fator >= 1000) ? daysToIso(fator) : null
   const documentId = digits.slice(19, 43)
 
   return {
@@ -205,8 +197,37 @@ function parseItfCode(digits: string): ParsedBarcode {
     txid: null,
     documentId,
     beneficiario: null,
-    confidence: valor !== null ? 'ok' : 'parcial',
+    confidence: valor !== null ? (moeda === '9' && fator >= 1000 ? 'ok' : 'parcial') : 'nenhum',
     debug: { moeda, fator: String(fator) },
+  }
+}
+
+/**
+ * Fallback: tenta extrair valor de qualquer string numérica longa
+ */
+function parseFallbackNumeric(digits: string): ParsedBarcode {
+  const len = digits.length
+  let valor: number | null = null
+  let vencimento: string | null = null
+  if (len >= 14) {
+    const tail14 = digits.slice(-14)
+    const venc4 = parseInt(tail14.slice(0, 4), 10)
+    const val10 = parseInt(tail14.slice(4, 14), 10)
+    if (Number.isFinite(val10) && val10 > 0) {
+      valor = val10 / 100
+      if (venc4 > 1000) vencimento = daysToIso(venc4)
+    }
+  }
+  if (valor === null && len >= 10) {
+    const val10 = parseInt(digits.slice(-10), 10)
+    if (Number.isFinite(val10) && val10 > 0) valor = val10 / 100
+  }
+  return {
+    tipo: 'other', raw: digits, valor, vencimento,
+    pixKey: null, txid: null, documentId: digits.slice(0, 20),
+    beneficiario: null,
+    confidence: valor !== null ? 'parcial' : 'nenhum',
+    debug: { fallback: 'true', len: String(len) },
   }
 }
 

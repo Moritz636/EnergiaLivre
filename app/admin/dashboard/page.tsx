@@ -192,6 +192,26 @@ export default function AdminDashboardPage() {
   const router = useRouter();
   const [section, setSection] = useState<Section>('overview');
 
+  // Re-verifica perfil se admin não foi detectado (corrige race condition em mobile)
+  const [recheckedAdmin, setRecheckedAdmin] = useState(false)
+  useEffect(() => {
+    if (!loading && user && !isAdmin && !recheckedAdmin) {
+      getSupabase()
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (data && (data as any).role === 'admin') {
+            window.location.reload()
+          } else {
+            setRecheckedAdmin(true)
+          }
+        })
+        .catch(() => setRecheckedAdmin(true))
+    }
+  }, [loading, user, isAdmin, recheckedAdmin])
+
   const [leads, setLeads] = useState<Lead[]>([]);
   const [users, setUsers] = useState<ProfileRow[]>([]);
   const [commissions, setCommissions] = useState<Commission[]>([]);

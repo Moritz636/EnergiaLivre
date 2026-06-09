@@ -48,8 +48,12 @@ export async function POST(request: NextRequest) {
 
     const parsedBarcode = parseBarcode(data.barcodePayload)
     if (parsedBarcode.confidence === 'nenhum' || parsedBarcode.valor === null) {
+      const tip =
+        parsedBarcode.debug?.len
+          ? `Encontrei ${parsedBarcode.debug.len} dígitos. Digite o código completo de 44 (barras) ou 47/48 (linha digitável) dígitos.`
+          : 'Digite o código completo de barras (44 dígitos) ou a linha digitável (47/48 dígitos) que aparece na sua conta de energia.'
       return NextResponse.json({
-        error: 'Não foi possível extrair valor da fatura a partir deste código.',
+        error: 'Não foi possível identificar o valor da fatura. ' + tip,
         parsed: parsedBarcode,
       }, { status: 422 })
     }
