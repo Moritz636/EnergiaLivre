@@ -11,10 +11,8 @@ import { Nav } from './_components/Nav'
 import { StatsGrid, type Stats } from './_components/StatsGrid'
 import { GoalProgress } from './_components/GoalProgress'
 import { FilterBar } from './_components/FilterBar'
-import {
-  CommissionsTable,
-  type ComissaoItem,
-} from './_components/CommissionsTable'
+import { CommissionsTable, type ComissaoItem } from './_components/CommissionsTable'
+import { ComissoesCharts } from './_components/ComissoesCharts'
 import { LoadingState } from './_components/LoadingState'
 import { AccessDenied } from './_components/AccessDenied'
 
@@ -104,11 +102,13 @@ export default function ComissoesDashboardPage() {
           <div className="mb-10">
             <h1 className="text-3xl font-bold text-white mb-2">Painel de Comissões</h1>
             <p className="text-slate-400">
-              Monetize sua rede e ganhe dinheiro com cada cliente indicado
+              Monetize sua rede e ganhe dinheiro com cada cliente indicado. Comissões pagas após 30 dias, todo dia 3 de cada mês.
             </p>
           </div>
 
           <StatsGrid stats={stats} />
+
+          <ComissoesCharts items={comissoes} />
 
           <GoalProgress atuais={cadastrosTotais} meta={metaAtual.cadastros} />
 
