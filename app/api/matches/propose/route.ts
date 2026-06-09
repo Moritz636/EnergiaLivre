@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createMatchProposal } from '@/lib/matches'
+import { createNotification } from '@/lib/notifications'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -145,6 +146,18 @@ export async function POST(request: NextRequest) {
     if (!result.success) {
       return NextResponse.json({ error: result.message }, { status: 400 })
     }
+
+    // Notificar destinatário sobre nova proposta
+    createNotification(supabase, {
+      userId: toUserId,
+      type: 'info',
+      title: 'Nova proposta de match',
+      message: message
+        ? `Você recebeu uma proposta: "${message.slice(0, 80)}"`
+        : 'Você recebeu uma nova proposta de match!',
+      link: '/dashboard/propostas',
+      metadata: { proposalId: result.id, fromUserId: user.id },
+    })
 
     return NextResponse.json({ success: true, id: result.id, mutual: false })
   } catch (err: any) {

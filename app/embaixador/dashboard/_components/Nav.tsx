@@ -15,6 +15,7 @@ import {
   Send,
   MessageCircle,
 } from 'lucide-react'
+import NotificationBell from '@/components/NotificationBell'
 
 interface NavProfile {
   nome?: string | null
@@ -90,6 +91,8 @@ export function Nav({ profile, onLogout }: NavProps) {
             <MessageCircle className="w-4 h-4" />
             <span className="hidden md:inline">Chat</span>
           </Link>
+
+          <NotificationBell />
 
           <button
             onClick={onLogout}

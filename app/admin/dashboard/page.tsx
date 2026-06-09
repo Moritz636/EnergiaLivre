@@ -196,19 +196,22 @@ export default function AdminDashboardPage() {
   const [recheckedAdmin, setRecheckedAdmin] = useState(false)
   useEffect(() => {
     if (!loading && user && !isAdmin && !recheckedAdmin) {
-      getSupabase()
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-        .then(({ data }) => {
+      ;(async () => {
+        try {
+          const { data } = await getSupabase()
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
           if (data && (data as any).role === 'admin') {
             window.location.reload()
           } else {
             setRecheckedAdmin(true)
           }
-        })
-        .catch(() => setRecheckedAdmin(true))
+        } catch {
+          setRecheckedAdmin(true)
+        }
+      })()
     }
   }, [loading, user, isAdmin, recheckedAdmin])
 

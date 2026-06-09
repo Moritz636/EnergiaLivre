@@ -6,6 +6,7 @@
 
 import Link from 'next/link'
 import { Zap, LogOut, Heart, FileText, MessageCircle } from 'lucide-react'
+import NotificationBell from '@/components/NotificationBell'
 
 interface NavProps {
   userName?: string | null
@@ -59,6 +60,7 @@ export function Nav({ userName, onLogout }: NavProps) {
             <MessageCircle className="w-4 h-4" />
             <span className="hidden md:inline">Suporte</span>
           </a>
+          <NotificationBell />
           <button
             onClick={onLogout}
             className="flex items-center gap-1.5 px-3 py-2 text-sm text-slate-400 hover:text-white transition"

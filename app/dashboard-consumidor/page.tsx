@@ -28,6 +28,8 @@ import { MemberPlusCta } from './_components/MemberPlusCta'
 import { LoadingState } from './_components/LoadingState'
 import { CreditWallet } from '@/components/CreditWallet'
 import FaturasSummary from './_components/FaturasSummary'
+import OnboardingWizard from '@/components/OnboardingWizard'
+import InvoiceReminder from '@/components/InvoiceReminder'
 
 type Assinatura = Database['public']['Tables']['assinaturas']['Row']
 
@@ -174,6 +176,18 @@ export default function DashboardConsumidorPage() {
         }}
       />
 
+      {user && (
+        <OnboardingWizard
+          userId={user.id}
+          profile={{
+            nome: profile?.nome,
+            cidade: profile?.cidade,
+            tipo: profile?.tipo,
+          }}
+          onComplete={() => {}}
+        />
+      )}
+
       <div
         className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/5 via-transparent to-transparent -z-20"
         aria-hidden
@@ -189,7 +203,13 @@ export default function DashboardConsumidorPage() {
 
       <Nav userName={profile?.nome} onLogout={logout} />
 
-      <main className="pt-24 pb-12 px-6 max-w-7xl mx-auto">
+      {user && (
+        <div className="pt-20 px-6 max-w-7xl mx-auto">
+          <InvoiceReminder userId={user.id} />
+        </div>
+      )}
+
+      <main className="pt-6 pb-12 px-6 max-w-7xl mx-auto">
         <Hero data={heroData} />
 
         <QuickActions />

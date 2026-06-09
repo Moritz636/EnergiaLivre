@@ -6,6 +6,7 @@ import { LogOut, Zap, TrendingUp, DollarSign, Sun, Building2, MapPin, Users, Loa
 import { ConsentModal } from '@/components/ConsentModal';
 import { CURRENT_TERMS_VERSION } from '@/lib/commissions';
 import { CreditWallet } from '@/components/CreditWallet';
+import NotificationBell from '@/components/NotificationBell';
 import Link from 'next/link';
 import type { Database } from '@/lib/database.types';
 
@@ -191,6 +192,7 @@ export default function DashboardGeradorPage() {
               <MessageCircle className="w-4 h-4" />
               <span className="hidden sm:inline">Suporte</span>
             </a>
+            <NotificationBell />
             <button
               onClick={logout}
               className="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-white transition"
