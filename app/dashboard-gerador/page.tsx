@@ -66,27 +66,15 @@ export default function DashboardGeradorPage() {
 
     async function loadMetrics() {
       try {
-        const { data: gerador } = await supabase
-          .from('geradores')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
+        const [geradorRes, leadsCountRes, leadsRes] = await Promise.all([
+          supabase.from('geradores').select('*').eq('id', user.id).maybeSingle(),
+          supabase.from('leads').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('tipo', 'gerador'),
+          supabase.from('leads').select('*').eq('user_id', user.id).eq('tipo', 'gerador').order('created_at', { ascending: false }).limit(5),
+        ])
 
-        const { count: leadsCount } = await supabase
-          .from('leads')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .eq('tipo', 'gerador');
-
-        const { data: leads } = await supabase
-          .from('leads')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('tipo', 'gerador')
-          .order('created_at', { ascending: false })
-          .limit(5);
-
-        const g = gerador as Gerador | null
+        const g = geradorRes.data as Gerador | null
+        const leadsCount = leadsCountRes.count
+        const leads = leadsRes.data as Lead[] | null
         const cap = g?.capacidade_kwp ?? 0
         const excedente = g?.excedente_mensal_kwh ?? 0
         const receita = cap * 150

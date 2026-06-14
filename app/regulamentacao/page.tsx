@@ -43,6 +43,9 @@ export default function RegulamentacaoPage() {
           <img 
             src="/images/image.png" 
             alt="Lei ANEEL 687/2015 - Geração Compartilhada de Energia Solar - Autoridade Regulatória Brasileira" 
+            loading="lazy"
+            width="1200"
+            height="800"
             className="w-full h-auto rounded-2xl block transform group-hover:scale-105 transition-transform duration-700"
           />
           {/* Selo sobreposto - Exclusividade */}

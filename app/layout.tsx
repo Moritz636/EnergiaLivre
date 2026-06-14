@@ -76,6 +76,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
+      <head>
+        <link rel="preconnect" href="https://eahwyotzbskfjvsoqzw.supabase.co" />
+        <link rel="preconnect" href="https://api.stripe.com" />
+        <link rel="dns-prefetch" href="https://eahwyotzbskfjvsoqzw.supabase.co" />
+        <link rel="dns-prefetch" href="https://api.stripe.com" />
+        <link rel="dns-prefetch" href="https://js.stripe.com" />
+      </head>
       <body className={inter.className}>{children}</body>
     </html>
   )
