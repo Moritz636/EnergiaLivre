@@ -16,7 +16,7 @@ const TIMELINE = [
   { year: '2024', quarter: 'Q4', title: 'A centelha', desc: 'Moritz descobre que a conta de luz da sua irmã estava 27% mais cara. Pergunta: por que ela não usa energia solar? Resposta: R$ 25.000 de investimento inicial. E se a gente conectasse consumidores a geradores de excedente na mesma UF?', icon: Sparkles },
   { year: '2025', quarter: 'Q1', title: 'O código', desc: 'Primeira versão do Energy Match em Next.js 14. Match por geolocalização (50 km), validação de capacidade excedente. 12 geradores e 8 consumidores em beta em Belo Horizonte.', icon: Code },
   { year: '2025', quarter: 'Q2', title: 'A primeira conexão', desc: 'Joana (consumidora, Contagem-MG) conecta-se a Seu Zé (gerador, Ibirité-MG). Economia de R$ 280/mês para ela. Renda passiva de R$ 304/mês para ele. A Lei 14.300/2022 funcionou na prática.', icon: Heart },
-  { year: '2025', quarter: 'Q3', title: 'A tração', desc: 'Scanner de fatura, PIX integrado, match estilo Tinder, ranking de geradores. 200 usuários ativos. Tempo médio de conexão: 4,2 dias. NPS: 78.', icon: TrendingUp },
+  { year: '2025', quarter: 'Q3', title: 'A tração', desc: 'Scanner de fatura, match estilo Tinder, ranking de geradores. 200 usuários ativos. Tempo médio de conexão: 4,2 dias. NPS: 78.', icon: TrendingUp },
   { year: '2025', quarter: 'Q4', title: 'A virada', desc: 'Lançamento do token KWATT (Lei 14.478/2022). 1 KWATT = até 30% de 1 kWh. Queima de 1% por transação. Staking opcional. Pré-venda em 2026. Lançamento da rede em 25/01/2027.', icon: Coins },
   { year: '2026', quarter: 'Q2', title: 'A expansão', desc: 'Match por estado e distribuidora. 10 distribuidoras integradas. 5.000 usuários.', icon: MapPin, future: true },
   { year: '2027', quarter: 'Q1', title: 'A rede', desc: 'Lançamento oficial da mainnet KWATT. 100.000 usuários. 10.000 geradores. 1 GWh/mês redistribuído. 50 cidades.', icon: Rocket, future: true },
@@ -41,7 +41,6 @@ const STACK = [
   ]},
   { categoria: 'Pagamentos', ferramentas: [
     { nome: 'Stripe', papel: 'Checkout + subscriptions + webhooks', site: 'https://stripe.com' },
-    { nome: 'PIX (BR Code + TLV EMV)', papel: 'Pagamento instantâneo brasileiro', site: 'https://www.bcb.gov.br/estabilidadefinanceira/pix' },
   ]},
   { categoria: 'Geolocalização', ferramentas: [
     { nome: 'OpenStreetMap + Leaflet', papel: 'Mapa base gratuito e interativo', site: 'https://leafletjs.com' },
@@ -122,7 +121,7 @@ export default function ManifestoPage() {
             {[
               { icon: MapPin, title: 'Match geolocalizado', desc: 'Algoritmo que conecta consumidor e gerador por proximidade, estado ou distribuidora (Lei 14.300/2022).' },
               { icon: Coins, title: 'Token KWATT', desc: 'Utilidade real na plataforma. 1 KWATT = até 30% de 1 kWh. Lei 14.478/2022 (criptoativos).' },
-              { icon: CreditCard, title: 'PIX + PagSeguro + Stripe', desc: 'Pagamento instantâneo entre as partes. Múltiplos gateways, zero burocracia.' },
+              { icon: CreditCard, title: 'Stripe', desc: 'Pagamento instantâneo entre as partes. Zero burocracia.' },
               { icon: Sun, title: 'Ranking de geradores', desc: '70% preço + 30% avaliação. Geradores que dão desconto real ficam no topo.' },
               { icon: Shield, title: 'LGPD e segurança', desc: 'Row Level Security no Supabase. Dados criptografados. Consentimento explícito.' },
               { icon: Target, title: 'Sem instalação', desc: 'O consumidor economiza sem placas solares. O gerador monetiza o excedente.' },

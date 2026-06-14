@@ -28,7 +28,6 @@ import { CommissionsList } from './_components/CommissionsList'
 import { LeadsList } from './_components/LeadsList'
 import { FooterMeta } from './_components/FooterMeta'
 import { LoadingState } from './_components/LoadingState'
-import { CreditWallet } from '@/components/CreditWallet'
 
 type LeadRow = Database['public']['Tables']['leads']['Row']
 type ComissaoRow = Database['public']['Tables']['comissoes']['Row']
@@ -206,8 +205,17 @@ export default function DashboardEmbaixadorPage() {
             <ReferralCard referralLink={referralLink} partnerCode={partnerCode} />
             <CommissionsList comissoes={recentComissoes} />
           </div>
-          <div>
-            <CreditWallet userId={user.id} />
+          <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-yellow-500/5 to-cyan-500/10 border border-emerald-500/20">
+            <h3 className="text-base font-black text-white mb-1">Saldo de Créditos</h3>
+            <p className="text-2xl font-bold text-emerald-400 mb-3">R$ 0,00</p>
+            <a
+              href="https://buy.stripe.com/8x29ATgP7eCl6gB3hr7Vm0k"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-900 text-sm font-bold transition"
+            >
+              Comprar créditos
+            </a>
           </div>
         </div>
 

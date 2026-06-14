@@ -140,8 +140,8 @@ export async function saveUserLocation(
 
   const row = {
     user_id: userId,
-    latitude: lat,
-    longitude: lng,
+    lat,
+    lng,
     cidade: cidade?.trim() ?? null,
     estado: estado?.trim().toUpperCase() ?? null,
     endereco: endereco?.trim() ?? null,

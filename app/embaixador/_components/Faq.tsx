@@ -21,7 +21,7 @@ const FAQS = [
   },
   {
     q: 'Como recebo?',
-    a: 'PIX direto para sua conta ou saldo em KWATT (token utilitário da plataforma, Lei 14.478/2022).',
+    a: 'Transferência direta para sua conta ou saldo em KWATT (token utilitário da plataforma, Lei 14.478/2022).',
   },
   {
     q: 'Posso indicar em qualquer estado?',

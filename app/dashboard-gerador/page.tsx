@@ -5,7 +5,7 @@ import { getSupabase } from '@/lib/supabase/singleton';
 import { LogOut, Zap, TrendingUp, DollarSign, Sun, Building2, MapPin, Users, Loader2, Sparkles, ArrowRight, ShieldCheck, Award, Crown, Calendar, BarChart3, MessageCircle, Heart, FileText } from 'lucide-react';
 import { ConsentModal } from '@/components/ConsentModal';
 import { CURRENT_TERMS_VERSION } from '@/lib/commissions';
-import { CreditWallet } from '@/components/CreditWallet';
+
 import NotificationBell from '@/components/NotificationBell';
 import Link from 'next/link';
 import type { Database } from '@/lib/database.types';
@@ -332,8 +332,17 @@ export default function DashboardGeradorPage() {
             )}
           </div>
 
-          <div className="lg:row-span-2">
-            <CreditWallet userId={user.id} />
+          <div className="lg:row-span-2 p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-yellow-500/5 to-cyan-500/10 border border-emerald-500/20">
+            <h3 className="text-base font-black text-white mb-1">Saldo de Créditos</h3>
+            <p className="text-2xl font-bold text-emerald-400 mb-3">R$ 0,00</p>
+            <a
+              href="https://buy.stripe.com/8x29ATgP7eCl6gB3hr7Vm0k"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-900 text-sm font-bold transition"
+            >
+              Comprar créditos
+            </a>
           </div>
         </div>
 

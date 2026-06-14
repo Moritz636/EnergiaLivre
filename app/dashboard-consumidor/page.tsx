@@ -26,7 +26,6 @@ import { PlanCard, type PlanData } from './_components/PlanCard'
 import { MotivationBlock } from './_components/MotivationBlock'
 import { MemberPlusCta } from './_components/MemberPlusCta'
 import { LoadingState } from './_components/LoadingState'
-import { CreditWallet } from '@/components/CreditWallet'
 import FaturasSummary from './_components/FaturasSummary'
 import OnboardingWizard from '@/components/OnboardingWizard'
 import InvoiceReminder from '@/components/InvoiceReminder'
@@ -225,7 +224,13 @@ export default function DashboardConsumidorPage() {
           </div>
           <div className="space-y-6">
             <FaturasSummary userId={user.id} />
-            <CreditWallet userId={user.id} />
+            <a
+              href="/checkout"
+              className="block p-4 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20 hover:border-emerald-500/40 transition text-center"
+            >
+              <p className="text-lg font-black text-white mb-1">Assine um Plano</p>
+              <p className="text-xs text-emerald-400">Economize até 38% na conta de luz</p>
+            </a>
           </div>
         </div>
 

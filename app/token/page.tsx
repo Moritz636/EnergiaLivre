@@ -58,7 +58,7 @@ const USE_CASE_ICON_MAP: Record<string, React.ComponentType<{ className?: string
 }
 
 const STEPS = [
-  { step: '01', icon: <CreditCard className="w-5 h-5" />, title: 'Compre créditos', desc: 'Escolha o valor e pague com Stripe. Aceitamos cartão de crédito, PIX e boleto.', color: 'amber' },
+  { step: '01', icon: <CreditCard className="w-5 h-5" />, title: 'Compre créditos', desc: 'Escolha o valor e pague com Stripe. Aceitamos cartão de crédito e boleto.', color: 'amber' },
   { step: '02', icon: <Zap className="w-5 h-5" />, title: 'Receba na hora', desc: 'Saldo creditado automaticamente na sua conta. Use imediatamente sem burocracia.', color: 'emerald' },
   { step: '03', icon: <Coins className="w-5 h-5" />, title: 'Use e economize', desc: 'Abata faturas, acumule cashback e compre no marketplace. Tudo com Moeda Energia.', color: 'cyan' },
 ]
@@ -66,7 +66,7 @@ const STEPS = [
 const FAQS = [
   { q: 'O que é Moeda Energia?', a: 'Moeda Energia é um crédito interno do ecossistema EnergiaLivre. Você compra com dinheiro via Stripe e usa para abater faturas de energia, acumular cashback e comprar no marketplace. Não é criptomoeda nem investimento.' },
   { q: 'Qual a diferença entre Moeda Energia e KWATT Token?', a: `Moeda Energia é o crédito interno que funciona hoje, comprado com cartão via Stripe e usado imediatamente. O KWATT é a versão blockchain desse crédito, com lançamento previsto para ${TOKEN_LAUNCH_DATE.toLocaleDateString('pt-BR')}. Até lá, a Moeda Energia já está disponível.` },
-  { q: 'Como comprar Moeda Energia?', a: 'Acesse a seção "Comprar" nesta página. O pagamento é processado pela Stripe (cartão, PIX ou boleto). Os créditos são liberados na hora na sua conta EnergiaLivre.' },
+  { q: 'Como comprar Moeda Energia?', a: 'Acesse a seção "Comprar" nesta página. O pagamento é processado pela Stripe (cartão ou boleto). Os créditos são liberados na hora na sua conta EnergiaLivre.' },
   { q: 'Como usar para pagar minha fatura?', a: 'Na plataforma EnergiaLivre, selecione "Pagar com Moeda Energia" ao visualizar sua fatura. 1 Moeda Energia = R$ 0,95 de abatimento.' },
   { q: 'Preciso de carteira blockchain?', a: 'Não. Moeda Energia é crédito interno da plataforma. Você só precisa de uma conta EnergiaLivre. Carteira EVM será necessária apenas para o KWATT on-chain futuramente.' },
   { q: 'E se eu me arrepender da compra?', a: 'Conforme CDC art. 49, você tem 7 dias para solicitar reembolso integral. Basta abrir ticket em suporte@energialivre.dev.br com o e-mail da compra.' },
@@ -262,7 +262,7 @@ export default function TokenPage() {
               </div>
               <h3 className="text-base font-bold text-white mb-1">Compra simples</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Pague com cartão de crédito, PIX ou boleto via Stripe. Sem burocracia, sem blockchain.
+                Pague com cartão de crédito ou boleto via Stripe. Sem burocracia, sem blockchain.
               </p>
             </div>
             <div className="p-5 rounded-2xl bg-white/5 border border-white/10 text-center">
@@ -351,7 +351,7 @@ export default function TokenPage() {
             </div>
             <h2 className="text-2xl md:text-3xl font-black text-white mb-2">Comprar Moeda Energia</h2>
             <p className="text-sm text-slate-300 mb-6 max-w-md mx-auto">
-              Pague com cartão de crédito, PIX ou boleto via Stripe. Créditos liberados na hora, sem taxa de adesão.
+               Pague com cartão de crédito ou boleto via Stripe. Créditos liberados na hora, sem taxa de adesão.
             </p>
             <a
               href="/checkout/moeda-energia"

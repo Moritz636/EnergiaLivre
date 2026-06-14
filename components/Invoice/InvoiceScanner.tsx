@@ -14,7 +14,7 @@ type ScannerProps = {
 
 type ScannerState = 'idle' | 'requesting' | 'scanning' | 'processing' | 'denied' | 'error' | 'unsupported';
 
-const DEFAULT_FORMATS = ['qr_code', 'code_128', 'code_39', 'ean_13', 'itf', 'pdf417'] as const;
+const DEFAULT_FORMATS = ['code_128', 'code_39', 'ean_13', 'itf', 'pdf417'] as const;
 
 export default function InvoiceScanner({ onScan, onClose, fps = 10, formats = [...DEFAULT_FORMATS] }: ScannerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -217,7 +217,7 @@ export default function InvoiceScanner({ onScan, onClose, fps = 10, formats = [.
           </button>
         </form>
         <p className="text-[10px] text-slate-500 mt-2">
-          Suportamos linha digitável (47/48 dígitos), código de barras ITF (44 dígitos) e QR codes padrão ANEEL/PIX.
+          Suportamos linha digitável (47/48 dígitos) e código de barras ITF (44 dígitos).
         </p>
       </div>
     </div>

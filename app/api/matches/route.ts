@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     // Para state/distributor, localizacao e opcional (mas recomendado para ordernacao)
     const { data: myLocation, error: locError } = await (supabase
       .from('user_locations')
-      .select('latitude, longitude, estado')
+      .select('lat, lng, estado')
       .eq('user_id', user.id)
       .maybeSingle() as any)
 
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
 
     // origin: lat/lng ou ponto neutro do Brasil (se mode!=radius)
     const origin = myLocation
-      ? { lat: Number(myLocation.latitude), lng: Number(myLocation.longitude) }
+      ? { lat: Number(myLocation.lat), lng: Number(myLocation.lng) }
       : { lat: -15.7801, lng: -47.9292 } // centro do Brasil, nao usado no filtro
 
     const candidates = await findCandidates(

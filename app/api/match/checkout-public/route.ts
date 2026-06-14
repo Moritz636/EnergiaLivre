@@ -1,9 +1,8 @@
 // ============================================================
 // POST /api/match/checkout-public
-// Cria PaymentIntent Stripe com Pix (one-time R$ 9,99).
-// Retorna client_secret + next_action.pix para frontend
-// exibir QR Code. Webhook payment_intent.succeeded ativa
-// member_plus (30d) + credita transacao.
+// Cria PaymentIntent Stripe com card (one-time R$ 9,99).
+// Retorna client_secret para frontend finalizar checkout.
+// Webhook payment_intent.succeeded ativa member_plus (30d).
 // ============================================================
 
 import { NextResponse } from 'next/server'
@@ -44,11 +43,11 @@ export async function POST(req: Request) {
 
     const stripe = new Stripe(stripeSecret, { apiVersion: '2024-06-20' })
 
-    // Cria PaymentIntent com Pix
+    // Cria PaymentIntent com card
     const pi = await stripe.paymentIntents.create({
       amount: AMOUNT_CENTS,
       currency: 'brl',
-      payment_method_types: ['pix'],
+      payment_method_types: ['card'],
       receipt_email: targetEmail,
       metadata: {
         userId: user?.id ?? '',
@@ -61,18 +60,10 @@ export async function POST(req: Request) {
       },
     })
 
-    // Retorna client_secret + dados do Pix para o frontend
-    const pix = (pi.next_action as any)?.pix
     return NextResponse.json({
       ok: true,
       clientSecret: pi.client_secret,
       paymentIntentId: pi.id,
-      pix: pix ? {
-        qrCode: pix.qr_code,
-        qrCodeBase64: pix.qr_code_base64,
-        expiresAt: pix.expires_at,
-      } : null,
-      source: 'payment_intent_pix',
     })
   } catch (err: any) {
     console.error('[checkout-public] erro:', err)

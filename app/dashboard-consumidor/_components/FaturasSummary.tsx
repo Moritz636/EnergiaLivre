@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { FileText, Upload, Scan, Loader2 } from 'lucide-react'
+import { FileText, Upload, Loader2 } from 'lucide-react'
 import { getSupabase } from '@/lib/supabase/singleton'
 
 interface FaturaSummary {
@@ -100,12 +100,6 @@ export default function FaturasSummary({ userId }: { userId: string }) {
           className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-900 text-xs font-bold transition"
         >
           <Upload className="w-3 h-3" /> Enviar
-        </Link>
-        <Link
-          href="/dashboard/faturas/scan"
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-xs font-bold transition"
-        >
-          <Scan className="w-3 h-3" /> Escanear
         </Link>
         <Link
           href="/dashboard/faturas"

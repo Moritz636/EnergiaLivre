@@ -70,6 +70,9 @@ export function useAuth() {
         await loadProfile(authUser.id);
       }
       setLoading(false);
+    }).catch((err) => {
+      console.error('[useAuth] getUser error:', err);
+      if (mountedRef.current) setLoading(false);
     });
 
     return () => {

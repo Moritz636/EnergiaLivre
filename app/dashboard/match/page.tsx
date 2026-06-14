@@ -48,7 +48,12 @@ export default function DashboardMatchPage() {
 
   // Auth + Member Plus
   useEffect(() => {
-    if (authLoading) return
+    if (authLoading) {
+      const timeout = setTimeout(() => {
+        if (authLoading) router.push('/login?redirect=/dashboard/match')
+      }, 8000)
+      return () => clearTimeout(timeout)
+    }
     if (!user) {
       router.push('/login?redirect=/dashboard/match')
       return
@@ -70,11 +75,11 @@ export default function DashboardMatchPage() {
     if (!user) return
     const { data } = await (supabase as any)
       .from('user_locations')
-      .select('latitude, longitude, estado')
+      .select('lat, lng, estado')
       .eq('user_id', user.id)
       .maybeSingle()
     if (data) {
-      setMyLocation({ lat: data.latitude, lng: data.longitude })
+      setMyLocation({ lat: data.lat, lng: data.lng })
       if (data.estado) setMyEstado(data.estado)
     }
   }, [user, supabase])

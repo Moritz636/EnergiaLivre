@@ -131,7 +131,10 @@ function MatchPage() {
 
   // 4) Busca preview (se temos payload)
   useEffect(() => {
-    if (!payload) return
+    if (!payload) {
+      if (!isPreview) setLoadingPreview(false)
+      return
+    }
     setLoadingPreview(true)
     ;(async () => {
       try {
@@ -155,7 +158,7 @@ function MatchPage() {
     })()
   }, [payload])
 
-  // Sem payload (acesso direto a /match): pede para comecar pelo /location
+  // Se carregou sem payload e sem preview definido: pede para comecar pelo /location
   if (!payload && !isPreview) {
     return (
       <div className="min-h-screen bg-[#020617] text-slate-200 flex items-center justify-center px-4">
@@ -184,29 +187,6 @@ function MatchPage() {
     : preview?.consumer
       ? { lat: preview.consumer.lat, lng: preview.consumer.lng, cidade: preview.consumer.cidade, estado: preview.consumer.estado }
       : null
-
-  const handleCheckout = async (params: { email: string; usinaId?: string }) => {
-    const res = await fetch('/api/match/checkout-public', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: params.email, usinaId: params.usinaId ?? selectedUsinaId }),
-    })
-    if (!res.ok) {
-      const j = (await res.json().catch(() => ({}))) as { error?: string }
-      throw new Error(j.error ?? 'Falha no checkout')
-    }
-    const json = await res.json()
-    return {
-      clientSecret: json.clientSecret,
-      paymentIntentId: json.paymentIntentId,
-      pix: json.pix,
-    }
-  }
-
-  const handlePaymentComplete = () => {
-    setAccess({ active: true, loading: false, daysRemaining: 30 })
-    setSuccessMsg('Pagamento confirmado! Acesso liberado por 30 dias.')
-  }
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 font-sans overflow-x-hidden">
@@ -312,9 +292,7 @@ function MatchPage() {
             <aside className="space-y-4">
               {showBlurred ? (
                 <AccessGateCard
-                  onCheckout={handleCheckout}
                   selectedUsinaId={selectedUsinaId ?? undefined}
-                  onPaymentComplete={handlePaymentComplete}
                 />
               ) : hasAccess ? (
                 <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30">

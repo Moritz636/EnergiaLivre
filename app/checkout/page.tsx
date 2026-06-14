@@ -7,12 +7,8 @@ import Image from 'next/image';
 import { STRIPE_PAYMENT_LINKS } from '@/lib/stripe-prices';
 import {
   ArrowLeft, Zap, ShieldCheck, Loader2, Crown, Sparkles,
-  CheckCircle2, Star, TrendingUp, Clock, CreditCard, Banknote,
-  QrCode, FileText, X, Copy, Check, ChevronDown,
+  CheckCircle2, Star, TrendingUp, Clock, CreditCard,
 } from 'lucide-react';
-
-type Gateway = 'stripe' | 'pagseguro'
-type PsMethod = 'PIX' | 'BOLETO' | 'CREDIT_CARD'
 
 const planos = [
   {
@@ -39,13 +35,6 @@ export default function CheckoutPage() {
   const [user, setUser] = useState<any>(null);
   const [selectedPlano, setSelectedPlano] = useState(planos[1]);
   const [loadingPlano, setLoadingPlano] = useState<string | null>(null);
-  const [gateway, setGateway] = useState<Gateway>('stripe');
-  const [psMethod, setPsMethod] = useState<PsMethod>('PIX');
-  const [psModal, setPsModal] = useState(false);
-  const [psResult, setPsResult] = useState<any>(null);
-  const [psLoading, setPsLoading] = useState(false);
-  const [psError, setPsError] = useState('');
-  const [copied, setCopied] = useState(false);
   const router = useRouter();
   const supabase = getSupabase();
 
@@ -56,53 +45,11 @@ export default function CheckoutPage() {
       setUser(user);
     };
     checkUser();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router]);
+  }, [supabase, router]);
 
   const handleAssinar = async (plano: typeof planos[0]) => {
-    if (gateway === 'stripe') {
-      setLoadingPlano(plano.id);
-      window.location.href = plano.paymentLink;
-      return;
-    }
-
-    setPsModal(true);
-    setPsLoading(true);
-    setPsError('');
-
-    try {
-      const res = await fetch('/api/pagseguro/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user?.id ?? 'guest',
-          type: 'plan_subscription',
-          description: `${plano.nome} - ${plano.kWh}kWh`,
-          amount: plano.preco,
-          paymentMethod: psMethod,
-          customerName: user?.email?.split('@')[0] ?? 'Cliente',
-          customerEmail: user?.email ?? '',
-          referenceId: `PLANO-${user?.id}-${Date.now()}`,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Erro PagSeguro');
-
-      setPsResult(data.charge);
-    } catch (err: any) {
-      setPsError(err.message);
-    } finally {
-      setPsLoading(false);
-    }
-  };
-
-  const copyPix = () => {
-    if (psResult?.pixCopyPaste) {
-      navigator.clipboard.writeText(psResult.pixCopyPaste);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+    setLoadingPlano(plano.id);
+    window.location.href = plano.paymentLink;
   };
 
   return (
@@ -136,53 +83,14 @@ export default function CheckoutPage() {
             </p>
           </div>
 
-          {/* Gateway toggle */}
           <div className="max-w-md mx-auto mb-10">
-            <p className="text-xs text-slate-500 text-center mb-3 font-bold uppercase tracking-wider">Forma de pagamento</p>
-            <div className="grid grid-cols-2 gap-2 p-1 bg-white/5 rounded-2xl border border-white/10">
-              <button
-                onClick={() => setGateway('stripe')}
-                className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition ${
-                  gateway === 'stripe'
-                    ? 'bg-emerald-500 text-slate-900 shadow-lg'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <CreditCard className="w-4 h-4" /> Stripe
-              </button>
-              <button
-                onClick={() => setGateway('pagseguro')}
-                className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition ${
-                  gateway === 'pagseguro'
-                    ? 'bg-emerald-500 text-slate-900 shadow-lg'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Banknote className="w-4 h-4" /> PagSeguro
-              </button>
+            <p className="text-xs text-slate-500 text-center mb-3 font-bold uppercase tracking-wider">Pagamento via Stripe</p>
+            <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+              <CreditCard className="w-5 h-5 text-emerald-400 inline mr-2" />
+              <span className="text-sm text-emerald-300 font-bold">Cartão de crédito, débito ou boleto</span>
             </div>
-            {gateway === 'pagseguro' && (
-              <div className="mt-2 flex items-center justify-center gap-3">
-                {(['PIX', 'BOLETO', 'CREDIT_CARD'] as PsMethod[]).map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setPsMethod(m)}
-                    className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition ${
-                      psMethod === m
-                        ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
-                        : 'border-white/10 text-slate-500 hover:border-white/30'
-                    }`}
-                  >
-                    {m === 'PIX' ? <><QrCode className="w-3 h-3 inline mr-1" />PIX</> : null}
-                    {m === 'BOLETO' ? <><FileText className="w-3 h-3 inline mr-1" />Boleto</> : null}
-                    {m === 'CREDIT_CARD' ? <><CreditCard className="w-3 h-3 inline mr-1" />Cartão</> : null}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
-          {/* Planos */}
           <div className="grid md:grid-cols-3 gap-6 mb-12">
             {planos.map((plano) => (
               <div
@@ -236,7 +144,6 @@ export default function CheckoutPage() {
             ))}
           </div>
 
-          {/* Comparativo */}
           <div className="mb-12 p-6 rounded-2xl bg-white/5 border border-white/10">
             <h3 className="text-lg font-bold text-white text-center mb-6">💰 Comparativo de Economia Mensal</h3>
             <div className="grid md:grid-cols-3 gap-6 text-center">
@@ -257,7 +164,6 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* Trust image */}
           <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/10 mb-8 max-w-md mx-auto">
             <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0">
               <Image src="/images/atendente-checkout.webp" alt="Atendente" width={56} height={56} className="w-full h-full object-cover" />
@@ -276,7 +182,6 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* WhatsApp Help */}
           <div className="mt-8 p-6 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-blue-500/5 border border-emerald-500/20">
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex-1 min-w-[200px]">
@@ -299,101 +204,6 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
-
-      {/* PagSeguro Modal */}
-      {psModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => { if (!psLoading) setPsModal(false) }}>
-          <div className="bg-[#020617] border border-white/10 rounded-3xl p-6 max-w-md w-full relative max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setPsModal(false)} className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-white/10 transition">
-              <X className="w-4 h-4 text-slate-400" />
-            </button>
-
-            {psLoading && (
-              <div className="text-center py-12">
-                <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mx-auto mb-4" />
-                <p className="text-white font-bold">Gerando pagamento...</p>
-              </div>
-            )}
-
-            {psError && !psLoading && (
-              <div className="text-center py-8">
-                <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
-                  <X className="w-6 h-6 text-red-400" />
-                </div>
-                <p className="text-red-400 font-bold mb-2">Erro no pagamento</p>
-                <p className="text-sm text-slate-400 mb-6">{psError}</p>
-                <button onClick={() => setPsModal(false)} className="px-6 py-2 bg-white/10 text-white rounded-xl text-sm font-bold hover:bg-white/20 transition">
-                  Fechar
-                </button>
-              </div>
-            )}
-
-            {psResult && !psLoading && (
-              <div className="text-center">
-                {psMethod === 'PIX' && (
-                  <>
-                    <div className="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
-                      <QrCode className="w-7 h-7 text-emerald-400" />
-                    </div>
-                    <h3 className="text-lg font-bold text-white mb-1">PIX gerado!</h3>
-                    <p className="text-xs text-slate-400 mb-4">Escaneie o QR Code ou copie o código PIX</p>
-                    {psResult.qrCodeImage && (
-                      <div className="mb-4 inline-block p-3 bg-white rounded-2xl">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={`data:image/png;base64,${psResult.qrCodeImage}`} alt="QR Code PIX" className="w-48 h-48 mx-auto" />
-                      </div>
-                    )}
-                    {psResult.pixCopyPaste && (
-                      <div className="mb-4">
-                        <div className="flex items-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-300 break-all text-left">
-                          <span className="flex-1 truncate">{psResult.pixCopyPaste}</span>
-                          <button onClick={copyPix} className="p-1.5 rounded-lg hover:bg-white/10 shrink-0 transition">
-                            {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-slate-400" />}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    <p className="text-[10px] text-slate-500 mb-4">O pagamento será confirmado automaticamente em até 5 minutos após o PIX.</p>
-                    <button onClick={() => setPsModal(false)} className="px-6 py-2 bg-white/10 text-white rounded-xl text-sm font-bold hover:bg-white/20 transition">
-                      Confirmar depois
-                    </button>
-                  </>
-                )}
-
-                {psMethod === 'BOLETO' && psResult.boletoLink && (
-                  <>
-                    <FileText className="w-10 h-10 text-yellow-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-bold text-white mb-1">Boleto gerado!</h3>
-                    <p className="text-xs text-slate-400 mb-4">Clique abaixo para visualizar e pagar</p>
-                    <a href={psResult.boletoLink} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-yellow-500/20 border border-yellow-500/30 text-yellow-300 rounded-xl font-bold text-sm hover:bg-yellow-500/30 transition mb-4">
-                      <FileText className="w-4 h-4" /> Ver Boleto
-                    </a>
-                    <button onClick={() => setPsModal(false)} className="block mx-auto text-xs text-slate-500 hover:text-white transition">Fechar</button>
-                  </>
-                )}
-
-                {psMethod === 'CREDIT_CARD' && (
-                  <>
-                    <CreditCard className="w-10 h-10 text-blue-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-bold text-white mb-1">Cartão de crédito</h3>
-                    <p className="text-xs text-slate-400 mb-4">Pagamento processado com segurança</p>
-                    {psResult.redirectUrl ? (
-                      <a href={psResult.redirectUrl} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500/20 border border-blue-500/30 text-blue-300 rounded-xl font-bold text-sm hover:bg-blue-500/30 transition mb-4">
-                        Finalizar Pagamento
-                      </a>
-                    ) : (
-                      <p className="text-sm text-emerald-400 font-bold mb-4">Pagamento aprovado!</p>
-                    )}
-                    <button onClick={() => setPsModal(false)} className="block mx-auto text-xs text-slate-500 hover:text-white transition">Fechar</button>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
