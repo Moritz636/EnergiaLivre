@@ -43,5 +43,8 @@ next-env.d.ts
 # scripts
 scripts/dns-check.log
 
+# Admin credentials
+supabase/create_admin.sql
+
 # Windows shortcuts
 *.lnk

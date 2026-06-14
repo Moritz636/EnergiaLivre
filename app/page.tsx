@@ -712,7 +712,7 @@ export default function HomePage() {
                 <li><Link href="/login" className="hover:text-emerald-400 transition">Entrar</Link></li>
                 <li><Link href="/cadastro" className="hover:text-emerald-400 transition">Cadastrar</Link></li>
                 <li><Link href="/cadastro-gerador" className="hover:text-emerald-400 transition">Sou Gerador</Link></li>
-                <li><Link href="/cadastro-parceiro" className="hover:text-emerald-400 transition">Sou Parceiro</Link></li>
+                <li><Link href="/cadastro-embaixador" className="hover:text-emerald-400 transition">Sou Parceiro</Link></li>
                 <li><a href="#contato" className="hover:text-emerald-400 transition">Contato</a></li>
               </ul>
             </div>

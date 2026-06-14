@@ -25,7 +25,8 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { saveLead } from '@/app/actions';
-import { buildFollowUpUrl, splitCidadeEstado } from '@/lib/leads';
+import { buildWhatsAppUrl, splitCidadeEstado } from '@/lib/leads';
+import type { LeadInput } from '@/lib/leads';
 import SiteHeader from '@/components/SiteHeader';
 import SiteFooter from '@/components/SiteFooter';
 
@@ -96,6 +97,23 @@ export default function VenderPage() {
     }
   }, [step, router]);
 
+  // Redireciona para WhatsApp após salvar lead
+  const redirectToWhatsApp = (nome: string, email: string, whatsapp: string, capacidade: string, estado: string, cargo: string) => {
+    const { cidade } = splitCidadeEstado(estado);
+    const lead: LeadInput = {
+      tipo: 'gerador',
+      nome,
+      email,
+      whatsapp,
+      cidade: cidade || estado,
+      estado: splitCidadeEstado(estado).estado || 'ND',
+      capacidadeKwp: Number(capacidade.replace(/\D/g, '')) || 0,
+      cargo,
+    };
+    const url = buildWhatsAppUrl(lead);
+    window.location.href = url;
+  };
+
   const handleNext = () => {
     setIsLoading(true);
     setTimeout(() => {
@@ -143,7 +161,8 @@ export default function VenderPage() {
         throw new Error(result.message);
       }
 
-      setStep(5);
+      // Redireciona para WhatsApp com todos os dados preenchidos
+      redirectToWhatsApp(formData.nome, formData.email, formData.whatsapp, formData.capacidade, formData.estado, formData.cargo);
     } catch (error: any) {
       console.error("Falha no envio:", error);
       const msg = encodeURIComponent(`Olá! Tentei enviar meus dados de gerador pelo site mas ocorreu um erro. Seguem meus dados:%0A%0ANome: ${formData.nome}%0AEmail: ${formData.email}%0AWhatsApp: ${formData.whatsapp}%0ACapacidade: ${formData.capacidade} kWp%0AEstado: ${formData.estado}%0A%0APor favor, me ajude a concluir o cadastro.`);
@@ -492,10 +511,15 @@ export default function VenderPage() {
                   Envie o projeto técnico ou a foto da última fatura de crédito da sua usina para o nosso WhatsApp. Análise prioritária!
                 </p>
                 <a
-                  href={buildFollowUpUrl('gerador', {
+                  href={buildWhatsAppUrl({
+                    tipo: 'gerador',
                     nome: formData.nome,
-                    ...splitCidadeEstado(formData.estado),
+                    email: formData.email,
+                    whatsapp: formData.whatsapp,
+                    cidade: splitCidadeEstado(formData.estado).cidade || formData.estado,
+                    estado: splitCidadeEstado(formData.estado).estado || 'ND',
                     capacidadeKwp: Number(formData.capacidade) || 0,
+                    cargo: formData.cargo,
                   })}
                   target="_blank"
                   rel="noopener noreferrer"

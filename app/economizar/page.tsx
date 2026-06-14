@@ -26,7 +26,8 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { saveLead } from '@/app/actions';
-import { buildFollowUpUrl, splitCidadeEstado } from '@/lib/leads';
+import { buildWhatsAppUrl, splitCidadeEstado } from '@/lib/leads';
+import type { LeadInput } from '@/lib/leads';
 import SiteHeader from '@/components/SiteHeader';
 import SiteFooter from '@/components/SiteFooter';
 
@@ -98,6 +99,22 @@ export default function EconomizarPage() {
     }
   }, [step, router]);
 
+  // Redireciona para WhatsApp após salvar lead
+  const redirectToWhatsApp = (nome: string, email: string, whatsapp: string, cidade: string, gastoMensal: string) => {
+    const { estado } = splitCidadeEstado(cidade);
+    const lead: LeadInput = {
+      tipo: 'consumidor',
+      nome,
+      email,
+      whatsapp,
+      cidade,
+      estado: estado || 'ND',
+      gastoMensal: Number(gastoMensal.replace(/\D/g, '')) || 0,
+    };
+    const url = buildWhatsAppUrl(lead);
+    window.location.href = url;
+  };
+
   const handleNext = () => {
     setIsLoading(true);
     setTimeout(() => {
@@ -140,7 +157,8 @@ export default function EconomizarPage() {
       });
       if (!result.success) throw new Error(result.message);
 
-      setStep(5);
+      // Redireciona para WhatsApp com todos os dados preenchidos
+      redirectToWhatsApp(formData.nome, formData.email, formData.whatsapp, formData.cidade, formData.gastoMensal);
     } catch (error: any) {
       console.error('Falha no envio:', error);
       setSubmitError('Não conseguimos enviar agora. Tente novamente ou chame no WhatsApp.');
@@ -456,7 +474,15 @@ export default function EconomizarPage() {
                   Envie uma foto da sua última fatura de energia. Isso torna o cálculo 100% preciso e acelera sua economia.
                 </p>
                 <a
-                  href={buildFollowUpUrl('consumidor', { nome: formData.nome, cidade: formData.cidade })}
+                  href={buildWhatsAppUrl({
+                    tipo: 'consumidor',
+                    nome: formData.nome,
+                    email: formData.email,
+                    whatsapp: formData.whatsapp,
+                    cidade: formData.cidade || 'N/I',
+                    estado: splitCidadeEstado(formData.cidade).estado || 'ND',
+                    gastoMensal: Number(formData.gastoMensal.replace(/\D/g, '')) || 0,
+                  })}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full py-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 rounded-xl font-bold text-sm transition border border-emerald-500/30"
