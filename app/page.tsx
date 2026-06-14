@@ -6,6 +6,7 @@ import {
   ArrowRight, Zap, ShieldCheck, Crown, ChevronDown, Mail, Wallet, Award,
   Sun, CheckCircle2, Building2, Leaf, Calculator, Clock, Sparkles, MapPin,
   TrendingUp, Lock, Phone, Target, Flame, Users, BadgeCheck, Share2, Send,
+  Handshake,
 } from 'lucide-react';
 import { WHATSAPP_BASE } from '@/lib/leads';
 
@@ -58,6 +59,7 @@ export default function HomePage() {
           <div className="hidden lg:flex items-center gap-7 text-sm font-medium text-slate-300">
             <a href="#como-funciona" className="hover:text-white transition">Como Funciona</a>
             <a href="#para-voce" className="hover:text-white transition">Para Você</a>
+            <Link href="/embaixador" className="hover:text-emerald-400 transition">Embaixador</Link>
             <a href="#planos" className="hover:text-white transition">Planos</a>
             <Link href="/simulador" className="hover:text-white transition">Simulador</Link>
             <Link href="/regulamentacao" className="hover:text-white transition">Regulamentação</Link>
@@ -96,19 +98,19 @@ export default function HomePage() {
           />
         </div>
         <div className="max-w-5xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-black mb-8 uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-black mb-8 uppercase tracking-wider animate-fade-up">
             <Crown className="w-3.5 h-3.5" /> Marketplace de Energia Solar · Lei 14.300/2022
           </div>
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-7 leading-[1.05] tracking-tight">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-7 leading-[1.05] tracking-tight animate-fade-up" style={{ animationDelay: '100ms' }}>
             A energia que você produz<br className="hidden md:block" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-emerald-300 to-yellow-400"> (ou consome) </span>
             finalmente trabalhando a seu favor.
           </h1>
-          <p className="text-lg md:text-xl text-slate-400 mb-10 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-slate-400 mb-10 max-w-3xl mx-auto leading-relaxed animate-fade-up" style={{ animationDelay: '150ms' }}>
             Conectamos <strong className="text-slate-200">geradores com excedente</strong> a consumidores que querem pagar menos na fatura.
             Sem obras em casa, sem fidelidade, sem intermediários. A plataforma faz o match e a energia flui.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4 mb-10">
+          <div className="flex flex-col sm:flex-row justify-center gap-4 mb-10 animate-fade-up" style={{ animationDelay: '200ms' }}>
             <Link
               href="/economizar"
               className="group px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-400 text-slate-900 rounded-full font-black text-base hover:from-emerald-400 hover:to-emerald-300 transition flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(16,185,129,0.35)]"
@@ -124,7 +126,7 @@ export default function HomePage() {
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] text-slate-500 uppercase tracking-wider font-bold">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] text-slate-500 uppercase tracking-wider font-bold animate-fade-up" style={{ animationDelay: '250ms' }}>
             <div className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-emerald-500" /> LGPD</div>
             <div className="flex items-center gap-1.5"><BadgeCheck className="w-3.5 h-3.5 text-emerald-500" /> ANEEL · REN 687/2015</div>
             <div className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> Pagamento criptografado</div>
@@ -132,14 +134,14 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="max-w-6xl mx-auto mt-20 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="max-w-6xl mx-auto mt-20 grid grid-cols-2 md:grid-cols-4 gap-4 px-6">
           {[
             { icon: <Users className="w-5 h-5" />, label: 'Match regional', desc: 'Oferta × demanda na sua UF' },
             { icon: <TrendingUp className="w-5 h-5" />, label: 'Até 32%', desc: 'de economia na fatura' },
             { icon: <Zap className="w-5 h-5" />, label: 'Sem instalação', desc: 'Você não precisa de painéis' },
             { icon: <Leaf className="w-5 h-5" />, label: '100% digital', desc: 'Onboarding em 2 minutos' },
           ].map((it, i) => (
-            <div key={i} className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 backdrop-blur-sm text-left hover:border-emerald-500/40 transition">
+            <div key={i} className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 backdrop-blur-sm text-left hover:border-emerald-500/40 transition animate-fade-up" style={{ animationDelay: `${300 + i * 80}ms` }}>
               <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-3">{it.icon}</div>
               <p className="text-sm font-black text-white">{it.label}</p>
               <p className="text-xs text-slate-500 mt-0.5">{it.desc}</p>
@@ -147,29 +149,78 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Role login — minimalista ISO 9001 */}
-        <div className="mt-16 max-w-2xl mx-auto">
-          <div className="grid grid-cols-3 gap-3">
-            <Link href="/login?from=consumidor" className="group p-4 rounded-2xl bg-white/[0.015] border border-white/[0.06] hover:border-emerald-500/30 hover:bg-white/[0.03] transition text-center">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition">
-                <Wallet className="w-5 h-5" />
+        {/* Role login — integrado, dinâmico e moderno */}
+        <div className="mt-20 max-w-6xl mx-auto px-6">
+          <div className="text-center mb-8 animate-fade-up">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black mb-3 uppercase tracking-wider">
+              <Users className="w-3.5 h-3.5" /> Acessar plataforma
+            </div>
+            <h2 className="text-2xl md:text-3xl font-black text-white">Qual é o seu perfil?</h2>
+            <p className="text-sm text-slate-400 mt-1">Escolha seu caminho e comece agora</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Link
+              href="/login?from=consumidor"
+              className="group relative p-6 rounded-2xl bg-gradient-to-br from-emerald-500/[0.08] to-emerald-500/[0.01] border border-emerald-500/20 hover:border-emerald-500/50 transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_30px_rgba(16,185,129,0.15)] animate-fade-up text-left"
+              style={{ animationDelay: '300ms' }}
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-3xl -z-10" />
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 border border-emerald-500/30 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.25)] transition-all duration-300">
+                <Wallet className="w-6 h-6 text-emerald-400" />
               </div>
-              <p className="text-xs font-bold text-white group-hover:text-emerald-300 transition">Consumidor</p>
-              <p className="text-[9px] text-slate-600 mt-0.5">Economizar</p>
+              <h3 className="text-base font-black text-white group-hover:text-emerald-300 transition-colors">Consumidor</h3>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">Reduza sua fatura de luz sem instalar painéis. Economia real todo mês.</p>
+              <div className="mt-4 flex items-center gap-1.5 text-[11px] font-bold text-emerald-400/70 group-hover:text-emerald-300 transition-colors">
+                Quero economizar <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+              </div>
             </Link>
-            <Link href="/login?from=gerador" className="group p-4 rounded-2xl bg-white/[0.015] border border-white/[0.06] hover:border-blue-500/30 hover:bg-white/[0.03] transition text-center">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition">
-                <Sun className="w-5 h-5" />
+
+            <Link
+              href="/login?from=gerador"
+              className="group relative p-6 rounded-2xl bg-gradient-to-br from-blue-500/[0.08] to-blue-500/[0.01] border border-blue-500/20 hover:border-blue-500/50 transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_30px_rgba(59,130,246,0.15)] animate-fade-up text-left"
+              style={{ animationDelay: '350ms' }}
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-3xl -z-10" />
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(59,130,246,0.25)] transition-all duration-300">
+                <Sun className="w-6 h-6 text-blue-400" />
               </div>
-              <p className="text-xs font-bold text-white group-hover:text-blue-300 transition">Gerador</p>
-              <p className="text-[9px] text-slate-600 mt-0.5">Monetizar</p>
+              <h3 className="text-base font-black text-white group-hover:text-blue-300 transition-colors">Gerador</h3>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">Monetize o excedente da sua usina solar. Renda passiva todo mês.</p>
+              <div className="mt-4 flex items-center gap-1.5 text-[11px] font-bold text-blue-400/70 group-hover:text-blue-300 transition-colors">
+                Quero gerar receita <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+              </div>
             </Link>
-            <Link href="/login?from=parceiro" className="group p-4 rounded-2xl bg-white/[0.015] border border-white/[0.06] hover:border-yellow-500/30 hover:bg-white/[0.03] transition text-center">
-              <div className="w-10 h-10 rounded-xl bg-yellow-500/10 text-yellow-400 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition">
-                <Award className="w-5 h-5" />
+
+            <Link
+              href="/login?from=embaixador"
+              className="group relative p-6 rounded-2xl bg-gradient-to-br from-purple-500/[0.08] to-purple-500/[0.01] border border-purple-500/20 hover:border-purple-500/50 transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_30px_rgba(168,85,247,0.15)] animate-fade-up text-left"
+              style={{ animationDelay: '400ms' }}
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full blur-3xl -z-10" />
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/30 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(168,85,247,0.25)] transition-all duration-300">
+                <Handshake className="w-6 h-6 text-purple-400" />
               </div>
-              <p className="text-xs font-bold text-white group-hover:text-yellow-300 transition">Parceiro</p>
-              <p className="text-[9px] text-slate-600 mt-0.5">Indicar</p>
+              <h3 className="text-base font-black text-white group-hover:text-purple-300 transition-colors">Embaixador</h3>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">Indique a plataforma e ganhe comissão recorrente por cada conexão.</p>
+              <div className="mt-4 flex items-center gap-1.5 text-[11px] font-bold text-purple-400/70 group-hover:text-purple-300 transition-colors">
+                Quero ser embaixador <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </Link>
+
+            <Link
+              href="/login?from=parceiro"
+              className="group relative p-6 rounded-2xl bg-gradient-to-br from-yellow-500/[0.08] to-yellow-500/[0.01] border border-yellow-500/20 hover:border-yellow-500/50 transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_30px_rgba(234,179,8,0.15)] animate-fade-up text-left"
+              style={{ animationDelay: '450ms' }}
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/10 rounded-full blur-3xl -z-10" />
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 border border-yellow-500/30 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(234,179,8,0.25)] transition-all duration-300">
+                <Award className="w-6 h-6 text-yellow-400" />
+              </div>
+              <h3 className="text-base font-black text-white group-hover:text-yellow-300 transition-colors">Parceiro</h3>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">Empresas e profissionais: ofereça energia solar aos seus clientes.</p>
+              <div className="mt-4 flex items-center gap-1.5 text-[11px] font-bold text-yellow-400/70 group-hover:text-yellow-300 transition-colors">
+                Quero ser parceiro <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+              </div>
             </Link>
           </div>
         </div>
@@ -712,6 +763,7 @@ export default function HomePage() {
                 <li><Link href="/login" className="hover:text-emerald-400 transition">Entrar</Link></li>
                 <li><Link href="/cadastro" className="hover:text-emerald-400 transition">Cadastrar</Link></li>
                 <li><Link href="/cadastro-gerador" className="hover:text-emerald-400 transition">Sou Gerador</Link></li>
+                <li><Link href="/cadastro-embaixador" className="hover:text-emerald-400 transition">Sou Embaixador</Link></li>
                 <li><Link href="/cadastro-embaixador" className="hover:text-emerald-400 transition">Sou Parceiro</Link></li>
                 <li><a href="#contato" className="hover:text-emerald-400 transition">Contato</a></li>
               </ul>

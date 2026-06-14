@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/app/hooks/useAuth'
+import { ArrowLeft, FileText, Loader2 } from 'lucide-react'
 import InvoiceList from '@/components/Invoice/InvoiceList'
-import { ArrowLeft, FileText, Upload, Loader2 } from 'lucide-react'
 
 export default function FaturasIndexPage() {
   const { user, profile, loading } = useAuth()
@@ -48,12 +48,6 @@ export default function FaturasIndexPage() {
             </div>
             <span className="text-xl font-black text-white">FATURAS</span>
           </div>
-          <Link
-            href="/dashboard/faturas/upload"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-[#020617] text-sm font-bold transition"
-          >
-            <Upload className="w-4 h-4" /> Nova
-          </Link>
         </div>
       </nav>
 
@@ -61,7 +55,7 @@ export default function FaturasIndexPage() {
         <div className="mb-6">
           <h1 className="text-2xl font-black text-white mb-1">Suas faturas</h1>
           <p className="text-sm text-slate-400">
-            Envie a foto ou PDF da sua conta de luz. Identificamos estado, concessionária e valor automaticamente.
+            Historico das suas contas de luz enviadas para analise.
           </p>
         </div>
         <InvoiceList />

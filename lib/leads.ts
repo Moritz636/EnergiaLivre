@@ -225,8 +225,33 @@ async function defaultInsert(
   supabase: SupabaseClient<any, any, any>,
   row: LeadInsert,
 ): Promise<{ data: any; error: any }> {
-  const result = await (supabase.from('leads').insert([row] as any) as any)
-  return { data: result?.data, error: result?.error }
+  try {
+    const result = await supabase.from('leads').insert(row as any)
+    return { data: (result as any)?.data, error: (result as any)?.error }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (msg.includes('schema cache')) {
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
+      const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      const res = await fetch(`${url}/rest/v1/leads`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': key,
+          'Authorization': `Bearer ${key}`,
+          'Prefer': 'return=representation',
+        },
+        body: JSON.stringify(row),
+      })
+      if (!res.ok) {
+        const text = await res.text()
+        return { data: null, error: text }
+      }
+      const data = await res.json()
+      return { data, error: null }
+    }
+    return { data: null, error: msg }
+  }
 }
 
 export async function captureLead(

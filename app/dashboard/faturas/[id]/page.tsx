@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/app/hooks/useAuth'
 import { getSupabase } from '@/lib/supabase/singleton'
-import InvoiceAnalysis from '@/components/Invoice/InvoiceAnalysis'
-import { ArrowLeft, FileText, Loader2, ExternalLink, MapPin, Zap, DollarSign } from 'lucide-react'
+import { ArrowLeft, FileText, Loader2, ExternalLink, MapPin, Zap, DollarSign, Calendar } from 'lucide-react'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -44,11 +43,8 @@ export default function FaturaDetailPage({ params }: PageProps) {
         if (mounted) setInvoice(data)
         if (mounted) setLoadingInv(false)
       })
-    return () => {
-      mounted = false
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [invoiceId, user?.id])
+    return () => { mounted = false }
+  }, [invoiceId, user?.id, supabase])
 
   if (loading || !user || !invoiceId || loadingInv) {
     return (
@@ -90,12 +86,10 @@ export default function FaturaDetailPage({ params }: PageProps) {
       </nav>
 
       <main className="pt-20 pb-8 px-4 md:px-6 max-w-2xl mx-auto space-y-4">
-        {/* Preview do arquivo */}
-        <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-          <h3 className="text-sm font-bold text-white mb-2">Arquivo enviado</h3>
+        <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
+          <h3 className="text-sm font-bold text-white mb-3">Arquivo enviado</h3>
           {invoice.file_type?.startsWith('image/') ? (
-            <a href={`/api/invoices/file/${invoice.id}`} target="_blank" rel="noopener noreferrer">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+            <a href={`/api/invoices/file/${invoice.id}`} target="_blank" rel="noopener noreferrer" className="block">
               <img
                 src={`/api/invoices/file/${invoice.id}`}
                 alt={invoice.file_name}
@@ -119,39 +113,46 @@ export default function FaturaDetailPage({ params }: PageProps) {
           </p>
         </div>
 
-        {/* Dados extraídos */}
-        <InvoiceAnalysis
-          invoiceId={invoiceId}
-          initialEstado={invoice.estado}
-          initialConcessionaria={invoice.concessionaria}
-          initialValorTotal={invoice.valor_total}
-          initialKwhMensal={invoice.kwh_mensal}
-          initialVencimento={invoice.vencimento}
-          onAnalyzed={async () => {
-            const { data } = await supabase
-              .from('invoice_uploads')
-              .select('*')
-              .eq('id', invoiceId)
-              .single()
-            setInvoice(data)
-          }}
-          onMatched={async (count) => {
-            const { data } = await supabase
-              .from('invoice_uploads')
-              .select('*')
-              .eq('id', invoiceId)
-              .single()
-            setInvoice(data)
-            if (count > 0) {
-              setTimeout(() => router.push('/dashboard/propostas'), 2500)
-            }
-          }}
-        />
+        {invoice.estado && (
+          <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Dados da fatura</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center gap-2 text-sm">
+                <MapPin className="w-4 h-4 text-emerald-400" />
+                <span className="text-slate-300">{invoice.estado}</span>
+              </div>
+              {invoice.concessionaria && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Zap className="w-4 h-4 text-yellow-400" />
+                  <span className="text-slate-300">{invoice.concessionaria}</span>
+                </div>
+              )}
+              {invoice.valor_total && (
+                <div className="flex items-center gap-2 text-sm">
+                  <DollarSign className="w-4 h-4 text-emerald-400" />
+                  <span className="text-slate-300">R$ {Number(invoice.valor_total).toFixed(2)}</span>
+                </div>
+              )}
+              {invoice.kwh_mensal && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Zap className="w-4 h-4 text-cyan-400" />
+                  <span className="text-slate-300">{invoice.kwh_mensal} kWh</span>
+                </div>
+              )}
+              {invoice.vencimento && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="w-4 h-4 text-slate-400" />
+                  <span className="text-slate-300">{invoice.vencimento}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {invoice.status === 'matched' && (
           <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center">
             <p className="text-sm text-emerald-300 font-bold">
-              ✓ {invoice.match_count} proposta{invoice.match_count === 1 ? '' : 's'} enviada{invoice.match_count === 1 ? '' : 's'} para geradores
+              {'\u2713'} {invoice.match_count} proposta{invoice.match_count === 1 ? '' : 's'} enviada{invoice.match_count === 1 ? '' : 's'} para geradores
             </p>
             <p className="text-xs text-slate-400 mt-1">
               Acompanhe em <Link href="/dashboard/propostas" className="text-emerald-400 hover:underline">Propostas</Link>

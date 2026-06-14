@@ -165,20 +165,8 @@ export default function VenderPage() {
       redirectToWhatsApp(formData.nome, formData.email, formData.whatsapp, formData.capacidade, formData.estado, formData.cargo);
     } catch (error: any) {
       console.error("Falha no envio:", error);
-      const msg = encodeURIComponent(`Olá! Tentei enviar meus dados de gerador pelo site mas ocorreu um erro. Seguem meus dados:%0A%0ANome: ${formData.nome}%0AEmail: ${formData.email}%0AWhatsApp: ${formData.whatsapp}%0ACapacidade: ${formData.capacidade} kWp%0AEstado: ${formData.estado}%0A%0APor favor, me ajude a concluir o cadastro.`);
-      setSubmitError(
-        <div className="space-y-2">
-          <p>Não conseguimos enviar agora. Tente novamente ou chame no WhatsApp.</p>
-          <a
-            href={`https://wa.me/5584987858668?text=${msg}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block w-full py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded-lg text-sm font-bold text-center border border-emerald-500/30 transition"
-          >
-            Falar no WhatsApp
-          </a>
-        </div>
-      );
+      router.push('/login?from=gerador');
+      return;
     } finally {
       setIsLoading(false);
     }

@@ -7,6 +7,7 @@ import { ConsentModal } from '@/components/ConsentModal';
 import { CURRENT_TERMS_VERSION } from '@/lib/commissions';
 
 import NotificationBell from '@/components/NotificationBell';
+import { SimpleMatchSection } from '@/components/Map/SimpleMatchSection';
 import Link from 'next/link';
 import type { Database } from '@/lib/database.types';
 
@@ -271,6 +272,8 @@ export default function DashboardGeradorPage() {
             <p className="text-xs text-slate-400 mt-1">interessados na sua usina</p>
           </div>
         </div>
+
+        <SimpleMatchSection supabase={supabase} userId={user.id} tipo="gerador" />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="p-6 rounded-2xl bg-white/5 border border-white/10">

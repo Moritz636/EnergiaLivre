@@ -161,7 +161,8 @@ export default function EconomizarPage() {
       redirectToWhatsApp(formData.nome, formData.email, formData.whatsapp, formData.cidade, formData.gastoMensal);
     } catch (error: any) {
       console.error('Falha no envio:', error);
-      setSubmitError('Não conseguimos enviar agora. Tente novamente ou chame no WhatsApp.');
+      router.push('/login?from=consumidor');
+      return;
     } finally {
       setIsLoading(false);
     }

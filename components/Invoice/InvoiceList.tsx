@@ -77,14 +77,8 @@ export default function InvoiceList() {
         <FileText className="w-12 h-12 text-slate-500 mx-auto mb-3" />
         <p className="text-slate-300 font-bold mb-1">Nenhuma fatura enviada ainda</p>
         <p className="text-slate-500 text-sm mb-4">
-          Envie sua fatura de energia para identificar estado, concessionária e valor automaticamente.
+          Acompanhe suas contas de energia e historico de analises.
         </p>
-        <Link
-          href="/dashboard/faturas/upload"
-          className="inline-block px-5 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-[#020617] font-bold text-sm transition"
-        >
-          Enviar primeira fatura
-        </Link>
       </div>
     )
   }
