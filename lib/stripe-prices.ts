@@ -22,6 +22,10 @@ export const STRIPE_PRICE_IDS = {
 
   // Member Plus (acesso ao match)
   MEMBER_PLUS: 'price_1TfterHl0ValDO6zlKATGAsX',
+
+  // Moeda Energia: checkout-moeda usa price_data dinâmico via API,
+  // não precisa de Price ID pré-criado. Stripe cria o produto
+  // "Moeda Energia" automaticamente na primeira compra.
 } as const
 
 export type StripePriceId = (typeof STRIPE_PRICE_IDS)[keyof typeof STRIPE_PRICE_IDS]

@@ -216,13 +216,13 @@ export function buildLeadRow(input: LeadInput, userId?: string | null): LeadInse
 }
 
 export interface CaptureLeadDeps {
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient<any, any, any>
   userId?: string | null
   insert?: (row: LeadInsert | LeadInsert[]) => Promise<{ data: any; error: any }>
 }
 
 async function defaultInsert(
-  supabase: SupabaseClient<Database>,
+  supabase: SupabaseClient<any, any, any>,
   row: LeadInsert,
 ): Promise<{ data: any; error: any }> {
   const result = await (supabase.from('leads').insert([row] as any) as any)

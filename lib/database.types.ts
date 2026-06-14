@@ -84,6 +84,11 @@ export interface Database {
           processed_at: string | null
           processed_by: string | null
           observacoes: string | null
+          anell_validated: boolean | null
+          anell_validated_at: string | null
+          anell_data: Json | null
+          match_ready: boolean | null
+          embaixador_id: string | null
           latitude: number | null
           longitude: number | null
         }
@@ -132,6 +137,11 @@ export interface Database {
           processed_at?: string | null
           processed_by?: string | null
           observacoes?: string | null
+          anell_validated?: boolean | null
+          anell_validated_at?: string | null
+          anell_data?: Json | null
+          match_ready?: boolean | null
+          embaixador_id?: string | null
           latitude?: number | null
           longitude?: number | null
         }
@@ -254,6 +264,67 @@ export interface Database {
           updated_at?: string
         }
       }
+      credit_transactions: {
+        Row: {
+          id: string
+          user_id: string
+          amount: number
+          type: string
+          status: string
+          description: string | null
+          admin_id: string | null
+          counterparty_user_id: string | null
+          external_reference: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          amount: number
+          type: string
+          status?: string
+          description?: string | null
+          admin_id?: string | null
+          counterparty_user_id?: string | null
+          external_reference?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          amount?: number
+          type?: string
+          status?: string
+          description?: string | null
+          admin_id?: string | null
+          counterparty_user_id?: string | null
+          external_reference?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      user_credits: {
+        Row: {
+          user_id: string
+          balance: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          balance?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          balance?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
       assinaturas: {
         Row: {
           id: number
@@ -370,7 +441,7 @@ export interface Database {
         Row: {
           id: number
           user_id: string
-          tipo_pagamento: 'assinatura' | 'comissao' | 'adicional'
+          tipo_pagamento: 'assinatura' | 'comissao' | 'adicional' | 'pix_wallet' | 'match_pix'
           valor: number
           status: 'pending' | 'succeeded' | 'failed' | 'refunded'
           stripe_payment_intent: string | null
@@ -382,7 +453,7 @@ export interface Database {
         Insert: {
           id?: number
           user_id: string
-          tipo_pagamento: 'assinatura' | 'comissao' | 'adicional'
+          tipo_pagamento: 'assinatura' | 'comissao' | 'adicional' | 'pix_wallet' | 'match_pix'
           valor: number
           status?: 'pending' | 'succeeded' | 'failed' | 'refunded'
           stripe_payment_intent?: string | null
@@ -1119,6 +1190,51 @@ export interface Database {
           status: string
           tx_hash: string | null
           created_at: string
+        }[]
+      }
+      get_user_balance: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
+      credit_user: {
+        Args: {
+          p_user_id: string
+          p_amount: number
+          p_type: string
+          p_description: string
+          p_admin_id: string | null
+          p_metadata?: Json
+        }
+        Returns: {
+          new_balance: number
+          transaction_id: string
+        }[]
+      }
+      validate_usina_anell: {
+        Args: {
+          p_lead_id: number
+          p_distribuidora: string
+          p_consumo_kwh: number
+        }
+        Returns: Json
+      }
+      process_payment_commissions: {
+        Args: { p_payment_id: number }
+        Returns: Json
+      }
+      credit_wallet: {
+        Args: {
+          p_user_id: string
+          p_amount: number
+          p_type: string
+          p_reason: string
+          p_coin_package_id: number | null
+          p_stripe_session_id: string | null
+          p_stripe_payment_intent_id: string | null
+          p_metadata: Json
+        }
+        Returns: {
+          transaction_id: string
         }[]
       }
     }

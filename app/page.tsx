@@ -5,12 +5,14 @@ import Link from 'next/link';
 import {
   ArrowRight, Zap, ShieldCheck, Crown, ChevronDown, Mail, Wallet, Award,
   Sun, CheckCircle2, Building2, Leaf, Calculator, Clock, Sparkles, MapPin,
-  TrendingUp, Lock, Phone, Target, Flame, Users, BadgeCheck, Share2,
+  TrendingUp, Lock, Phone, Target, Flame, Users, BadgeCheck, Share2, Send,
 } from 'lucide-react';
 import { WHATSAPP_BASE } from '@/lib/leads';
 
 export default function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [calcBill, setCalcBill] = useState('')
+  const [calcResult, setCalcResult] = useState<number | null>(null)
 
   const faqs = [
     {
@@ -173,6 +175,64 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* CALCULADORA INSTANTÂNEA */}
+      <section className="py-24 px-6 border-t border-white/5">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black mb-4 uppercase tracking-wider">
+            <Calculator className="w-3 h-3" /> Simulador Instantâneo
+          </div>
+          <h2 className="text-3xl md:text-5xl font-black text-white mb-4 tracking-tight">
+            Quanto você pode economizar?
+          </h2>
+          <p className="text-slate-400 max-w-xl mx-auto mb-8">
+            Digite o valor da sua conta de luz e veja na hora sua economia potencial com créditos de energia solar.
+          </p>
+          <div className="max-w-sm mx-auto space-y-4">
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">R$</span>
+              <input
+                type="number"
+                value={calcBill}
+                onChange={(e) => { setCalcBill(e.target.value); setCalcResult(null) }}
+                placeholder="Valor da sua conta mensal"
+                className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:border-emerald-500 outline-none transition"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const v = parseFloat(calcBill.replace(',', '.'))
+                    if (v >= 50) setCalcResult(v * 0.32)
+                  }
+                }}
+              />
+            </div>
+            <button
+              onClick={() => {
+                const v = parseFloat(calcBill.replace(',', '.'))
+                if (v >= 50) setCalcResult(v * 0.32)
+              }}
+              className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-400 text-slate-900 rounded-xl font-black text-sm hover:from-emerald-400 hover:to-emerald-300 transition shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+            >
+              Calcular economia
+            </button>
+            {calcResult !== null && (
+              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 animate-fade-in">
+                <p className="text-3xl font-black text-emerald-400">R$ {calcResult.toFixed(2)}</p>
+                <p className="text-xs text-slate-400">de economia por mês*</p>
+                <p className="text-[10px] text-slate-500 mt-2">*Estimativa baseada em até 32% de economia com cessão de créditos. Consulte os termos.</p>
+                <Link
+                  href="/economizar"
+                  className="mt-3 inline-flex items-center gap-1 px-4 py-2 bg-emerald-500 text-slate-900 rounded-lg text-xs font-bold hover:bg-emerald-400 transition"
+                >
+                  Quero essa economia <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+            )}
+            {calcBill && parseFloat(calcBill.replace(',', '.')) < 50 && calcResult === null && (
+              <p className="text-[10px] text-slate-500">Mínimo de R$ 50,00 para simulação.</p>
+            )}
+          </div>
+        </div>
+      </section>
+
       <section id="como-funciona" className="relative py-24 px-6 border-t border-white/5">
         <div className="absolute inset-0 -z-20" aria-hidden>
           <Image
@@ -218,7 +278,11 @@ export default function HomePage() {
             ].map((s, i) => (
               <div key={i} className="relative p-8 rounded-3xl bg-gradient-to-br from-white/[0.04] to-transparent border border-white/10 backdrop-blur-sm group hover:border-emerald-500/40 transition">
                 <div className="absolute -top-4 -left-2 text-7xl font-black text-white/[0.04] leading-none select-none">{s.n}</div>
-                <div className={`w-14 h-14 rounded-2xl bg-${s.color}-500/10 text-${s.color}-400 flex items-center justify-center mb-5 group-hover:scale-110 transition`}>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition ${
+                  s.color === 'emerald' ? 'bg-emerald-500/10 text-emerald-400' :
+                  s.color === 'blue' ? 'bg-blue-500/10 text-blue-400' :
+                  'bg-yellow-500/10 text-yellow-400'
+                }`}>
                   {s.icon}
                 </div>
                 <h3 className="text-xl font-black text-white mb-2">{s.title}</h3>
@@ -504,6 +568,58 @@ export default function HomePage() {
               );
             })}
           </div>
+        </div>
+      </section>
+
+      {/* LEAD CAPTURE */}
+      <section className="relative py-24 px-6 border-t border-white/5">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black mb-4 uppercase tracking-wider">
+            <Mail className="w-3 h-3" /> Lead Capture
+          </div>
+          <h2 className="text-3xl md:text-5xl font-black text-white mb-4 tracking-tight">
+            Quer economizar na conta de luz?
+          </h2>
+          <p className="text-slate-400 max-w-xl mx-auto mb-8">
+            Deixe seu contato. Nossa equipe analisa sua região e te mostra quanto você pode economizar.
+          </p>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault()
+              const form = e.currentTarget
+              const data = new FormData(form)
+              try {
+                const res = await fetch('/api/leads/quick-capture', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    nome: data.get('nome'),
+                    email: data.get('email'),
+                    whatsapp: data.get('whatsapp'),
+                    cidade: data.get('cidade'),
+                  }),
+                })
+                if (res.ok) {
+                  form.innerHTML = '<div class="py-8"><div class="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4"><CheckCircle2 className="w-8 h-8 text-emerald-400" /></div><p class="text-xl font-bold text-white mb-2">Recebemos seu contato!</p><p class="text-slate-400">Nossa equipe vai analisar sua região e te retornar em até 24h.</p></div>'
+                }
+              } catch { /* ignore */ }
+            }}
+            className="max-w-md mx-auto space-y-4"
+          >
+            <div className="grid grid-cols-2 gap-4">
+              <input name="nome" placeholder="Seu nome" required className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-3 px-4 text-white placeholder-slate-500 focus:border-emerald-500 outline-none transition" />
+              <input name="cidade" placeholder="Cidade - UF" required className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-3 px-4 text-white placeholder-slate-500 focus:border-emerald-500 outline-none transition" />
+            </div>
+            <input type="email" name="email" placeholder="Seu melhor e-mail" required className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-3 px-4 text-white placeholder-slate-500 focus:border-emerald-500 outline-none transition" />
+            <input type="tel" name="whatsapp" placeholder="WhatsApp com DDD" required className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-3 px-4 text-white placeholder-slate-500 focus:border-emerald-500 outline-none transition" />
+            <button
+              type="submit"
+              className="w-full py-4 bg-gradient-to-r from-emerald-500 to-emerald-400 text-slate-900 rounded-xl font-black text-base hover:from-emerald-400 hover:to-emerald-300 transition shadow-[0_0_25px_rgba(16,185,129,0.3)]"
+            >
+              Quero economizar agora
+            </button>
+            <p className="text-[10px] text-slate-500">Seus dados estão protegidos pela LGPD. Sem spam.</p>
+          </form>
         </div>
       </section>
 

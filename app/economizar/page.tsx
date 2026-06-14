@@ -253,6 +253,11 @@ export default function EconomizarPage() {
                 <div className="flex items-center gap-1"><Clock className="w-3 h-3 text-emerald-500" /> Análise Rápida</div>
                 <div className="flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500" /> Sem Compromisso</div>
               </div>
+              {/* Nota de transparência */}
+              <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/10 text-[10px] text-slate-400 leading-relaxed">
+                <strong className="text-blue-300">Já disponível hoje:</strong> Análise de viabilidade gratuita e cadastro para match com geradores.
+                <strong className="text-blue-300 ml-1">Em breve:</strong> Pagamento de fatura direto na plataforma e compra de Moeda Energia via Stripe.
+              </div>
             </div>
           )}
 

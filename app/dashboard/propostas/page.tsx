@@ -348,15 +348,21 @@ function ProposalCard({
     <li className="p-4">
       <div className="flex items-start gap-3">
         <div
-          className={`w-12 h-12 rounded-2xl bg-${accent}-500/20 flex items-center justify-center shrink-0`}
+          className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
+            accent === 'blue' ? 'bg-blue-500/20' : 'bg-emerald-500/20'
+          }`}
         >
-          <span className={`text-${accent}-300 font-extrabold text-lg`}>{initial}</span>
+          <span className={`font-extrabold text-lg ${
+            accent === 'blue' ? 'text-blue-300' : 'text-emerald-300'
+          }`}>{initial}</span>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-sm font-bold text-white truncate">{o.nome}</h3>
             <span
-              className={`px-2 py-0.5 rounded-full text-[10px] font-bold bg-${accent}-500/20 text-${accent}-300 uppercase`}
+              className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                accent === 'blue' ? 'bg-blue-500/20 text-blue-300' : 'bg-emerald-500/20 text-emerald-300'
+              }`}
             >
               {o.tipo}
             </span>

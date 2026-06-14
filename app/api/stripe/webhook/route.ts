@@ -57,17 +57,22 @@ export async function POST(request: NextRequest) {
         if (session.payment_status !== 'paid') break;
 
         const userId = session.metadata?.userId;
+        const paymentType = session.metadata?.type;
         const coinsRaw = session.metadata?.coins;
-        const packageIdRaw = session.metadata?.packageId;
         const packageCode = session.metadata?.packageCode ?? 'pacote';
 
         const coins = parseInt(coinsRaw ?? '0', 10);
-        const packageId = parseInt(packageIdRaw ?? '0', 10);
 
-        if (!userId || !Number.isFinite(coins) || coins <= 0) {
+        // Moeda Energia: amount vem como string no metadata
+        let amount = coins
+        if (paymentType === 'moeda_energia') {
+          amount = Math.round(parseFloat(session.metadata?.amount ?? '0'))
+        }
+
+        if (!userId || !Number.isFinite(amount) || amount <= 0) {
           console.error(
             '[webhook] checkout.session.completed sem metadata válido:',
-            { userId, coins, packageId }
+            { userId, amount, paymentType }
           );
           break;
         }
@@ -76,18 +81,18 @@ export async function POST(request: NextRequest) {
           'credit_wallet',
           {
             p_user_id: userId,
-            p_amount: coins,
+            p_amount: amount,
             p_type: 'purchase',
-            p_reason: `Compra de pacote (${packageCode})`,
-            p_coin_package_id:
-              Number.isFinite(packageId) && packageId > 0
-                ? packageId
-                : null,
+            p_reason: paymentType === 'moeda_energia'
+              ? `Compra de Moeda Energia — R$ ${amount.toFixed(2)}`
+              : `Compra de pacote (${packageCode})`,
+            p_coin_package_id: null,
             p_stripe_session_id: session.id,
             p_stripe_payment_intent_id:
               (session.payment_intent as string | null) ?? null,
             p_metadata: {
               packageCode,
+              paymentType,
               amount_total: session.amount_total,
               currency: session.currency,
             },
@@ -100,7 +105,7 @@ export async function POST(request: NextRequest) {
         }
 
         console.log(
-          `[webhook] Moedas creditadas: user=${userId} coins=${coins} tx=${rpcResult?.[0]?.transaction_id}`
+          `[webhook] Moedas creditadas: user=${userId} amount=${amount} tx=${rpcResult?.[0]?.transaction_id}`
         );
         break;
       }
@@ -187,9 +192,9 @@ export async function POST(request: NextRequest) {
 
         // Processa comissões 5% parceiro + 15% UFV (idempotente)
         if (newPag?.id) {
-          const { error: commErr } = await (supabase.rpc('process_payment_commissions', {
+          const { error: commErr } = await supabase.rpc('process_payment_commissions', {
             p_payment_id: newPag.id,
-          } as any) as any);
+          });
           if (commErr) {
             console.error(`[commissions] payment #${newPag.id} falhou:`, commErr);
           }
@@ -383,7 +388,7 @@ export async function POST(request: NextRequest) {
                 p_description: `Compra Match Viewer 30d (PIX) — usina: ${usinaId ?? 'N/A'}`,
                 p_admin_id: null,
                 p_metadata: { payment_intent_id: pi.id, usinaId, source: 'match_pix' },
-              } as any);
+              });
             } catch {
               // credit_user pode nao existir se migration nao aplicada
             }
